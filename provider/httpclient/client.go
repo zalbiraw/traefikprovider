@@ -69,8 +69,17 @@ func parseDynamicConfiguration(body []byte) *dynamic.Configuration {
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return &dynamic.Configuration{}
 	}
-	httpConfig := &dynamic.HTTPConfiguration{}
-	changed := false
+
+	var (
+		httpConfig *dynamic.HTTPConfiguration
+		tcpConfig  *dynamic.TCPConfiguration
+		udpConfig  *dynamic.UDPConfiguration
+		tlsConfig  *dynamic.TLSConfiguration
+		changed    bool
+	)
+
+	// HTTP flat keys
+	httpConfig = &dynamic.HTTPConfiguration{}
 	if routers, ok := raw["routers"]; ok {
 		jsonRouters, _ := json.Marshal(routers)
 		_ = json.Unmarshal(jsonRouters, &httpConfig.Routers)
@@ -86,14 +95,70 @@ func parseDynamicConfiguration(body []byte) *dynamic.Configuration {
 		_ = json.Unmarshal(jsonMiddlewares, &httpConfig.Middlewares)
 		changed = true
 	}
-	if changed {
-		configuration := dynamic.Configuration{HTTP: httpConfig}
-		return &configuration
+	if changed && (len(httpConfig.Routers) > 0 || len(httpConfig.Services) > 0 || len(httpConfig.Middlewares) > 0) {
+		return &dynamic.Configuration{HTTP: httpConfig}
 	}
+
+	// TCP flat keys
+	changed = false
+	tcpConfig = &dynamic.TCPConfiguration{}
+	if tcpRouters, ok := raw["tcpRouters"]; ok {
+		jsonRouters, _ := json.Marshal(tcpRouters)
+		_ = json.Unmarshal(jsonRouters, &tcpConfig.Routers)
+		changed = true
+	}
+	if tcpServices, ok := raw["tcpServices"]; ok {
+		jsonServices, _ := json.Marshal(tcpServices)
+		_ = json.Unmarshal(jsonServices, &tcpConfig.Services)
+		changed = true
+	}
+	if changed && (len(tcpConfig.Routers) > 0 || len(tcpConfig.Services) > 0) {
+		return &dynamic.Configuration{TCP: tcpConfig}
+	}
+
+	// UDP flat keys
+	changed = false
+	udpConfig = &dynamic.UDPConfiguration{}
+	if udpRouters, ok := raw["udpRouters"]; ok {
+		jsonRouters, _ := json.Marshal(udpRouters)
+		_ = json.Unmarshal(jsonRouters, &udpConfig.Routers)
+		changed = true
+	}
+	if udpServices, ok := raw["udpServices"]; ok {
+		jsonServices, _ := json.Marshal(udpServices)
+		_ = json.Unmarshal(jsonServices, &udpConfig.Services)
+		changed = true
+	}
+	if changed && (len(udpConfig.Routers) > 0 || len(udpConfig.Services) > 0) {
+		return &dynamic.Configuration{UDP: udpConfig}
+	}
+
+	// TLS flat keys
+	changed = false
+	tlsConfig = &dynamic.TLSConfiguration{}
+	if certs, ok := raw["certificates"]; ok {
+		jsonCerts, _ := json.Marshal(certs)
+		_ = json.Unmarshal(jsonCerts, &tlsConfig.Certificates)
+		changed = true
+	}
+	if options, ok := raw["options"]; ok {
+		jsonOpts, _ := json.Marshal(options)
+		_ = json.Unmarshal(jsonOpts, &tlsConfig.Options)
+		changed = true
+	}
+	if stores, ok := raw["stores"]; ok {
+		jsonStores, _ := json.Marshal(stores)
+		_ = json.Unmarshal(jsonStores, &tlsConfig.Stores)
+		changed = true
+	}
+	if changed && (len(tlsConfig.Certificates) > 0 || len(tlsConfig.Options) > 0 || len(tlsConfig.Stores) > 0) {
+		return &dynamic.Configuration{TLS: tlsConfig}
+	}
+
+	// Nested format (preferred)
 	var configuration dynamic.Configuration
 	if err := json.Unmarshal(body, &configuration); err != nil {
 		return &dynamic.Configuration{}
 	}
-
 	return &configuration
 }
