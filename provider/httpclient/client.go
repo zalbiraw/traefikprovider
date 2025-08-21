@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/traefik/genconf/dynamic"
 
@@ -23,7 +24,13 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 		return &dynamic.Configuration{}
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	client := http.DefaultClient
+	if providerCfg.Connection.Timeout != "" {
+		if d, err := time.ParseDuration(providerCfg.Connection.Timeout); err == nil {
+			client = &http.Client{Timeout: d}
+		}
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return &dynamic.Configuration{}
 	}

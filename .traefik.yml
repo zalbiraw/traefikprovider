@@ -16,10 +16,10 @@ testData:
       path: "/api/rawdata"
       timeout: "15s"
       headers: {}
-      mTLS:
-        caFile: /path/to/ca.crt
-        certFile: /path/to/cert.crt
-        keyFile: /path/to/key
+      # mTLS:
+      #   caFile: /path/to/ca.crt
+      #   certFile: /path/to/cert.crt
+      #   keyFile: /path/to/key
     http:
       discover: true
       routers:
