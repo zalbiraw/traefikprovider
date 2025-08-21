@@ -19,6 +19,18 @@ func CreateConfig() *Config {
 					},
 					MTLS: nil,
 				},
+				HTTP: &HTTPSection{
+					Discover: true,
+				},
+				TCP: &TCPSection{
+					Discover: true,
+				},
+				UDP: &UDPSection{
+					Discover: true,
+				},
+				TLS: &TLSSection{
+					Discover: true,
+				},
 			},
 		},
 	}
