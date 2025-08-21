@@ -2,9 +2,272 @@ displayName: Provider Plugin Demo
 type: provider
 iconPath: .assets/icon.png
 
-import: github.com/traefik/pluginproviderdemo
+import: github.com/zalbiraw/traefik-provider
 
-summary: '[Demo] Simple Provider Plugin'
+summary: 'Traefik provider that will allow you to discover other Traefik instances configuration. The plugin will allow you to filter and overide discovered config as well as group discvered services and introduces tunneling concept for services.'
 
 testData:
-  pollInterval: 5s
+  pollInterval: "5s"
+  providers:
+  - name: "cluster-1"
+    connection:
+      host: ["localhost"]
+      port: 8080
+      path: "/api/rawdata"
+      timeout: "15s"
+      headers: {}
+      mTLS:
+        caFile: /path/to/ca.crt
+        certFile: /path/to/cert.crt
+        keyFile: /path/to/key
+    http:
+      discover: true
+      routers:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+          entrypoints: []
+          rule: ""
+          ruleRegex: ""
+          service: ""
+          serviceRegex: ""
+        overrides:
+          rules:
+          - mode: "OVERWRITE"
+            values: ""
+            filters: {}
+          - mode: "PREPEND"
+            values: ""
+            operator: "AND"
+            filters: {}
+          - mode: "APPEND"
+            values: ""
+            operator: "OR"
+            filters: {}
+          - mode: "REGEX"
+            values: ""
+            filters: {}
+          entrypoints:
+          - mode: "OVERWRITE"
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            values: []
+            filters: {}
+          services:
+          - mode: "OVERWRITE"
+            values: ""
+            filters: {}
+          - mode: "REGEX"
+            values: ""
+            filters: {}
+          middlewares:
+          - mode: "OVERWRITE"
+            values: []
+            filters: {}
+          - mode: "PREPEND"
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            values: []
+            filters: {}
+        extraRoutes: []
+      middlewares:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+        extraMiddlewares: []
+      services:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+        overrides:
+          servers:
+          - mode: "OVERWRITE"
+            strategy: ""
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            strategy: ""
+            values: []
+            filters: {}
+          - mode: "TUNNEL"
+            filters: {}
+            connection:
+              port: 8000
+              timeout: "15s"
+              headers: {}
+              mTLS:
+                caFile: /path/to/ca.crt
+                certFile: /path/to/cert.crt
+                keyFile: /path/to/key
+          healthchecks:
+          - mode: "OVERWRITE"
+            path: ""
+            pathRegex: ""
+            interval: "15s"
+            timeout: "10s"
+            filters: {}
+        extraServices: []
+      serverTransports:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+        extraServerTransports: []
+    tcp:
+      discover: true
+      routers:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+          entrypoints: []
+          rule: ""
+          ruleRegex: ""
+          service: ""
+          serviceRegex: ""
+        overrides:
+          rules:
+          - mode: "OVERWRITE"
+            values: ""
+            filters: {}
+          - mode: "PREPEND"
+            values: ""
+            operator: "AND"
+            filters: {}
+          - mode: "APPEND"
+            values: ""
+            operator: "OR"
+            filters: {}
+          - mode: "REGEX"
+            values: ""
+            filters: {}
+          entrypoints:
+          - mode: "OVERWRITE"
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            values: []
+            filters: {}
+          services:
+          - mode: "OVERWRITE"
+            values: ""
+            filters: {}
+          - mode: "REGEX"
+            values: ""
+            filters: {}
+          middlewares:
+          - mode: "OVERWRITE"
+            values: []
+            filters: {}
+          - mode: "PREPEND"
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            values: []
+            filters: {}
+        extraRoutes: []
+      middlewares:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+        extraMiddlewares: []
+      services:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+        overrides:
+          servers:
+          - mode: "OVERWRITE"
+            strategy: ""
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            strategy: ""
+            values: []
+            filters: {}
+          - mode: "TUNNEL"
+            filters: {}
+            connection:
+              port: 8000
+              timeout: "15s"
+              headers: {}
+              mTLS:
+                caFile: /path/to/ca.crt
+                certFile: /path/to/cert.crt
+                keyFile: /path/to/key
+          healthchecks:
+          - mode: "OVERWRITE"
+            path: ""
+            pathRegex: ""
+            interval: "15s"
+            timeout: "10s"
+            filters: {}
+        extraServices: []
+    udp:
+      discover: true
+      routers:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+          entrypoints: []
+          service: ""
+          serviceRegex: ""
+        overrides:
+          entrypoints:
+          - mode: "OVERWRITE"
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            values: []
+            filters: {}
+          services:
+          - mode: "OVERWRITE"
+            values: ""
+            filters: {}
+          - mode: "REGEX"
+            values: ""
+            filters: {}
+        extraRoutes: []
+      services:
+        discover: true
+        filters:
+          name: ""
+          nameRegex: ""
+        overrides:
+          servers:
+          - mode: "OVERWRITE"
+            strategy: ""
+            values: []
+            filters: {}
+          - mode: "APPEND"
+            strategy: ""
+            values: []
+            filters: {}
+          - mode: "TUNNEL"
+            filters: {}
+            connection:
+              port: 8000
+              timeout: "15s"
+              headers: {}
+              mTLS:
+                caFile: /path/to/ca.crt
+                certFile: /path/to/cert.crt
+                keyFile: /path/to/key
+          healthchecks:
+          - mode: "OVERWRITE"
+            path: ""
+            pathRegex: ""
+            interval: "15s"
+            timeout: "10s"
+            filters: {}
+        extraServices: []
+    tls:
+      discover: true

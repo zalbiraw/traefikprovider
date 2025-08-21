@@ -1,4 +1,4 @@
-module github.com/traefik/pluginproviderdemo
+module github.com/zalbiraw/traefik-provider
 
 go 1.19
 

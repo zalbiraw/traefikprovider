@@ -1,5 +1,5 @@
-// Package pluginproviderdemo contains a demo of the provider's plugin.
-package pluginproviderdemo
+// Package traefik-provider contains a demo of the provider's plugin.
+package provider
 
 import (
 	"context"
@@ -10,17 +10,14 @@ import (
 
 	"github.com/traefik/genconf/dynamic"
 	"github.com/traefik/genconf/dynamic/tls"
+
+	"github.com/zalbiraw/traefik-provider/config"
 )
 
-// Config the plugin configuration.
-type Config struct {
-	PollInterval string `json:"pollInterval,omitempty"`
-}
-
 // CreateConfig creates the default plugin configuration.
-func CreateConfig() *Config {
-	return &Config{
-		PollInterval: "5s", // 5 * time.Second
+func CreateConfig() *config.Config {
+	return &config.Config{
+		PollInterval: "5s",
 	}
 }
 
@@ -33,10 +30,34 @@ type Provider struct {
 }
 
 // New creates a new Provider plugin.
-func New(ctx context.Context, config *Config, name string) (*Provider, error) {
+func New(ctx context.Context, config *config.Config, name string) (*Provider, error) {
+	// Validate PollInterval
+	if config.PollInterval == "" {
+		return nil, fmt.Errorf("PollInterval is required")
+	}
 	pi, err := time.ParseDuration(config.PollInterval)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid PollInterval: %w", err)
+	}
+	if pi <= 0 {
+		return nil, fmt.Errorf("PollInterval must be greater than 0")
+	}
+
+	// Validate Providers
+	if len(config.Providers) == 0 {
+		return nil, fmt.Errorf("at least one ProviderConfig is required")
+	}
+	for i, p := range config.Providers {
+		if p.Name == "" {
+			return nil, fmt.Errorf("provider[%d]: Name is required", i)
+		}
+		// Example: validate Connection fields
+		if len(p.Connection.Host) == 0 {
+			return nil, fmt.Errorf("provider[%d]: Connection.Host is required", i)
+		}
+		if p.Connection.Port == 0 {
+			return nil, fmt.Errorf("provider[%d]: Connection.Port is required", i)
+		}
 	}
 
 	return &Provider{
