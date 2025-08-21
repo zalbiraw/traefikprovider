@@ -9,24 +9,18 @@ import (
 	"time"
 
 	"github.com/traefik/genconf/dynamic"
-	"github.com/traefik/genconf/dynamic/tls"
 
 	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefik-provider/provider/httpclient"
 )
 
-// CreateConfig creates the default plugin configuration.
-func CreateConfig() *config.Config {
-	return &config.Config{
-		PollInterval: "5s",
-	}
-}
 
 // Provider a simple provider plugin.
 type Provider struct {
 	name         string
 	pollInterval time.Duration
-
-	cancel func()
+	config       *config.Config
+	cancel       func()
 }
 
 // New creates a new Provider plugin.
@@ -63,6 +57,7 @@ func New(ctx context.Context, config *config.Config, name string) (*Provider, er
 	return &Provider{
 		name:         name,
 		pollInterval: pi,
+		config:       config,
 	}, nil
 }
 
@@ -97,13 +92,17 @@ func (p *Provider) loadConfiguration(ctx context.Context, cfgChan chan<- json.Ma
 	ticker := time.NewTicker(p.pollInterval)
 	defer ticker.Stop()
 
+	// TODO: Support multiple providers if needed. For now, use the first one.
+	providerCfg := &config.ProviderConfig{}
+	if len(p.config.Providers) > 0 {
+		providerCfg = &p.config.Providers[0]
+	}
+
 	for {
 		select {
-		case t := <-ticker.C:
-			configuration := generateConfiguration(t)
-
+		case <-ticker.C:
+			configuration := httpclient.GenerateConfiguration(providerCfg)
 			cfgChan <- &dynamic.JSONPayload{Configuration: configuration}
-
 		case <-ctx.Done():
 			return
 		}
@@ -114,69 +113,4 @@ func (p *Provider) loadConfiguration(ctx context.Context, cfgChan chan<- json.Ma
 func (p *Provider) Stop() error {
 	p.cancel()
 	return nil
-}
-
-func generateConfiguration(date time.Time) *dynamic.Configuration {
-	configuration := &dynamic.Configuration{
-		HTTP: &dynamic.HTTPConfiguration{
-			Routers:           make(map[string]*dynamic.Router),
-			Middlewares:       make(map[string]*dynamic.Middleware),
-			Services:          make(map[string]*dynamic.Service),
-			ServersTransports: make(map[string]*dynamic.ServersTransport),
-		},
-		TCP: &dynamic.TCPConfiguration{
-			Routers:  make(map[string]*dynamic.TCPRouter),
-			Services: make(map[string]*dynamic.TCPService),
-		},
-		TLS: &dynamic.TLSConfiguration{
-			Stores:  make(map[string]tls.Store),
-			Options: make(map[string]tls.Options),
-		},
-		UDP: &dynamic.UDPConfiguration{
-			Routers:  make(map[string]*dynamic.UDPRouter),
-			Services: make(map[string]*dynamic.UDPService),
-		},
-	}
-
-	configuration.HTTP.Routers["pp-route-01"] = &dynamic.Router{
-		EntryPoints: []string{"web"},
-		Service:     "pp-service-01",
-		Rule:        "Host(`example.com`)",
-	}
-
-	configuration.HTTP.Services["pp-service-01"] = &dynamic.Service{
-		LoadBalancer: &dynamic.ServersLoadBalancer{
-			Servers: []dynamic.Server{
-				{
-					URL: "http://localhost:9090",
-				},
-			},
-			PassHostHeader: boolPtr(true),
-		},
-	}
-
-	if date.Minute()%2 == 0 {
-		configuration.HTTP.Routers["pp-route-02"] = &dynamic.Router{
-			EntryPoints: []string{"web"},
-			Service:     "pp-service-02",
-			Rule:        "Host(`another.example.com`)",
-		}
-
-		configuration.HTTP.Services["pp-service-02"] = &dynamic.Service{
-			LoadBalancer: &dynamic.ServersLoadBalancer{
-				Servers: []dynamic.Server{
-					{
-						URL: "http://localhost:9091",
-					},
-				},
-				PassHostHeader: boolPtr(true),
-			},
-		}
-	}
-
-	return configuration
-}
-
-func boolPtr(v bool) *bool {
-	return &v
 }

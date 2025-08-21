@@ -12,21 +12,11 @@ import (
 
 	provider "github.com/zalbiraw/traefik-provider"
 	"github.com/zalbiraw/traefik-provider/config"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	cfg := provider.CreateConfig()
-
-	cfg.PollInterval = "5s"
-
-	providerObj := config.ProviderConfig{
-		Name: "test",
-		Connection: config.ConnectionConfig{
-			Host: []string{"dashboard.traefik.localhost"},
-			Port: 8080,
-		},
-	}
-	cfg.Providers = append(cfg.Providers, providerObj)
+	cfg := config.CreateConfig()
 
 	p, err := provider.New(context.Background(), cfg, "preview")
 	if err != nil {
@@ -37,12 +27,20 @@ func main() {
 	if err := p.Provide(cfgChan); err != nil {
 		log.Fatalf("provide error: %v", err)
 	}
-	// Read a single configuration snapshot and print it.
+
 	marshaled := <-cfgChan
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(marshaled); err != nil {
-		log.Fatalf("encode error: %v", err)
+	jsonBytes, err := marshaled.MarshalJSON()
+	if err != nil {
+		log.Fatalf("marshal error: %v", err)
 	}
+	var asInterface interface{}
+	if err := json.Unmarshal(jsonBytes, &asInterface); err != nil {
+		log.Fatalf("unmarshal error: %v", err)
+	}
+	yamlBytes, err := yaml.Marshal(asInterface)
+	if err != nil {
+		log.Fatalf("yaml marshal error: %v", err)
+	}
+	os.Stdout.Write(yamlBytes)
 	_ = p.Stop()
 }
