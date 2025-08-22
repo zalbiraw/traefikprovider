@@ -24,6 +24,15 @@ func CreateConfig() *Config {
 					Routers: &RoutersConfig{
 						Discover:         true,
 						DiscoverPriority: false,
+						Filters: RouterFilters{
+							Name:         "",
+							NameRegex:    "",
+							Entrypoints:  []string{},
+							Rule:         "",
+							RuleRegex:    "",
+							Service:      "",
+							ServiceRegex: "",
+						},
 					},
 					Services: &ServicesConfig{
 						Discover: true,

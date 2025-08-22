@@ -25,14 +25,14 @@ testData:
       routers:
         # discover: true
         # discoverPriority: false
-        filters:
-          name: ""
-          nameRegex: ""
-          entrypoints: []
-          rule: ""
-          ruleRegex: ""
-          service: ""
-          serviceRegex: ""
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
+        #   entrypoints: []
+        #   rule: ""
+        #   ruleRegex: ""
+        #   service: ""
+        #   serviceRegex: ""
         overrides:
           rules:
           - mode: "OVERWRITE"
@@ -73,18 +73,18 @@ testData:
           - mode: "APPEND"
             values: []
             filters: {}
-        extraRoutes: []
-      middlewares:
+        # extraRoutes: []
+      # middlewares: 
         # discover: true
-        filters:
-          name: ""
-          nameRegex: ""
-        extraMiddlewares: []
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
+        # extraMiddlewares: []
       services:
         # discover: true
-        filters:
-          name: ""
-          nameRegex: ""
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
         overrides:
           servers:
           - mode: "OVERWRITE"
@@ -112,25 +112,25 @@ testData:
             interval: "15s"
             timeout: "10s"
             filters: {}
-        extraServices: []
-      serverTransports:
+        # extraServices: []
+      # serverTransports:
         # discover: true
-        filters:
-          name: ""
-          nameRegex: ""
-        extraServerTransports: []
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
+        # extraServerTransports: []
     tcp:
       # discover: true
       routers:
         # discover: true
-        filters:
-          name: ""
-          nameRegex: ""
-          entrypoints: []
-          rule: ""
-          ruleRegex: ""
-          service: ""
-          serviceRegex: ""
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
+        #   entrypoints: []
+        #   rule: ""
+        #   ruleRegex: ""
+        #   service: ""
+        #   serviceRegex: ""
         overrides:
           rules:
           - mode: "OVERWRITE"
@@ -171,18 +171,18 @@ testData:
           - mode: "APPEND"
             values: []
             filters: {}
-        extraRoutes: []
+        # extraRoutes: []
       middlewares:
-        discover: true
-        filters:
-          name: ""
-          nameRegex: ""
-        extraMiddlewares: []
+        # discover: true
+        # filters:
+          # name: ""
+          # nameRegex: ""
+        # extraMiddlewares: []
       services:
         # discover: true
-        filters:
-          name: ""
-          nameRegex: ""
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
         overrides:
           servers:
           - mode: "OVERWRITE"
@@ -210,17 +210,17 @@ testData:
             interval: "15s"
             timeout: "10s"
             filters: {}
-        extraServices: []
+        # extraServices: []
     udp:
       # discover: true
       routers:
         # discover: true
-        filters:
-          name: ""
-          nameRegex: ""
-          entrypoints: []
-          service: ""
-          serviceRegex: ""
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
+        #   entrypoints: []
+        #   service: ""
+        #   serviceRegex: ""
         overrides:
           entrypoints:
           - mode: "OVERWRITE"
@@ -236,12 +236,12 @@ testData:
           - mode: "REGEX"
             values: ""
             filters: {}
-        extraRoutes: []
+        # extraRoutes: []
       services:
         # discover: true
-        filters:
-          name: ""
-          nameRegex: ""
+        # filters:
+        #   name: ""
+        #   nameRegex: ""
         overrides:
           servers:
           - mode: "OVERWRITE"
@@ -269,6 +269,6 @@ testData:
             interval: "15s"
             timeout: "10s"
             filters: {}
-        extraServices: []
+        # extraServices: []
     # tls:
       # discover: true
