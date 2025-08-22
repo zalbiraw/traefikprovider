@@ -42,7 +42,7 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 	}
 	cfg, err := parseDynamicConfiguration(body, providerCfg)
 	if err != nil {
-			return cfg
+		return cfg
 	}
 	return cfg
 }
@@ -91,11 +91,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// HTTP
 	httpConfig = &dynamic.HTTPConfiguration{}
 	if providerCfg.HTTP != nil && providerCfg.HTTP.Discover {
-		discoverPriority := false
-		if providerCfg.HTTP.Routers != nil {
-			discoverPriority = providerCfg.HTTP.Routers.DiscoverPriority
-		}
-		if err := parseHTTPConfig(raw, httpConfig, discoverPriority); err != nil {
+		if err := parseHTTPConfig(raw, httpConfig, providerCfg.HTTP); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}
@@ -103,7 +99,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// TCP
 	tcpConfig = &dynamic.TCPConfiguration{}
 	if providerCfg.TCP != nil && providerCfg.TCP.Discover {
-		if err := parseTCPConfig(raw, tcpConfig); err != nil {
+		if err := parseTCPConfig(raw, tcpConfig, providerCfg.TCP); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}
@@ -111,7 +107,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// UDP
 	udpConfig = &dynamic.UDPConfiguration{}
 	if providerCfg.UDP != nil && providerCfg.UDP.Discover {
-		if err := parseUDPConfig(raw, udpConfig); err != nil {
+		if err := parseUDPConfig(raw, udpConfig, providerCfg.UDP); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}
@@ -119,7 +115,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// TLS
 	tlsConfig = &dynamic.TLSConfiguration{}
 	if providerCfg.TLS != nil && providerCfg.TLS.Discover {
-		if err := parseTLSConfig(raw, tlsConfig); err != nil {
+		if err := parseTLSConfig(raw, tlsConfig, providerCfg.TLS); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}

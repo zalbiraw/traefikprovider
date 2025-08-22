@@ -21,12 +21,41 @@ func CreateConfig() *Config {
 				},
 				HTTP: &HTTPSection{
 					Discover: true,
+					Routers: &RoutersConfig{
+						Discover:         true,
+						DiscoverPriority: false,
+					},
+					Services: &ServicesConfig{
+						Discover: true,
+					},
+					Middlewares: &MiddlewaresConfig{
+						Discover: true,
+					},
+					ServerTransports: ServerTransportsConfig{
+						Discover: true,
+					},
 				},
 				TCP: &TCPSection{
 					Discover: true,
+					Routers: &RoutersConfig{
+						Discover:         true,
+						DiscoverPriority: false,
+					},
+					Middlewares: &MiddlewaresConfig{
+						Discover: true,
+					},
+					Services: &ServicesConfig{
+						Discover: true,
+					},
 				},
 				UDP: &UDPSection{
 					Discover: true,
+					Routers: &UDPRoutersConfig{
+						Discover: true,
+					},
+					Services: &UDPServicesConfig{
+						Discover: true,
+					},
 				},
 				TLS: &TLSSection{
 					Discover: true,
