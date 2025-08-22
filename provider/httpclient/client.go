@@ -14,7 +14,6 @@ import (
 
 // GenerateConfiguration fetches and parses the dynamic configuration from the remote provider.
 func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configuration {
-	fmt.Printf("[DEBUG] Provider config: %+v\n", providerCfg)
 	if len(providerCfg.Connection.Host) == 0 {
 		return &dynamic.Configuration{}
 	}
@@ -43,10 +42,8 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 	}
 	cfg, err := parseDynamicConfiguration(body, providerCfg)
 	if err != nil {
-		fmt.Printf("[DEBUG] Error in parseDynamicConfiguration: %v\n", err)
-		return cfg
+			return cfg
 	}
-	fmt.Printf("[DEBUG] Final configuration from GenerateConfiguration: %+v\n", cfg)
 	return cfg
 }
 
@@ -75,7 +72,6 @@ func buildProviderRequest(url string, headers map[string]string) *http.Request {
 
 // parseDynamicConfiguration parses the response body into a dynamic.Configuration struct.
 func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) (*dynamic.Configuration, error) {
-	fmt.Printf("[DEBUG] Received body: %s\n", string(body))
 	var testJson interface{}
 	if err := json.Unmarshal(body, &testJson); err != nil {
 		return &dynamic.Configuration{}, fmt.Errorf("error unmarshaling response body to testJson: %w", err)
@@ -84,7 +80,6 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return &dynamic.Configuration{}, fmt.Errorf("error unmarshaling response body to raw map: %w", err)
 	}
-	fmt.Printf("[DEBUG] Parsed raw map: %+v\n", raw)
 
 	var (
 		httpConfig *dynamic.HTTPConfiguration
@@ -96,7 +91,11 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// HTTP
 	httpConfig = &dynamic.HTTPConfiguration{}
 	if providerCfg.HTTP != nil && providerCfg.HTTP.Discover {
-		if err := parseHTTPConfig(raw, httpConfig); err != nil {
+		discoverPriority := false
+		if providerCfg.HTTP.Routers != nil {
+			discoverPriority = providerCfg.HTTP.Routers.DiscoverPriority
+		}
+		if err := parseHTTPConfig(raw, httpConfig, discoverPriority); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}
@@ -131,6 +130,5 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 		UDP:  udpConfig,
 		TLS:  tlsConfig,
 	}
-	fmt.Printf("[DEBUG] Returning configuration: %+v\n", cfg)
 	return cfg, nil
 }

@@ -9,23 +9,27 @@ import (
 )
 
 // filterAndUnmarshalRouters filters routers by integer priority and unmarshals valid ones.
-func filterAndUnmarshalRouters(routers interface{}) map[string]*dynamic.Router {
+// filterAndUnmarshalRouters filters routers and optionally parses priority if syncPriority is true.
+func filterAndUnmarshalRouters(routers interface{}, syncPriority bool) map[string]*dynamic.Router {
 	result := make(map[string]*dynamic.Router)
 	if routersMap, ok := routers.(map[string]interface{}); ok {
 		for name, val := range routersMap {
 			if routerMap, ok := val.(map[string]interface{}); ok {
 				router := &dynamic.Router{}
-				if prio, ok := routerMap["priority"]; ok {
-					switch v := prio.(type) {
-					case float64:
-						if v != float64(int(v)) || v > float64(math.MaxInt64) || v < float64(math.MinInt64) {
-							continue // Discard if not int or out of int64 range
+				if syncPriority {
+					if prio, ok := routerMap["priority"]; ok {
+						switch v := prio.(type) {
+						case float64:
+							if v != float64(int(v)) || v > float64(math.MaxInt64) || v < float64(math.MinInt64) {
+								fmt.Printf("[WARN] Invalid router priority for %s: %v\n", name, v)
+								break
+							}
+							router.Priority = int(v)
+						case int:
+							router.Priority = v
+						default:
+							fmt.Printf("[WARN] Invalid router priority for %s: %v\n", name, v)
 						}
-						router.Priority = int(v)
-					case int:
-						router.Priority = v
-					default:
-						continue // Discard if not int
 					}
 				}
 				b, err := json.Marshal(routerMap)
@@ -42,9 +46,9 @@ func filterAndUnmarshalRouters(routers interface{}) map[string]*dynamic.Router {
 	return result
 }
 
-func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration) error {
+func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, discoverPriority bool) error {
 	if routers, ok := raw["routers"]; ok {
-		httpConfig.Routers = filterAndUnmarshalRouters(routers)
+		httpConfig.Routers = filterAndUnmarshalRouters(routers, discoverPriority)
 	}
 	if services, ok := raw["services"]; ok {
 		jsonServices, err := json.Marshal(services)

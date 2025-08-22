@@ -1,10 +1,11 @@
 package config
 
 type RoutersConfig struct {
-	Discover  bool             `json:"discover,omitempty" yaml:"discover,omitempty"`
-	Filters   RouterFilters    `json:"filters,omitempty" yaml:"filters,omitempty"`
-	Overrides RouterOverrides  `json:"overrides,omitempty" yaml:"overrides,omitempty"`
-	ExtraRoutes []interface{}  `json:"extraRoutes,omitempty" yaml:"extraRoutes,omitempty"`
+	Discover         bool             `json:"discover,omitempty" yaml:"discover,omitempty"`
+	DiscoverPriority bool             `json:"discoverPriority,omitempty" yaml:"discoverPriority,omitempty"`
+	Filters          RouterFilters    `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Overrides        RouterOverrides  `json:"overrides,omitempty" yaml:"overrides,omitempty"`
+	ExtraRoutes      []interface{}    `json:"extraRoutes,omitempty" yaml:"extraRoutes,omitempty"`
 }
 
 type RouterFilters struct {

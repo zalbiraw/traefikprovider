@@ -11,19 +11,20 @@ testData:
   providers:
   - name: "cluster-1"
     connection:
-      host: ["localhost"]
-      port: 8080
-      path: "/api/rawdata"
-      timeout: "15s"
-      headers: {}
-      # mTLS:
-      #   caFile: /path/to/ca.crt
-      #   certFile: /path/to/cert.crt
-      #   keyFile: /path/to/key
+      # host: ["localhost"]
+      # port: 8080
+      # path: "/api/rawdata"
+      # timeout: "15s"
+      # headers: {}
+      mTLS:
+        caFile: /path/to/ca.crt
+        certFile: /path/to/cert.crt
+        keyFile: /path/to/key
     http:
-      discover: true
+      # discover: true
       routers:
-        discover: true
+        # discover: true
+        discoverPriority: false
         filters:
           name: ""
           nameRegex: ""
@@ -119,7 +120,7 @@ testData:
           nameRegex: ""
         extraServerTransports: []
     tcp:
-      discover: true
+      # discover: true
       routers:
         discover: true
         filters:
@@ -211,7 +212,7 @@ testData:
             filters: {}
         extraServices: []
     udp:
-      discover: true
+      # discover: true
       routers:
         discover: true
         filters:
@@ -269,5 +270,5 @@ testData:
             timeout: "10s"
             filters: {}
         extraServices: []
-    tls:
-      discover: true
+    # tls:
+      # discover: true
