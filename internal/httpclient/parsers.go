@@ -2,9 +2,11 @@ package httpclient
 
 import (
 	"encoding/json"
+
 	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefik-provider/config"
-	"github.com/zalbiraw/traefik-provider/provider/filters"
+	"github.com/zalbiraw/traefik-provider/internal/filters"
+	"github.com/zalbiraw/traefik-provider/internal/overrides"
 )
 
 func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection) error {
@@ -12,7 +14,6 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 		if routers, ok := raw["routers"]; ok {
 			httpConfig.Routers = filters.HTTPRouters(routers, providerConfig.Routers)
 		}
-		// Append extraRoutes
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -26,12 +27,12 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 				httpConfig.Routers[routerName] = &router
 			}
 		}
+		overrides.OverrideHTTPRouters(httpConfig.Routers, providerConfig.Routers.Overrides)
 	}
 	if providerConfig.Services.Discover {
 		if services, ok := raw["services"]; ok {
 			httpConfig.Services = filters.HTTPServices(services, providerConfig.Services)
 		}
-		// Append extraServices
 		for _, extra := range providerConfig.Services.ExtraServices {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -45,12 +46,12 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 				httpConfig.Services[serviceName] = &service
 			}
 		}
+		overrides.OverrideHTTPServices(httpConfig.Services, providerConfig.Services.Overrides)
 	}
 	if providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["middlewares"]; ok {
 			httpConfig.Middlewares = filters.HTTPMiddlewares(middlewares, providerConfig.Middlewares)
 		}
-		// Append extraMiddlewares
 		for _, extra := range providerConfig.Middlewares.ExtraMiddlewares {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -92,7 +93,6 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 		if routers, ok := raw["tcpRouters"]; ok {
 			tcpConfig.Routers = filters.TCPRouters(routers, providerConfig.Routers)
 		}
-		// Append extraRoutes
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -106,12 +106,12 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 				tcpConfig.Routers[routerName] = &router
 			}
 		}
+		overrides.OverrideTCPRouters(tcpConfig.Routers, providerConfig.Routers.Overrides)
 	}
 	if providerConfig.Services.Discover {
 		if services, ok := raw["tcpServices"]; ok {
 			tcpConfig.Services = filters.TCPServices(services, providerConfig.Services)
 		}
-		// Append extraServices
 		for _, extra := range providerConfig.Services.ExtraServices {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -125,12 +125,12 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 				tcpConfig.Services[serviceName] = &service
 			}
 		}
+		overrides.OverrideTCPServices(tcpConfig.Services, providerConfig.Services.Overrides)
 	}
 	if providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["tcpMiddlewares"]; ok {
 			tcpConfig.Middlewares = filters.TCPMiddlewares(middlewares, providerConfig.Middlewares)
 		}
-		// Append extraMiddlewares
 		for _, extra := range providerConfig.Middlewares.ExtraMiddlewares {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -167,6 +167,7 @@ func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfigurat
 				udpConfig.Routers[routerName] = &router
 			}
 		}
+		overrides.OverrideUDPRouters(udpConfig.Routers, providerConfig.Routers.Overrides)
 	}
 	if providerConfig.Services.Discover {
 		if services, ok := raw["udpServices"]; ok {
@@ -186,6 +187,7 @@ func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfigurat
 				udpConfig.Services[serviceName] = &service
 			}
 		}
+		overrides.OverrideUDPServices(udpConfig.Services, providerConfig.Services.Overrides)
 	}
 	return nil
 }
