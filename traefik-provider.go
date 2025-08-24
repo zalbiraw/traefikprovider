@@ -41,7 +41,7 @@ func New(ctx context.Context, config *config.Config, name string) (*Provider, er
 		if p.Name == "" {
 			return nil, fmt.Errorf("provider[%d]: Name is required", i)
 		}
-		if len(p.Connection.Host) == 0 {
+		if p.Connection.Host == "" {
 			return nil, fmt.Errorf("provider[%d]: Connection.Host is required", i)
 		}
 		if p.Connection.Port == 0 {

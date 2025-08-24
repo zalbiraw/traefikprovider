@@ -1,6 +1,5 @@
 displayName: Provider Plugin Demo
 type: provider
-iconPath: .assets/icon.png
 
 import: github.com/zalbiraw/traefik-provider
 
@@ -20,255 +19,193 @@ testData:
         caFile: /path/to/ca.crt
         certFile: /path/to/cert.crt
         keyFile: /path/to/key
+    tunnels:
+      # - name: tunnel1
+      #   addresses: [
+      #     "http://localhost:8080",
+      #   ]
+        mTLS:
+          caFile: /path/to/ca.crt
+          certFile: /path/to/cert.crt
+          keyFile: /path/to/key
     http:
-      # discover: true
+      discover: true
       routers:
-        # discover: true
-        # discoverPriority: false
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
-        #   entrypoints: []
-        #   rule: ""
-        #   ruleRegex: ""
-        #   service: ""
-        #   serviceRegex: ""
+        discover: true
+        discoverPriority: false
+        filters:
+          name: "^(?!.*@internal$).*"
+          entrypoints: []
+          rule: ""
+          service: ""
         overrides:
           rules:
-          - mode: "OVERWRITE"
-            values: ""
-            filters: {}
-          - mode: "PREPEND"
-            values: ""
-            operator: "AND"
-            filters: {}
-          - mode: "APPEND"
-            values: ""
-            operator: "OR"
-            filters: {}
-          - mode: "REGEX"
-            values: ""
-            filters: {}
+          # Set
+          - value: "Host(`app.traefik.cloud`)"
+            filters: 
+              rule: "Host(`app.traefik.localhost`)"
+          # Regex
+          - value: "$1 && PathPrefix(`/api/`)"
+            filters: 
+              rule: "Host(`app.traefik`) && PathPrefix(`/api/`)"
           entrypoints:
-          - mode: "OVERWRITE"
-            values: []
-            filters: {}
-          - mode: "APPEND"
-            values: []
-            filters: {}
+          # Set
+          - value: ["websecure"]
+            filters: 
+              entrypoints: ["web"]
+          # Append
+          - value: "websecure"
+            filters: 
+              entrypoints: ["web"]
           services:
-          - mode: "OVERWRITE"
-            values: ""
-            filters: {}
-          - mode: "REGEX"
-            values: ""
-            filters: {}
+          # Set
+          - value: "apps"
+            filters: 
+              service: "app[123]"
+          # Regex
+          - value: "$1-service"
+            filters: 
+              service: "app[123]"
           middlewares:
-          - mode: "OVERWRITE"
-            values: []
-            filters: {}
-          - mode: "PREPEND"
-            values: []
-            filters: {}
-          - mode: "APPEND"
-            values: []
-            filters: {}
-        # extraRoutes: []
-      # middlewares: 
-        # discover: true
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
-        # extraMiddlewares: []
+          # Set
+          - value: ["jwt", "ratelimit"]
+            filters: 
+              entrypoints: ["web"]
+          # Append, if prepend is required, it can bed done at entrypoint level, this allows the notation to be simple
+          - value: "ratelimit"
+            filters: 
+              name: "app[123]"
+        extraRoutes: []
+      middlewares: 
+        discover: true
+        filters:
+          name: ""
+        extraMiddlewares: []
       services:
-        # discover: true
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
+        discover: true
+        filters:
+          name: ""
         overrides:
           servers:
-          - mode: "OVERWRITE"
-            strategy: ""
-            values: []
+          - strategy: ""
+            value: []
             filters: {}
-          - mode: "APPEND"
-            strategy: ""
-            values: []
+          - strategy: ""
+            value: ""
             filters: {}
-          - mode: "TUNNEL"
+          - tunnel: "tunnel1"
             filters: {}
-            connection:
-              port: 8000
-              timeout: "15s"
-              headers: {}
-              mTLS:
-                caFile: /path/to/ca.crt
-                certFile: /path/to/cert.crt
-                keyFile: /path/to/key
           healthchecks:
-          - mode: "OVERWRITE"
-            path: ""
-            pathRegex: ""
+          - path: ""
             interval: "15s"
             timeout: "10s"
             filters: {}
-        # extraServices: []
-      # serverTransports:
-        # discover: true
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
-        # extraServerTransports: []
+        extraServices: []
+      serverTransports:
+        discover: true
+        filters:
+          name: ""
+        extraServerTransports: []
     tcp:
-      # discover: true
+      discover: true
       routers:
-        # discover: true
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
-        #   entrypoints: []
-        #   rule: ""
-        #   ruleRegex: ""
-        #   service: ""
-        #   serviceRegex: ""
+        discover: true
+        filters:
+          name: ""
+          entrypoints: []
+          rule: ""
+          service: ""
         overrides:
           rules:
-          - mode: "OVERWRITE"
-            values: ""
-            filters: {}
-          - mode: "PREPEND"
-            values: ""
-            operator: "AND"
-            filters: {}
-          - mode: "APPEND"
-            values: ""
-            operator: "OR"
-            filters: {}
-          - mode: "REGEX"
-            values: ""
-            filters: {}
+          # Set
+          - value: "HostSNI(`app.traefik.cloud`)"
+            filters: 
+              rule: "HostSNI(`app.traefik.localhost`)"
+          # Regex
+          - value: "$1 && HostSNI(`dev.app.traefik`)"
+            filters: 
+              rule: "HostSNI(`app.traefik`)"
           entrypoints:
-          - mode: "OVERWRITE"
-            values: []
-            filters: {}
-          - mode: "APPEND"
-            values: []
-            filters: {}
+          # Set
+          - value: ["websecure"]
+            filters: 
+              entrypoints: ["web"]
+          # Append
+          - value: "websecure"
+            filters: 
+              entrypoints: ["web"]
           services:
-          - mode: "OVERWRITE"
-            values: ""
-            filters: {}
-          - mode: "REGEX"
-            values: ""
-            filters: {}
+          # Set
+          - value: "apps"
+            filters: 
+              service: "app[123]"
+          # Regex
+          - value: "$1-service"
+            filters: 
+              service: "app[123]"
           middlewares:
-          - mode: "OVERWRITE"
-            values: []
-            filters: {}
-          - mode: "PREPEND"
-            values: []
-            filters: {}
-          - mode: "APPEND"
-            values: []
-            filters: {}
-        # extraRoutes: []
+          # Set
+          - value: ["ip-allow-list"]
+            filters: 
+              entrypoints: ["web"]
+          # Append
+          - value: "internal-network-allow-list"
+            filters: 
+              name: "app[123]"
+        extraRoutes: []
       middlewares:
-        # discover: true
-        # filters:
-          # name: ""
-          # nameRegex: ""
-        # extraMiddlewares: []
+        discover: true
+        filters:
+          name: ""
+        extraMiddlewares: []
       services:
-        # discover: true
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
+        discover: true
+        filters:
+          name: ""
         overrides:
           servers:
-          - mode: "OVERWRITE"
-            strategy: ""
-            values: []
+          - strategy: ""
+            value: []
             filters: {}
-          - mode: "APPEND"
-            strategy: ""
-            values: []
+          - strategy: ""
+            value: ""
             filters: {}
-          - mode: "TUNNEL"
+          - tunnel: "tunnel1"
             filters: {}
-            connection:
-              port: 8000
-              timeout: "15s"
-              headers: {}
-              mTLS:
-                caFile: /path/to/ca.crt
-                certFile: /path/to/cert.crt
-                keyFile: /path/to/key
-          healthchecks:
-          - mode: "OVERWRITE"
-            path: ""
-            pathRegex: ""
-            interval: "15s"
-            timeout: "10s"
-            filters: {}
-        # extraServices: []
+        extraServices: []
     udp:
-      # discover: true
+      discover: true
       routers:
-        # discover: true
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
-        #   entrypoints: []
-        #   service: ""
-        #   serviceRegex: ""
+        discover: true
+        filters:
+          name: ""
+          entrypoints: []
+          service: ""
         overrides:
-          entrypoints:
-          - mode: "OVERWRITE"
-            values: []
-            filters: {}
-          - mode: "APPEND"
-            values: []
-            filters: {}
           services:
-          - mode: "OVERWRITE"
-            values: ""
-            filters: {}
-          - mode: "REGEX"
-            values: ""
-            filters: {}
-        # extraRoutes: []
+          # Set
+          - value: "apps"
+            filters: 
+              service: "app[123]"
+          # Regex
+          - value: "$1-service"
+            filters: 
+              service: "app[123]"
+        extraRoutes: []
       services:
-        # discover: true
-        # filters:
-        #   name: ""
-        #   nameRegex: ""
+        discover: true
+        filters:
+          name: ""
         overrides:
           servers:
-          - mode: "OVERWRITE"
-            strategy: ""
-            values: []
+          - strategy: ""
+            value: []
             filters: {}
-          - mode: "APPEND"
-            strategy: ""
-            values: []
+          - strategy: ""
+            value: ""
             filters: {}
-          - mode: "TUNNEL"
+          - tunnel: "tunnel1"
             filters: {}
-            connection:
-              port: 8000
-              timeout: "15s"
-              headers: {}
-              mTLS:
-                caFile: /path/to/ca.crt
-                certFile: /path/to/cert.crt
-                keyFile: /path/to/key
-          healthchecks:
-          - mode: "OVERWRITE"
-            path: ""
-            pathRegex: ""
-            interval: "15s"
-            timeout: "10s"
-            filters: {}
-        # extraServices: []
-    # tls:
-      # discover: true
+        extraServices: []
+    tls:
+      discover: true

@@ -21,10 +21,10 @@ func regexMatch(pattern, value string) (bool, error) {
 	return re.MatchString(value), nil
 }
 
-// filterMapByNameAndRegex filters a map[string]interface{} by name and nameRegex fields.
-func filterMapByNameAndRegex(
+// filterMapByNameRegex filters a map[string]interface{} by name as regex if set, otherwise exact match.
+func filterMapByNameRegex(
 	input map[string]interface{},
-	name, nameRegex string,
+	name string,
 ) map[string]map[string]interface{} {
 	result := make(map[string]map[string]interface{})
 	for k, v := range input {
@@ -32,11 +32,8 @@ func filterMapByNameAndRegex(
 		if !ok {
 			continue
 		}
-		if name != "" && k != name {
-			continue
-		}
-		if nameRegex != "" {
-			matched, err := regexMatch(nameRegex, k)
+		if name != "" {
+			matched, err := regexMatch(name, k)
 			if err != nil || !matched {
 				continue
 			}

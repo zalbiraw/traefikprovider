@@ -9,16 +9,14 @@ type RoutersConfig struct {
 }
 
 type RouterFilters struct {
-	Name         string   `json:"name,omitempty" yaml:"name,omitempty"`
-	NameRegex    string   `json:"nameRegex,omitempty" yaml:"nameRegex,omitempty"`
-	Entrypoints  []string `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
-	Rule         string   `json:"rule,omitempty" yaml:"rule,omitempty"`
-	RuleRegex    string   `json:"ruleRegex,omitempty" yaml:"ruleRegex,omitempty"`
-	Service      string   `json:"service,omitempty" yaml:"service,omitempty"`
-	ServiceRegex string   `json:"serviceRegex,omitempty" yaml:"serviceRegex,omitempty"`
+	Name        string   `json:"name,omitempty" yaml:"name,omitempty"`
+	Rule        string   `json:"rule,omitempty" yaml:"rule,omitempty"`
+	Entrypoints []string `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
+	Service     string   `json:"service,omitempty" yaml:"service,omitempty"`
 }
 
 type RouterOverrides struct {
+	Name        string               `json:"name,omitempty" yaml:"name,omitempty"`
 	Rules       []OverrideRule       `json:"rules,omitempty" yaml:"rules,omitempty"`
 	Entrypoints []OverrideEntrypoint `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
 	Services    []OverrideService    `json:"services,omitempty" yaml:"services,omitempty"`
@@ -26,26 +24,21 @@ type RouterOverrides struct {
 }
 
 type OverrideRule struct {
-	Mode     string                 `json:"mode,omitempty" yaml:"mode,omitempty"`
-	Values   string                 `json:"values,omitempty" yaml:"values,omitempty"`
-	Operator string                 `json:"operator,omitempty" yaml:"operator,omitempty"`
-	Filters  map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value   string                 `json:"value,omitempty" yaml:"value,omitempty"`
+	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
 
 type OverrideEntrypoint struct {
-	Mode    string                 `json:"mode,omitempty" yaml:"mode,omitempty"`
-	Values  []string               `json:"values,omitempty" yaml:"values,omitempty"`
+	Value   []string               `json:"value,omitempty" yaml:"value,omitempty"`
 	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
 
 type OverrideService struct {
-	Mode    string                 `json:"mode,omitempty" yaml:"mode,omitempty"`
-	Values  string                 `json:"values,omitempty" yaml:"values,omitempty"`
+	Value   string                 `json:"value,omitempty" yaml:"value,omitempty"`
 	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
 
 type OverrideMiddleware struct {
-	Mode    string                 `json:"mode,omitempty" yaml:"mode,omitempty"`
-	Values  []string               `json:"values,omitempty" yaml:"values,omitempty"`
+	Value   []string               `json:"value,omitempty" yaml:"value,omitempty"`
 	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/zalbiraw/traefik-provider/internal/overrides"
 )
 
-func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection) error {
+func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers.Discover {
 		if routers, ok := raw["routers"]; ok {
 			httpConfig.Routers = filters.HTTPRouters(routers, providerConfig.Routers)
@@ -46,7 +46,7 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 				httpConfig.Services[serviceName] = &service
 			}
 		}
-		overrides.OverrideHTTPServices(httpConfig.Services, providerConfig.Services.Overrides)
+		overrides.OverrideHTTPServices(httpConfig.Services, providerConfig.Services.Overrides, tunnels)
 	}
 	if providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["middlewares"]; ok {
@@ -88,7 +88,7 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 	return nil
 }
 
-func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection) error {
+func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers.Discover {
 		if routers, ok := raw["tcpRouters"]; ok {
 			tcpConfig.Routers = filters.TCPRouters(routers, providerConfig.Routers)
@@ -125,7 +125,7 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 				tcpConfig.Services[serviceName] = &service
 			}
 		}
-		overrides.OverrideTCPServices(tcpConfig.Services, providerConfig.Services.Overrides)
+		overrides.OverrideTCPServices(tcpConfig.Services, providerConfig.Services.Overrides, tunnels)
 	}
 	if providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["tcpMiddlewares"]; ok {
@@ -148,7 +148,7 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 	return nil
 }
 
-func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection) error {
+func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers.Discover {
 		if routers, ok := raw["udpRouters"]; ok {
 			udpConfig.Routers = filters.UDPRouters(routers, providerConfig.Routers)
@@ -187,7 +187,7 @@ func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfigurat
 				udpConfig.Services[serviceName] = &service
 			}
 		}
-		overrides.OverrideUDPServices(udpConfig.Services, providerConfig.Services.Overrides)
+		overrides.OverrideUDPServices(udpConfig.Services, providerConfig.Services.Overrides, tunnels)
 	}
 	return nil
 }

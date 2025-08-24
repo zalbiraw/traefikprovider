@@ -1,4 +1,4 @@
-package provider
+package internal
 
 import (
 	"encoding/json"
@@ -13,13 +13,13 @@ import (
 )
 
 // generateConfiguration fetches and parses the dynamic configuration from the remote provider.
-func generateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configuration {
-	if len(providerCfg.Connection.Host) == 0 {
+func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configuration {
+	if providerCfg.Connection.Host == "" {
 		log.Print("No host configured for provider")
 		return &dynamic.Configuration{}
 	}
 
-	host := providerCfg.Connection.Host[0]
+	host := providerCfg.Connection.Host
 	port := providerCfg.Connection.Port
 	path := providerCfg.Connection.Path
 

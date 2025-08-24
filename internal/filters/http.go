@@ -14,7 +14,7 @@ func HTTPRouters(routers interface{}, config *config.RoutersConfig) map[string]*
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(routersMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(routersMap, filters.Name)
 	for name, routerMap := range filtered {
 		router := &dynamic.Router{}
 		if config.DiscoverPriority {
@@ -28,20 +28,14 @@ func HTTPRouters(routers interface{}, config *config.RoutersConfig) map[string]*
 				continue
 			}
 		}
-		if filters.Rule != "" && router.Rule != filters.Rule {
-			continue
-		}
-		if filters.RuleRegex != "" {
-			matched, err := regexMatch(filters.RuleRegex, router.Rule)
+		if filters.Rule != "" {
+			matched, err := regexMatch(filters.Rule, router.Rule)
 			if err != nil || !matched {
 				continue
 			}
 		}
-		if filters.Service != "" && router.Service != filters.Service {
-			continue
-		}
-		if filters.ServiceRegex != "" {
-			matched, err := regexMatch(filters.ServiceRegex, router.Service)
+		if filters.Service != "" {
+			matched, err := regexMatch(filters.Service, router.Service)
 			if err != nil || !matched {
 				continue
 			}
@@ -58,7 +52,7 @@ func HTTPServices(services interface{}, config *config.ServicesConfig) map[strin
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(servicesMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(servicesMap, filters.Name)
 	for name, serviceMap := range filtered {
 		service := &dynamic.Service{}
 		b, err := json.Marshal(serviceMap)
@@ -80,7 +74,7 @@ func HTTPMiddlewares(middlewares interface{}, config *config.MiddlewaresConfig) 
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(middlewaresMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(middlewaresMap, filters.Name)
 	for name, middlewareMap := range filtered {
 		middleware := &dynamic.Middleware{}
 		b, err := json.Marshal(middlewareMap)
@@ -102,7 +96,7 @@ func HTTPServerTransports(serverTransports interface{}, config *config.ServerTra
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(stMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(stMap, filters.Name)
 	for name, stItemMap := range filtered {
 		st := &dynamic.ServersTransport{}
 		b, err := json.Marshal(stItemMap)

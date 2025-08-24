@@ -10,7 +10,7 @@ func CreateConfig() *Config {
 			{
 				Name: "Traefik Provider",
 				Connection: ConnectionConfig{
-					Host:    []string{"localhost"},
+					Host:    "localhost",
 					Port:    8080,
 					Path:    "/api/rawdata",
 					Timeout: "5s",
@@ -25,13 +25,10 @@ func CreateConfig() *Config {
 						Discover:         true,
 						DiscoverPriority: false,
 						Filters: RouterFilters{
-							Name:         "",
-							NameRegex:    "",
-							Entrypoints:  []string{},
-							Rule:         "",
-							RuleRegex:    "",
-							Service:      "",
-							ServiceRegex: "",
+							Name:        "",
+							Entrypoints: []string{},
+							Rule:        "",
+							Service:     "",
 						},
 					},
 					Services: &ServicesConfig{
@@ -77,4 +74,35 @@ func CreateConfig() *Config {
 type Config struct {
 	PollInterval string           `json:"pollInterval,omitempty" yaml:"pollInterval,omitempty"`
 	Providers    []ProviderConfig `json:"providers,omitempty" yaml:"providers,omitempty"`
+}
+
+type ProviderConfig struct {
+	Name       string           `json:"name,omitempty" yaml:"name,omitempty"`
+	Connection ConnectionConfig `json:"connection,omitempty" yaml:"connection,omitempty"`
+	HTTP       *HTTPSection     `json:"http,omitempty" yaml:"http,omitempty"`
+	TCP        *TCPSection      `json:"tcp,omitempty" yaml:"tcp,omitempty"`
+	UDP        *UDPSection      `json:"udp,omitempty" yaml:"udp,omitempty"`
+	TLS        *TLSSection      `json:"tls,omitempty" yaml:"tls,omitempty"`
+	Tunnels    []TunnelConfig   `json:"tunnels,omitempty" yaml:"tunnels,omitempty"`
+}
+
+type ConnectionConfig struct {
+	Host    string            `json:"host,omitempty" yaml:"host,omitempty"`
+	Port    int               `json:"port,omitempty" yaml:"port,omitempty"`
+	Path    string            `json:"path,omitempty" yaml:"path,omitempty"`
+	Timeout string            `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
+	MTLS    *MTLSConfig       `json:"mTLS,omitempty" yaml:"mTLS,omitempty"`
+}
+
+type MTLSConfig struct {
+	CAFile   string `json:"caFile,omitempty" yaml:"caFile,omitempty"`
+	CertFile string `json:"certFile,omitempty" yaml:"certFile,omitempty"`
+	KeyFile  string `json:"keyFile,omitempty" yaml:"keyFile,omitempty"`
+}
+
+type TunnelConfig struct {
+	Name      string      `json:"name,omitempty" yaml:"name,omitempty"`
+	Addresses []string    `json:"connection,omitempty" yaml:"connection,omitempty"`
+	MTLS      *MTLSConfig `json:"mTLS,omitempty" yaml:"mTLS,omitempty"`
 }

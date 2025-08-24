@@ -13,7 +13,7 @@ func TCPRouters(routers interface{}, config *config.RoutersConfig) map[string]*d
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(routersMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(routersMap, filters.Name)
 	for name, routerMap := range filtered {
 		router := &dynamic.TCPRouter{}
 		b, err := json.Marshal(routerMap)
@@ -28,20 +28,14 @@ func TCPRouters(routers interface{}, config *config.RoutersConfig) map[string]*d
 				continue
 			}
 		}
-		if filters.Rule != "" && router.Rule != filters.Rule {
-			continue
-		}
-		if filters.RuleRegex != "" {
-			matched, err := regexMatch(filters.RuleRegex, router.Rule)
+		if filters.Rule != "" {
+			matched, err := regexMatch(filters.Rule, router.Rule)
 			if err != nil || !matched {
 				continue
 			}
 		}
-		if filters.Service != "" && router.Service != filters.Service {
-			continue
-		}
-		if filters.ServiceRegex != "" {
-			matched, err := regexMatch(filters.ServiceRegex, router.Service)
+		if filters.Service != "" {
+			matched, err := regexMatch(filters.Service, router.Service)
 			if err != nil || !matched {
 				continue
 			}
@@ -58,7 +52,7 @@ func TCPServices(services interface{}, config *config.ServicesConfig) map[string
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(servicesMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(servicesMap, filters.Name)
 	for name, serviceMap := range filtered {
 		service := &dynamic.TCPService{}
 		b, err := json.Marshal(serviceMap)

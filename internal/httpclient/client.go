@@ -14,7 +14,7 @@ import (
 
 // GenerateConfiguration fetches and parses the dynamic configuration from the remote provider.
 func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configuration {
-	if len(providerCfg.Connection.Host) == 0 {
+	if providerCfg.Connection.Host == "" {
 		return &dynamic.Configuration{}
 	}
 
@@ -49,7 +49,7 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 
 // buildProviderURL constructs the URL for the provider endpoint.
 func buildProviderURL(cfg *config.ProviderConfig) string {
-	host := cfg.Connection.Host[0]
+	host := cfg.Connection.Host
 	port := cfg.Connection.Port
 	path := cfg.Connection.Path
 	return fmt.Sprintf("http://%s:%d%s", host, port, path)
@@ -91,7 +91,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// HTTP
 	httpConfig = &dynamic.HTTPConfiguration{}
 	if providerCfg.HTTP != nil && providerCfg.HTTP.Discover {
-		if err := parseHTTPConfig(raw, httpConfig, providerCfg.HTTP); err != nil {
+		if err := parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Tunnels); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}
@@ -99,7 +99,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// TCP
 	tcpConfig = &dynamic.TCPConfiguration{}
 	if providerCfg.TCP != nil && providerCfg.TCP.Discover {
-		if err := parseTCPConfig(raw, tcpConfig, providerCfg.TCP); err != nil {
+		if err := parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Tunnels); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}
@@ -107,7 +107,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	// UDP
 	udpConfig = &dynamic.UDPConfiguration{}
 	if providerCfg.UDP != nil && providerCfg.UDP.Discover {
-		if err := parseUDPConfig(raw, udpConfig, providerCfg.UDP); err != nil {
+		if err := parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Tunnels); err != nil {
 			return &dynamic.Configuration{}, err
 		}
 	}

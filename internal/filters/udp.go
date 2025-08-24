@@ -13,7 +13,7 @@ func UDPRouters(routers interface{}, config *config.UDPRoutersConfig) map[string
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(routersMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(routersMap, filters.Name)
 	for name, routerMap := range filtered {
 		router := &dynamic.UDPRouter{}
 		b, err := json.Marshal(routerMap)
@@ -28,11 +28,8 @@ func UDPRouters(routers interface{}, config *config.UDPRoutersConfig) map[string
 				continue
 			}
 		}
-		if filters.Service != "" && router.Service != filters.Service {
-			continue
-		}
-		if filters.ServiceRegex != "" {
-			matched, err := regexMatch(filters.ServiceRegex, router.Service)
+		if filters.Service != "" {
+			matched, err := regexMatch(filters.Service, router.Service)
 			if err != nil || !matched {
 				continue
 			}
@@ -49,7 +46,7 @@ func UDPServices(services interface{}, config *config.UDPServicesConfig) map[str
 		return result
 	}
 	filters := config.Filters
-	filtered := filterMapByNameAndRegex(servicesMap, filters.Name, filters.NameRegex)
+	filtered := filterMapByNameRegex(servicesMap, filters.Name)
 	for name, serviceMap := range filtered {
 		service := &dynamic.UDPService{}
 		b, err := json.Marshal(serviceMap)
