@@ -8,7 +8,8 @@ type ServicesConfig struct {
 }
 
 type ServiceFilter struct {
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Name     string `json:"name,omitempty" yaml:"name,omitempty"`
+	Provider string `json:"provider,omitempty" yaml:"provider,omitempty"`
 }
 
 type ServiceOverrides struct {

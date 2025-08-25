@@ -8,7 +8,7 @@ import (
 
 func applyRouterOverride[T any](filtered map[string]*dynamic.Router, routerFilter config.RouterFilter, value T, apply func(r *dynamic.Router, v T)) {
 	rc := &config.RoutersConfig{Filter: routerFilter}
-	for key, router := range filters.HTTPRouters(filtered, rc) {
+	for key, router := range filters.HTTPRouters(filtered, rc, config.ProviderFilter{}) {
 		apply(router, value)
 		filtered[key] = router
 	}
@@ -31,7 +31,7 @@ func handleRouterOverride(
 
 func applyServiceOverride[T any](filtered map[string]*dynamic.Service, serviceFilter config.ServiceFilter, value T, apply func(r *dynamic.Service, v T)) {
 	rc := &config.ServicesConfig{Filter: serviceFilter}
-	for key, service := range filters.HTTPServices(filtered, rc) {
+	for key, service := range filters.HTTPServices(filtered, rc, config.ProviderFilter{}) {
 		apply(service, value)
 		filtered[key] = service
 	}
@@ -54,7 +54,7 @@ func handleServiceOverride(
 
 func applyTCPServiceOverride[T any](filtered map[string]*dynamic.TCPService, serviceFilter config.ServiceFilter, value T, apply func(r *dynamic.TCPService, v T)) {
 	rc := &config.ServicesConfig{Filter: serviceFilter}
-	for key, service := range filters.TCPServices(filtered, rc) {
+	for key, service := range filters.TCPServices(filtered, rc, config.ProviderFilter{}) {
 		apply(service, value)
 		filtered[key] = service
 	}
@@ -77,7 +77,7 @@ func handleTCPServiceOverride(
 
 func applyUDPServiceOverride[T any](filtered map[string]*dynamic.UDPService, serviceFilter config.ServiceFilter, value T, apply func(r *dynamic.UDPService, v T)) {
 	rc := &config.UDPServicesConfig{Filter: serviceFilter}
-	for key, service := range filters.UDPServices(filtered, rc) {
+	for key, service := range filters.UDPServices(filtered, rc, config.ProviderFilter{}) {
 		apply(service, value)
 		filtered[key] = service
 	}

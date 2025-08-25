@@ -14,7 +14,7 @@ import (
 
 // GenerateConfiguration fetches and parses the dynamic configuration from the remote provider.
 func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configuration {
-	if providerCfg.Connection.Host == "" {
+	if providerCfg.Connection.Host == "" || providerCfg.Connection.Port == 0 || providerCfg.Connection.Path == "" {
 		return &dynamic.Configuration{}
 	}
 
@@ -111,17 +111,17 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 
 	// HTTP
 	if providerCfg.HTTP.Discover {
-		parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Tunnels)
+		parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Filter, providerCfg.Tunnels)
 	}
 
 	// TCP
 	if providerCfg.TCP.Discover {
-		parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Tunnels)
+		parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Filter, providerCfg.Tunnels)
 	}
 
 	// UDP
 	if providerCfg.UDP.Discover {
-		parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Tunnels)
+		parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Filter, providerCfg.Tunnels)
 	}
 
 	// TLS

@@ -19,15 +19,20 @@ func regexMatch(pattern, value string) (bool, error) {
 	return re.MatchString(value), nil
 }
 
-// filterMapByNameRegex filter a map of typed objects by name as regex if set, otherwise exact match.
-func filterMapByNameRegex[T any, R any](
-	input map[string]*T,
-	name string,
-) map[string]R {
+// filterMapByNameRegex filters a map of typed objects by name (regex if set) and provider postfix (regex if set).
+// The provider is extracted from the resource name as the substring after the last '@'.
+func filterMapByNameRegex[T any, R any](input map[string]*T, name string, provider string) map[string]R {
 	result := make(map[string]R)
 	for k, v := range input {
 		if name != "" {
 			matched, err := regexMatch(name, k)
+			if err != nil || !matched {
+				continue
+			}
+		}
+		if provider != "" {
+			prov := extractProviderFromName(k)
+			matched, err := regexMatch(provider, prov)
 			if err != nil || !matched {
 				continue
 			}
@@ -60,4 +65,18 @@ func unmarshalRouter(routerMap map[string]interface{}, router *dynamic.Router) e
 		return err
 	}
 	return json.Unmarshal(b, router)
+}
+
+// extractProviderFromName retrieves the postfix after the last '@' in a resource name.
+// If no '@' is present, it returns an empty string.
+func extractProviderFromName(name string) string {
+	for i := len(name) - 1; i >= 0; i-- {
+		if name[i] == '@' {
+			if i+1 < len(name) {
+				return name[i+1:]
+			}
+			return ""
+		}
+	}
+	return ""
 }

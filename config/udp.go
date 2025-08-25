@@ -9,6 +9,7 @@ type UDPRoutersConfig struct {
 
 type UDPRouterFilter struct {
 	Name        string   `json:"name,omitempty" yaml:"name,omitempty"`
+	Provider    string   `json:"provider,omitempty" yaml:"provider,omitempty"`
 	Entrypoints []string `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
 	Service     string   `json:"service,omitempty" yaml:"service,omitempty"`
 }

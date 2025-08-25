@@ -14,54 +14,9 @@ func CreateConfig() *Config {
 					Port:    8080,
 					Path:    "/api/rawdata",
 					Timeout: "5s",
-					Headers: map[string]string{
-						"Host": "dashboard.traefik.localhost",
-					},
-					MTLS: nil,
 				},
-				HTTP: &HTTPSection{
-					Discover: true,
-					Routers: &RoutersConfig{
-						Discover:         true,
-						DiscoverPriority: false,
-						Filter: RouterFilter{
-							Name:        "",
-							Entrypoints: []string{},
-							Rule:        "",
-							Service:     "",
-						},
-					},
-					Services: &ServicesConfig{
-						Discover: true,
-					},
-					Middlewares: &MiddlewaresConfig{
-						Discover: true,
-					},
-				},
-				TCP: &TCPSection{
-					Discover: true,
-					Routers: &RoutersConfig{
-						Discover:         true,
-						DiscoverPriority: false,
-					},
-					Middlewares: &MiddlewaresConfig{
-						Discover: true,
-					},
-					Services: &ServicesConfig{
-						Discover: true,
-					},
-				},
-				UDP: &UDPSection{
-					Discover: true,
-					Routers: &UDPRoutersConfig{
-						Discover: true,
-					},
-					Services: &UDPServicesConfig{
-						Discover: true,
-					},
-				},
-				TLS: &TLSSection{
-					Discover: true,
+				Filter: ProviderFilter{
+					Provider: "file",
 				},
 			},
 		},
@@ -75,12 +30,17 @@ type Config struct {
 
 type ProviderConfig struct {
 	Name       string           `json:"name,omitempty" yaml:"name,omitempty"`
+	Filter     ProviderFilter   `json:"filter,omitempty" yaml:"filter,omitempty"`
 	Connection ConnectionConfig `json:"connection,omitempty" yaml:"connection,omitempty"`
 	HTTP       *HTTPSection     `json:"http,omitempty" yaml:"http,omitempty"`
 	TCP        *TCPSection      `json:"tcp,omitempty" yaml:"tcp,omitempty"`
 	UDP        *UDPSection      `json:"udp,omitempty" yaml:"udp,omitempty"`
 	TLS        *TLSSection      `json:"tls,omitempty" yaml:"tls,omitempty"`
 	Tunnels    []TunnelConfig   `json:"tunnels,omitempty" yaml:"tunnels,omitempty"`
+}
+
+type ProviderFilter struct {
+	Provider string `json:"provider,omitempty" yaml:"provider,omitempty"`
 }
 
 type ConnectionConfig struct {

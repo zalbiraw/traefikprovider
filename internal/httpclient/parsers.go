@@ -24,7 +24,7 @@ func convertToTyped[T any](data interface{}) map[string]*T {
 	return result
 }
 
-func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection, tunnels []config.TunnelConfig) error {
+func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers == nil {
 		providerConfig.Routers = &config.RoutersConfig{Discover: true}
 	}
@@ -38,7 +38,7 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 	if providerConfig.Routers.Discover {
 		if routers, ok := raw["routers"]; ok {
 			typedRouters := convertToTyped[dynamic.Router](routers)
-			httpConfig.Routers = filters.HTTPRouters(typedRouters, providerConfig.Routers)
+			httpConfig.Routers = filters.HTTPRouters(typedRouters, providerConfig.Routers, pf)
 		}
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
 			b, err := json.Marshal(extra)
@@ -53,13 +53,14 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 				httpConfig.Routers[routerName] = &router
 			}
 		}
+		overrides.StripProvidersHTTP(httpConfig)
 		overrides.OverrideHTTPRouters(httpConfig.Routers, providerConfig.Routers.Overrides)
 	}
 
 	if providerConfig.Services.Discover {
 		if services, ok := raw["services"]; ok {
 			typedServices := convertToTyped[dynamic.Service](services)
-			httpConfig.Services = filters.HTTPServices(typedServices, providerConfig.Services)
+			httpConfig.Services = filters.HTTPServices(typedServices, providerConfig.Services, pf)
 		}
 		for _, extra := range providerConfig.Services.ExtraServices {
 			b, err := json.Marshal(extra)
@@ -74,13 +75,14 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 				httpConfig.Services[serviceName] = &service
 			}
 		}
+		overrides.StripProvidersHTTP(httpConfig)
 		overrides.OverrideHTTPServices(httpConfig.Services, providerConfig.Services.Overrides, tunnels)
 	}
 
 	if providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["middlewares"]; ok {
 			typedMiddlewares := convertToTyped[dynamic.Middleware](middlewares)
-			httpConfig.Middlewares = filters.HTTPMiddlewares(typedMiddlewares, providerConfig.Middlewares)
+			httpConfig.Middlewares = filters.HTTPMiddlewares(typedMiddlewares, providerConfig.Middlewares, pf)
 		}
 		for _, extra := range providerConfig.Middlewares.ExtraMiddlewares {
 			b, err := json.Marshal(extra)
@@ -95,11 +97,12 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 				httpConfig.Middlewares[middlewareName] = &middleware
 			}
 		}
+		overrides.StripProvidersHTTP(httpConfig)
 	}
 	return nil
 }
 
-func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection, tunnels []config.TunnelConfig) error {
+func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers == nil {
 		providerConfig.Routers = &config.RoutersConfig{Discover: true}
 	}
@@ -113,7 +116,7 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 	if providerConfig.Routers.Discover {
 		if routers, ok := raw["tcpRouters"]; ok {
 			typedRouters := convertToTyped[dynamic.TCPRouter](routers)
-			tcpConfig.Routers = filters.TCPRouters(typedRouters, providerConfig.Routers)
+			tcpConfig.Routers = filters.TCPRouters(typedRouters, providerConfig.Routers, pf)
 		}
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
 			b, err := json.Marshal(extra)
@@ -128,13 +131,14 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 				tcpConfig.Routers[routerName] = &router
 			}
 		}
+		overrides.StripProvidersTCP(tcpConfig)
 		overrides.OverrideTCPRouters(tcpConfig.Routers, providerConfig.Routers.Overrides)
 	}
 
 	if providerConfig.Services.Discover {
 		if services, ok := raw["tcpServices"]; ok {
 			typedServices := convertToTyped[dynamic.TCPService](services)
-			tcpConfig.Services = filters.TCPServices(typedServices, providerConfig.Services)
+			tcpConfig.Services = filters.TCPServices(typedServices, providerConfig.Services, pf)
 		}
 		for _, extra := range providerConfig.Services.ExtraServices {
 			b, err := json.Marshal(extra)
@@ -149,13 +153,14 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 				tcpConfig.Services[serviceName] = &service
 			}
 		}
+		overrides.StripProvidersTCP(tcpConfig)
 		overrides.OverrideTCPServices(tcpConfig.Services, providerConfig.Services.Overrides, tunnels)
 	}
 
 	if providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["tcpMiddlewares"]; ok {
 			typedMiddlewares := convertToTyped[dynamic.TCPMiddleware](middlewares)
-			tcpConfig.Middlewares = filters.TCPMiddlewares(typedMiddlewares, providerConfig.Middlewares)
+			tcpConfig.Middlewares = filters.TCPMiddlewares(typedMiddlewares, providerConfig.Middlewares, pf)
 		}
 		for _, extra := range providerConfig.Middlewares.ExtraMiddlewares {
 			b, err := json.Marshal(extra)
@@ -170,11 +175,12 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 				tcpConfig.Middlewares[middlewareName] = &middleware
 			}
 		}
+		overrides.StripProvidersTCP(tcpConfig)
 	}
 	return nil
 }
 
-func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection, tunnels []config.TunnelConfig) error {
+func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers == nil {
 		providerConfig.Routers = &config.UDPRoutersConfig{Discover: true}
 	}
@@ -185,9 +191,8 @@ func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfigurat
 	if providerConfig.Routers.Discover {
 		if routers, ok := raw["udpRouters"]; ok {
 			typedRouters := convertToTyped[dynamic.UDPRouter](routers)
-			udpConfig.Routers = filters.UDPRouters(typedRouters, providerConfig.Routers)
+			udpConfig.Routers = filters.UDPRouters(typedRouters, providerConfig.Routers, pf)
 		}
-		// Append extraRoutes
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -201,15 +206,15 @@ func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfigurat
 				udpConfig.Routers[routerName] = &router
 			}
 		}
+		overrides.StripProvidersUDP(udpConfig)
 		overrides.OverrideUDPRouters(udpConfig.Routers, providerConfig.Routers.Overrides)
 	}
 
 	if providerConfig.Services.Discover {
 		if services, ok := raw["udpServices"]; ok {
 			typedServices := convertToTyped[dynamic.UDPService](services)
-			udpConfig.Services = filters.UDPServices(typedServices, providerConfig.Services)
+			udpConfig.Services = filters.UDPServices(typedServices, providerConfig.Services, pf)
 		}
-		// Append extraServices
 		for _, extra := range providerConfig.Services.ExtraServices {
 			b, err := json.Marshal(extra)
 			if err != nil {
@@ -223,6 +228,7 @@ func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfigurat
 				udpConfig.Services[serviceName] = &service
 			}
 		}
+		overrides.StripProvidersUDP(udpConfig)
 		overrides.OverrideUDPServices(udpConfig.Services, providerConfig.Services.Overrides, tunnels)
 	}
 	return nil

@@ -64,7 +64,7 @@ func TestFilterMapByNameRegex(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := filterMapByNameRegex[struct{}, *struct{}](tt.input, tt.pattern)
+			result := filterMapByNameRegex[struct{}, *struct{}](tt.input, tt.pattern, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d results, got %d", len(tt.expected), len(result))
@@ -100,7 +100,7 @@ func TestFilterMapByNameRegexInvalidPattern(t *testing.T) {
 	}
 
 	// Invalid regex pattern should return empty result
-	result := filterMapByNameRegex[struct{}, *struct{}](input, "[")
+	result := filterMapByNameRegex[struct{}, *struct{}](input, "[", "")
 	if len(result) != 0 {
 		t.Errorf("Expected empty result for invalid regex, got %d items", len(result))
 	}

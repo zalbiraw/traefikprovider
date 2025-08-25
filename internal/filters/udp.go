@@ -5,15 +5,18 @@ import (
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
-func UDPRouters(routers map[string]*dynamic.UDPRouter, config *config.UDPRoutersConfig) map[string]*dynamic.UDPRouter {
+func UDPRouters(routers map[string]*dynamic.UDPRouter, cfg *config.UDPRoutersConfig, pf config.ProviderFilter) map[string]*dynamic.UDPRouter {
 	result := make(map[string]*dynamic.UDPRouter)
-	filter := config.Filter
+	filter := cfg.Filter
+	if pf.Provider != "" {
+		filter.Provider = pf.Provider
+	}
 
-	if filter.Name == "" && len(filter.Entrypoints) == 0 && filter.Service == "" {
+	if filter.Name == "" && filter.Provider == "" && len(filter.Entrypoints) == 0 && filter.Service == "" {
 		return routers
 	}
 
-	filtered := filterMapByNameRegex[dynamic.UDPRouter, *dynamic.UDPRouter](routers, filter.Name)
+	filtered := filterMapByNameRegex[dynamic.UDPRouter, *dynamic.UDPRouter](routers, filter.Name, filter.Provider)
 	for name, router := range filtered {
 		if len(filter.Entrypoints) > 0 {
 			if !routerEntrypointsMatch(router.EntryPoints, filter.Entrypoints) {
@@ -31,15 +34,18 @@ func UDPRouters(routers map[string]*dynamic.UDPRouter, config *config.UDPRouters
 	return result
 }
 
-func UDPServices(services map[string]*dynamic.UDPService, config *config.UDPServicesConfig) map[string]*dynamic.UDPService {
+func UDPServices(services map[string]*dynamic.UDPService, cfg *config.UDPServicesConfig, pf config.ProviderFilter) map[string]*dynamic.UDPService {
 	result := make(map[string]*dynamic.UDPService)
-	filter := config.Filter
+	filter := cfg.Filter
+	if pf.Provider != "" {
+		filter.Provider = pf.Provider
+	}
 
-	if filter.Name == "" {
+	if filter.Name == "" && filter.Provider == "" {
 		return services
 	}
 
-	filtered := filterMapByNameRegex[dynamic.UDPService, *dynamic.UDPService](services, filter.Name)
+	filtered := filterMapByNameRegex[dynamic.UDPService, *dynamic.UDPService](services, filter.Name, filter.Provider)
 	for name, service := range filtered {
 		result[name] = service
 	}

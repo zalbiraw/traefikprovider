@@ -42,6 +42,7 @@ testData:
         discoverPriority: false
         filter:
           name: ""
+          provider: ""
           entrypoints: []
           rule: ""
           service: ""
@@ -87,11 +88,13 @@ testData:
         discover: true
         filter:
           name: ""
+          provider: ""
         extraMiddlewares: []
       services:
         discover: true
         filter:
           name: ""
+          provider: ""
         overrides:
           servers:
           # Override web-app with specific servers
@@ -121,6 +124,7 @@ testData:
         discover: true
         filter:
           name: ""
+          provider: ""
           entrypoints: []
           rule: ""
           service: ""
@@ -166,11 +170,13 @@ testData:
         discover: true
         filter:
           name: ""
+          provider: ""
         extraMiddlewares: []
       services:
         discover: true
         filter:
           name: ""
+          provider: ""
         overrides:
           servers:
           - strategy: ""
@@ -188,6 +194,7 @@ testData:
         discover: true
         filter:
           name: ""
+          provider: ""
           entrypoints: []
           service: ""
         overrides:
@@ -205,6 +212,7 @@ testData:
         discover: true
         filter:
           name: ""
+          provider: ""
         overrides:
           servers:
           - strategy: ""
