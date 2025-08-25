@@ -1,3 +1,4 @@
+// Package overrides applies user-defined overrides to filtered configs.
 package overrides
 
 import (
@@ -7,8 +8,7 @@ import (
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
-// OverrideUDPRouters will later apply overrides to filtered UDP routers.
-
+// OverrideUDPRouters applies override rules to the given UDP routers map.
 func applyOverrideUDP[T any](filtered map[string]*dynamic.UDPRouter, value T, apply func(r *dynamic.UDPRouter, v T)) {
 	for key, router := range filtered {
 		apply(router, value)
@@ -30,6 +30,7 @@ func handleOverrideUDP(
 	}
 }
 
+// OverrideUDPRouters applies overrides to the provided UDP routers map.
 func OverrideUDPRouters(filtered map[string]*dynamic.UDPRouter, overrides config.UDPOverrides) {
 	for _, oep := range overrides.Entrypoints {
 		handleOverrideUDP(filtered, oep.Value,

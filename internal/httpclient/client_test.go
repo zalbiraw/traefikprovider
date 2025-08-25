@@ -135,7 +135,9 @@ func TestGenerateConfiguration(t *testing.T) {
 
 					w.WriteHeader(tt.serverStatus)
 					if tt.serverResponse != "" {
-						w.Write([]byte(tt.serverResponse))
+						if _, err := w.Write([]byte(tt.serverResponse)); err != nil {
+							t.Fatal(err)
+						}
 					}
 				}))
 				defer server.Close()
@@ -438,7 +440,9 @@ func TestGenerateConfigurationIntegration(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
-		w.Write(responseBytes)
+		if _, err := w.Write(responseBytes); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -565,7 +569,9 @@ func TestGenerateConfigurationErrorHandling(t *testing.T) {
 
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(tt.statusCode)
-				w.Write([]byte(tt.serverResponse))
+				if _, err := w.Write([]byte(tt.serverResponse)); err != nil {
+					t.Fatal(err)
+				}
 			}))
 			defer server.Close()
 
@@ -684,7 +690,9 @@ func TestGenerateConfigurationTimeout(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(50 * time.Millisecond)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{}`))
+		if _, err := w.Write([]byte(`{}`)); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -808,7 +816,9 @@ func TestGenerateConfigurationNon200Status(t *testing.T) {
 	// Test with server returning non-200 status
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(404)
-		w.Write([]byte("Not Found"))
+		if _, err := w.Write([]byte("Not Found")); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -830,7 +840,9 @@ func TestGenerateConfigurationParseError(t *testing.T) {
 	// Test with server returning invalid JSON that causes parse error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte("invalid json"))
+		if _, err := w.Write([]byte("invalid json")); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -852,7 +864,9 @@ func TestGenerateConfigurationValidTimeoutParsing(t *testing.T) {
 	// Test with valid timeout that gets parsed correctly
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte(`{"routers": {}}`))
+		if _, err := w.Write([]byte(`{"routers": {}}`)); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -875,7 +889,9 @@ func TestGenerateConfigurationInvalidTimeoutParsing(t *testing.T) {
 	// Test with invalid timeout that fails to parse
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte(`{"routers": {}}`))
+		if _, err := w.Write([]byte(`{"routers": {}}`)); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -921,7 +937,9 @@ func TestGenerateConfigurationSuccessfulParse(t *testing.T) {
 	// Test successful parsing path where parseDynamicConfiguration returns no error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)", "service": "test-service"}}}`))
+		if _, err := w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)", "service": "test-service"}}}`)); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -946,7 +964,9 @@ func TestGenerateConfigurationParseErrorReturnsConfig(t *testing.T) {
 	// Test that when parseDynamicConfiguration returns an error, we still return the config
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		w.Write([]byte(`invalid json that will cause parse error`))
+		if _, err := w.Write([]byte(`invalid json that will cause parse error`)); err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer server.Close()
 
@@ -975,7 +995,9 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(200)
-					w.Write([]byte(`{"routers": {}}`))
+					if _, err := w.Write([]byte(`{"routers": {}}`)); err != nil {
+						t.Fatal(err)
+					}
 				}))
 			},
 			expectResult: true,
@@ -985,7 +1007,9 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(500)
-					w.Write([]byte("Internal Server Error"))
+					if _, err := w.Write([]byte("Internal Server Error")); err != nil {
+						t.Fatal(err)
+					}
 				}))
 			},
 			expectResult: true,
@@ -995,7 +1019,9 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(200)
-					w.Write([]byte("invalid json"))
+					if _, err := w.Write([]byte("invalid json")); err != nil {
+						t.Fatal(err)
+					}
 				}))
 			},
 			expectResult: true,
@@ -1005,7 +1031,9 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(200)
-					w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)"}}}`))
+					if _, err := w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)"}}}`)); err != nil {
+						t.Fatal(err)
+					}
 				}))
 			},
 			expectResult: true,

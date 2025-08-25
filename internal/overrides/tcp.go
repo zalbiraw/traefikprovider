@@ -1,3 +1,4 @@
+// Package overrides applies user-defined overrides to filtered configs.
 package overrides
 
 import (
@@ -28,6 +29,7 @@ func handleOverrideTCP(
 	}
 }
 
+// OverrideTCPRouters applies override rules to the given TCP routers map.
 func OverrideTCPRouters(filtered map[string]*dynamic.TCPRouter, overrides config.RouterOverrides) {
 	for _, oep := range overrides.Entrypoints {
 		handleOverrideTCP(filtered, oep.Value,

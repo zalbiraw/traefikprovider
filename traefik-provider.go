@@ -1,4 +1,4 @@
-// Package traefik-provider contains a demo of the provider's plugin.
+// Package provider implements a Traefik dynamic configuration provider plugin.
 package provider
 
 import (
@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/traefik/genconf/dynamic"
-
 	"github.com/zalbiraw/traefik-provider/config"
 	"github.com/zalbiraw/traefik-provider/internal"
 	"github.com/zalbiraw/traefik-provider/internal/httpclient"
 )
 
+// Provider implements the Traefik provider plugin lifecycle.
 type Provider struct {
 	name         string
 	pollInterval time.Duration
@@ -22,6 +22,7 @@ type Provider struct {
 	cancel       func()
 }
 
+// New creates a new Provider using the given configuration and name.
 func New(ctx context.Context, config *config.Config, name string) (*Provider, error) {
 	if config.PollInterval == "" {
 		return nil, fmt.Errorf("PollInterval is required")
@@ -56,6 +57,7 @@ func New(ctx context.Context, config *config.Config, name string) (*Provider, er
 	}, nil
 }
 
+// Init validates the provider configuration before starting.
 func (p *Provider) Init() error {
 	if p.pollInterval <= 0 {
 		return fmt.Errorf("poll interval must be greater than 0")
@@ -64,6 +66,7 @@ func (p *Provider) Init() error {
 	return nil
 }
 
+// Provide starts the background polling and sends merged configurations to cfgChan.
 func (p *Provider) Provide(cfgChan chan<- json.Marshaler) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	p.cancel = cancel
@@ -101,6 +104,7 @@ func (p *Provider) loadConfiguration(ctx context.Context, cfgChan chan<- json.Ma
 	}
 }
 
+// Stop stops the background polling goroutine.
 func (p *Provider) Stop() error {
 	p.cancel()
 	return nil

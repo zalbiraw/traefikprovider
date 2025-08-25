@@ -298,21 +298,23 @@ func TestIntegrationOverrides(t *testing.T) {
 
 // Helper function to wait for a service to be ready
 func waitForService(ctx context.Context, url string) error {
-	client := &http.Client{Timeout: 5 * time.Second}
+    client := &http.Client{Timeout: 5 * time.Second}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			resp, err := client.Get(url)
-			if err == nil {
-				resp.Body.Close()
-				if resp.StatusCode == 200 {
-					return nil
-				}
-			}
-			time.Sleep(2 * time.Second)
-		}
-	}
+    for {
+        select {
+        case <-ctx.Done():
+            return ctx.Err()
+        default:
+            resp, err := client.Get(url)
+            if err == nil {
+                if cerr := resp.Body.Close(); cerr != nil {
+                    // Closing error is non-fatal for readiness; continue polling.
+                }
+                if resp.StatusCode == 200 {
+                    return nil
+                }
+            }
+            time.Sleep(2 * time.Second)
+        }
+    }
 }

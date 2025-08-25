@@ -1,3 +1,4 @@
+// Package filters provides utilities to filter dynamic configuration objects.
 package filters
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
+// TLSCertificates converts a raw certificates section into typed TLS certificates.
 func TLSCertificates(certificates interface{}, config *config.TLSSection) []*dynamictls.CertAndStores {
 	certs := []*dynamictls.CertAndStores{}
 	certsSlice, ok := certificates.([]interface{})
@@ -31,6 +33,7 @@ func TLSCertificates(certificates interface{}, config *config.TLSSection) []*dyn
 	return certs
 }
 
+// TLSOptions converts a raw options section into a map of TLS options.
 func TLSOptions(options interface{}, config *config.TLSSection) map[string]dynamictls.Options {
 	result := make(map[string]dynamictls.Options)
 	optionsMap, ok := options.(map[string]interface{})
@@ -55,6 +58,7 @@ func TLSOptions(options interface{}, config *config.TLSSection) map[string]dynam
 	return result
 }
 
+// TLSStores converts a raw stores section into a map of TLS stores.
 func TLSStores(stores interface{}, config *config.TLSSection) map[string]dynamictls.Store {
 	result := make(map[string]dynamictls.Store)
 	storesMap, ok := stores.(map[string]interface{})

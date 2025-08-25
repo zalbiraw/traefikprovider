@@ -1,8 +1,8 @@
+// Package internal provides internal utilities for merging configurations.
 package internal
 
 import (
 	"github.com/traefik/genconf/dynamic"
-
 	tlstypes "github.com/traefik/genconf/dynamic/tls"
 )
 
@@ -18,45 +18,65 @@ func MergeConfigurations(configs ...*dynamic.Configuration) *dynamic.Configurati
 		if cfg == nil {
 			continue
 		}
-		if cfg.HTTP != nil {
-			for k, v := range cfg.HTTP.Routers {
-				merged.HTTP.Routers[k] = v
-			}
-			for k, v := range cfg.HTTP.Services {
-				merged.HTTP.Services[k] = v
-			}
-			for k, v := range cfg.HTTP.Middlewares {
-				merged.HTTP.Middlewares[k] = v
-			}
-		}
-		if cfg.TCP != nil {
-			for k, v := range cfg.TCP.Routers {
-				merged.TCP.Routers[k] = v
-			}
-			for k, v := range cfg.TCP.Services {
-				merged.TCP.Services[k] = v
-			}
-			for k, v := range cfg.TCP.Middlewares {
-				merged.TCP.Middlewares[k] = v
-			}
-		}
-		if cfg.UDP != nil {
-			for k, v := range cfg.UDP.Routers {
-				merged.UDP.Routers[k] = v
-			}
-			for k, v := range cfg.UDP.Services {
-				merged.UDP.Services[k] = v
-			}
-		}
-		if cfg.TLS != nil {
-			merged.TLS.Certificates = append(merged.TLS.Certificates, cfg.TLS.Certificates...)
-			for k, v := range cfg.TLS.Options {
-				merged.TLS.Options[k] = v
-			}
-			for k, v := range cfg.TLS.Stores {
-				merged.TLS.Stores[k] = v
-			}
-		}
+		mergeHTTP(merged, cfg)
+		mergeTCP(merged, cfg)
+		mergeUDP(merged, cfg)
+		mergeTLS(merged, cfg)
 	}
 	return merged
+}
+
+func mergeHTTP(dst, src *dynamic.Configuration) {
+	if src.HTTP == nil {
+		return
+	}
+	for k, v := range src.HTTP.Routers {
+		dst.HTTP.Routers[k] = v
+	}
+	for k, v := range src.HTTP.Services {
+		dst.HTTP.Services[k] = v
+	}
+	for k, v := range src.HTTP.Middlewares {
+		dst.HTTP.Middlewares[k] = v
+	}
+}
+
+func mergeTCP(dst, src *dynamic.Configuration) {
+	if src.TCP == nil {
+		return
+	}
+	for k, v := range src.TCP.Routers {
+		dst.TCP.Routers[k] = v
+	}
+	for k, v := range src.TCP.Services {
+		dst.TCP.Services[k] = v
+	}
+	for k, v := range src.TCP.Middlewares {
+		dst.TCP.Middlewares[k] = v
+	}
+}
+
+func mergeUDP(dst, src *dynamic.Configuration) {
+	if src.UDP == nil {
+		return
+	}
+	for k, v := range src.UDP.Routers {
+		dst.UDP.Routers[k] = v
+	}
+	for k, v := range src.UDP.Services {
+		dst.UDP.Services[k] = v
+	}
+}
+
+func mergeTLS(dst, src *dynamic.Configuration) {
+	if src.TLS == nil {
+		return
+	}
+	dst.TLS.Certificates = append(dst.TLS.Certificates, src.TLS.Certificates...)
+	for k, v := range src.TLS.Options {
+		dst.TLS.Options[k] = v
+	}
+	for k, v := range src.TLS.Stores {
+		dst.TLS.Stores[k] = v
+	}
 }

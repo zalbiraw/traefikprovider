@@ -72,3 +72,8 @@ issues:
         - goconst
         - funlen
         - godot
+        - usestdlibvars
+        - errchkjson
+        - errname
+        - errorlint
+        - gochecknoglobals

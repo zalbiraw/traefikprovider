@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"time"
 
 	"github.com/traefik/genconf/dynamic"
-
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
@@ -31,9 +31,9 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 	if err != nil {
 		return &dynamic.Configuration{}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != 200 {
+	if resp.StatusCode != http.StatusOK {
 		return &dynamic.Configuration{}
 	}
 
@@ -53,12 +53,13 @@ func buildProviderURL(cfg *config.ProviderConfig) string {
 	host := cfg.Connection.Host
 	port := cfg.Connection.Port
 	path := cfg.Connection.Path
-	return fmt.Sprintf("http://%s:%d%s", host, port, path)
+	hostPort := net.JoinHostPort(host, fmt.Sprintf("%d", port))
+	return "http://" + hostPort + path
 }
 
 // buildProviderRequest creates an HTTP GET request with headers.
 func buildProviderRequest(url string, headers map[string]string) *http.Request {
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil
 	}
@@ -73,10 +74,6 @@ func buildProviderRequest(url string, headers map[string]string) *http.Request {
 
 // parseDynamicConfiguration parses the response body into a dynamic.Configuration struct.
 func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) (*dynamic.Configuration, error) {
-	var testJson interface{}
-	if err := json.Unmarshal(body, &testJson); err != nil {
-		return &dynamic.Configuration{}, fmt.Errorf("error unmarshaling response body to testJson: %w", err)
-	}
 	var raw map[string]interface{}
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return &dynamic.Configuration{}, fmt.Errorf("error unmarshaling response body to raw map: %w", err)
@@ -89,25 +86,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 		tlsConfig  = &dynamic.TLSConfiguration{}
 	)
 
-	if providerCfg.HTTP == nil {
-		providerCfg.HTTP = &config.HTTPSection{Discover: true}
-	}
-
-	if providerCfg.TCP == nil {
-		providerCfg.TCP = &config.TCPSection{Discover: true}
-	}
-
-	if providerCfg.UDP == nil {
-		providerCfg.UDP = &config.UDPSection{Discover: true}
-	}
-
-	if providerCfg.TLS == nil {
-		providerCfg.TLS = &config.TLSSection{Discover: true}
-	}
-
-	if providerCfg.Tunnels == nil {
-		providerCfg.Tunnels = []config.TunnelConfig{}
-	}
+	ensureProviderDefaults(providerCfg)
 
 	// HTTP
 	if providerCfg.HTTP.Discover {
@@ -136,4 +115,23 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 		TLS:  tlsConfig,
 	}
 	return cfg, nil
+}
+
+// ensureProviderDefaults ensures non-nil sections with default Discover values.
+func ensureProviderDefaults(providerCfg *config.ProviderConfig) {
+	if providerCfg.HTTP == nil {
+		providerCfg.HTTP = &config.HTTPSection{Discover: true}
+	}
+	if providerCfg.TCP == nil {
+		providerCfg.TCP = &config.TCPSection{Discover: true}
+	}
+	if providerCfg.UDP == nil {
+		providerCfg.UDP = &config.UDPSection{Discover: true}
+	}
+	if providerCfg.TLS == nil {
+		providerCfg.TLS = &config.TLSSection{Discover: true}
+	}
+	if providerCfg.Tunnels == nil {
+		providerCfg.Tunnels = []config.TunnelConfig{}
+	}
 }

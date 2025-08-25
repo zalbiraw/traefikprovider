@@ -1,3 +1,4 @@
+// Package filters provides utilities to filter dynamic configuration objects.
 package filters
 
 import (
@@ -5,6 +6,7 @@ import (
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
+// HTTPRouters filters HTTP routers based on `cfg.Filter` and optional provider filter.
 func HTTPRouters(routers map[string]*dynamic.Router, cfg *config.RoutersConfig, pf config.ProviderFilter) map[string]*dynamic.Router {
 	result := make(map[string]*dynamic.Router)
 	filters := cfg.Filter
@@ -21,28 +23,34 @@ func HTTPRouters(routers map[string]*dynamic.Router, cfg *config.RoutersConfig, 
 		if !cfg.DiscoverPriority {
 			router.Priority = 0
 		}
-		if len(filters.Entrypoints) > 0 {
-			if !routerEntrypointsMatch(router.EntryPoints, filters.Entrypoints) {
-				continue
-			}
-		}
-		if filters.Rule != "" {
-			matched, err := regexMatch(filters.Rule, router.Rule)
-			if err != nil || !matched {
-				continue
-			}
-		}
-		if filters.Service != "" {
-			matched, err := regexMatch(filters.Service, router.Service)
-			if err != nil || !matched {
-				continue
-			}
+		if !httpRouterMatches(router, filters) {
+			continue
 		}
 		result[name] = router
 	}
 	return result
 }
 
+func httpRouterMatches(router *dynamic.Router, filters config.RouterFilter) bool {
+	if len(filters.Entrypoints) > 0 && !routerEntrypointsMatch(router.EntryPoints, filters.Entrypoints) {
+		return false
+	}
+	if filters.Rule != "" {
+		matched, err := regexMatch(filters.Rule, router.Rule)
+		if err != nil || !matched {
+			return false
+		}
+	}
+	if filters.Service != "" {
+		matched, err := regexMatch(filters.Service, router.Service)
+		if err != nil || !matched {
+			return false
+		}
+	}
+	return true
+}
+
+// HTTPServices filters HTTP services based on `cfg.Filter` and optional provider filter.
 func HTTPServices(services map[string]*dynamic.Service, cfg *config.ServicesConfig, pf config.ProviderFilter) map[string]*dynamic.Service {
 	result := make(map[string]*dynamic.Service)
 	filter := cfg.Filter
@@ -61,6 +69,7 @@ func HTTPServices(services map[string]*dynamic.Service, cfg *config.ServicesConf
 	return result
 }
 
+// HTTPMiddlewares filters HTTP middlewares based on `cfg.Filter` and optional provider filter.
 func HTTPMiddlewares(middlewares map[string]*dynamic.Middleware, cfg *config.MiddlewaresConfig, pf config.ProviderFilter) map[string]*dynamic.Middleware {
 	result := make(map[string]*dynamic.Middleware)
 	filter := cfg.Filter

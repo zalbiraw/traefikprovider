@@ -1,3 +1,4 @@
+// Package overrides applies user-defined overrides to filtered configs.
 package overrides
 
 import (
@@ -7,6 +8,7 @@ import (
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
+// OverrideHTTPRouters applies override rules to the given HTTP routers map.
 func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.RouterOverrides) {
 	// Rule overrides
 	for _, orule := range overrides.Rules {

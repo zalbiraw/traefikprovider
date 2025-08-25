@@ -1,3 +1,4 @@
+// Package filters provides utilities to filter dynamic configuration objects.
 package filters
 
 import (
@@ -5,6 +6,7 @@ import (
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
+// UDPRouters filters UDP routers based on `cfg.Filter` and optional provider filter.
 func UDPRouters(routers map[string]*dynamic.UDPRouter, cfg *config.UDPRoutersConfig, pf config.ProviderFilter) map[string]*dynamic.UDPRouter {
 	result := make(map[string]*dynamic.UDPRouter)
 	filter := cfg.Filter
@@ -34,6 +36,7 @@ func UDPRouters(routers map[string]*dynamic.UDPRouter, cfg *config.UDPRoutersCon
 	return result
 }
 
+// UDPServices filters UDP services based on `cfg.Filter` and optional provider filter.
 func UDPServices(services map[string]*dynamic.UDPService, cfg *config.UDPServicesConfig, pf config.ProviderFilter) map[string]*dynamic.UDPService {
 	result := make(map[string]*dynamic.UDPService)
 	filter := cfg.Filter
