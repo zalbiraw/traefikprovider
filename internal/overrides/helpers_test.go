@@ -1,6 +1,7 @@
 package overrides
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/traefik/genconf/dynamic"
@@ -159,3 +160,112 @@ func TestApplyUDPServiceOverride(t *testing.T) {
 		t.Error("Expected UDP service to remain in filtered map")
 	}
 }
+
+func TestStripProviderFromKeys(t *testing.T) {
+	m := map[string]*int{"a@p1": ptr(1), "b": ptr(2)}
+	out := StripProviderFromKeys(m)
+	if len(out) != 2 {
+		t.Fatalf("len(out)=%d", len(out))
+	}
+	if _, ok := out["a"]; !ok {
+		t.Fatalf("expected key 'a'")
+	}
+	if _, ok := out["b"]; !ok {
+		t.Fatalf("expected key 'b'")
+	}
+	if out["a"] != m["a@p1"] || out["b"] != m["b"] {
+		t.Fatalf("values not preserved")
+	}
+}
+
+func TestStripProviderRefsRouter_HTTP(t *testing.T) {
+	service := "svc@file"
+	mids := []string{"m1@file", "m2"}
+	StripProviderRefsRouter(&service, &mids)
+	if service != "svc" {
+		t.Fatalf("service=%q", service)
+	}
+	if !reflect.DeepEqual(mids, []string{"m1", "m2"}) {
+		t.Fatalf("middlewares=%v", mids)
+	}
+}
+
+func TestStripProviderRefsRouter_UDP(t *testing.T) {
+	service := "svc@f"
+	StripProviderRefsRouter(&service, nil)
+	if service != "svc" {
+		t.Fatalf("service=%q", service)
+	}
+}
+
+func TestStripProvidersHTTP_TCP_UDP(t *testing.T) {
+	// HTTP
+	httpCfg := &dynamic.HTTPConfiguration{
+		Routers: map[string]*dynamic.Router{
+			"r@p": {Service: "s@p", Middlewares: []string{"m1@p", "m2"}},
+		},
+		Services:    map[string]*dynamic.Service{"s@p": {}},
+		Middlewares: map[string]*dynamic.Middleware{"m1@p": {}, "m2": {}},
+	}
+	StripProvidersHTTP(httpCfg)
+	if _, ok := httpCfg.Routers["r"]; !ok {
+		t.Fatalf("router key not stripped")
+	}
+	if httpCfg.Routers["r"].Service != "s" {
+		t.Fatalf("router service not stripped")
+	}
+	if !reflect.DeepEqual(httpCfg.Routers["r"].Middlewares, []string{"m1", "m2"}) {
+		t.Fatalf("router middlewares not stripped")
+	}
+	if _, ok := httpCfg.Services["s"]; !ok {
+		t.Fatalf("service key not stripped")
+	}
+	if _, ok := httpCfg.Middlewares["m1"]; !ok {
+		t.Fatalf("middleware key not stripped")
+	}
+
+	// TCP
+	tcpCfg := &dynamic.TCPConfiguration{
+		Routers: map[string]*dynamic.TCPRouter{
+			"tr@p": {Service: "ts@p", Middlewares: []string{"tm@p"}},
+		},
+		Services:    map[string]*dynamic.TCPService{"ts@p": {}},
+		Middlewares: map[string]*dynamic.TCPMiddleware{"tm@p": {}},
+	}
+	StripProvidersTCP(tcpCfg)
+	if _, ok := tcpCfg.Routers["tr"]; !ok {
+		t.Fatalf("tcp router key not stripped")
+	}
+	if tcpCfg.Routers["tr"].Service != "ts" {
+		t.Fatalf("tcp router service not stripped")
+	}
+	if !reflect.DeepEqual(tcpCfg.Routers["tr"].Middlewares, []string{"tm"}) {
+		t.Fatalf("tcp router middlewares not stripped")
+	}
+	if _, ok := tcpCfg.Services["ts"]; !ok {
+		t.Fatalf("tcp service key not stripped")
+	}
+	if _, ok := tcpCfg.Middlewares["tm"]; !ok {
+		t.Fatalf("tcp middleware key not stripped")
+	}
+
+	// UDP
+	udpCfg := &dynamic.UDPConfiguration{
+		Routers: map[string]*dynamic.UDPRouter{
+			"ur@p": {Service: "us@p"},
+		},
+		Services: map[string]*dynamic.UDPService{"us@p": {}},
+	}
+	StripProvidersUDP(udpCfg)
+	if _, ok := udpCfg.Routers["ur"]; !ok {
+		t.Fatalf("udp router key not stripped")
+	}
+	if udpCfg.Routers["ur"].Service != "us" {
+		t.Fatalf("udp router service not stripped")
+	}
+	if _, ok := udpCfg.Services["us"]; !ok {
+		t.Fatalf("udp service key not stripped")
+	}
+}
+
+func ptr[T any](v T) *T { return &v }

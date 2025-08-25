@@ -412,3 +412,188 @@ func TestInvalidInputHandling(t *testing.T) {
 		t.Error("Expected empty result for empty UDP services input")
 	}
 }
+
+func TestExtractProviderFromName(t *testing.T) {
+	cases := []struct {
+		in  string
+		out string
+	}{
+		{"", ""},
+		{"noat", ""},
+		{"svc@file", "file"},
+		{"ns/name@kubernetes@file", "file"},
+		{"trailing@", ""},
+	}
+	for _, c := range cases {
+		if got := extractProviderFromName(c.in); got != c.out {
+			t.Fatalf("extractProviderFromName(%q)=%q want %q", c.in, got, c.out)
+		}
+	}
+}
+
+func TestFilterMapByNameRegexProviderInvalid(t *testing.T) {
+	input := map[string]*struct{}{
+		"a@p": {},
+	}
+	// invalid provider regex should yield empty result
+	res := filterMapByNameRegex[struct{}, *struct{}](input, "", "[")
+	if len(res) != 0 {
+		t.Fatalf("expected 0, got %d", len(res))
+	}
+}
+
+func TestHTTPRoutersProviderOverride(t *testing.T) {
+	routers := map[string]*dynamic.Router{
+		"r1@p1": {Rule: "Host(`a`)", Service: "s1"},
+		"r2@p2": {Rule: "Host(`b`)", Service: "s2"},
+	}
+	cfg := &config.RoutersConfig{Filter: config.RouterFilter{Name: ".*", Provider: "p1"}}
+	// ProviderFilter should override filter.Provider to p2
+	out := HTTPRouters(routers, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["r2@p2"]; !ok {
+		t.Fatalf("expected r2@p2 to remain after provider override")
+	}
+}
+
+func TestHTTPRoutersDiscoverPriorityFalse(t *testing.T) {
+	routers := map[string]*dynamic.Router{
+		"r@p": {Rule: "Host(`x`)", Service: "s", Priority: 5, EntryPoints: []string{"web"}},
+	}
+	cfg := &config.RoutersConfig{DiscoverPriority: false, Filter: config.RouterFilter{Name: ".*", Entrypoints: []string{"web"}}}
+	out := HTTPRouters(routers, cfg, config.ProviderFilter{})
+	r := out["r@p"]
+	if r == nil || r.Priority != 0 {
+		t.Fatalf("expected priority reset to 0, got %+v", r)
+	}
+}
+
+func TestHTTPServicesEarlyReturn(t *testing.T) {
+	services := map[string]*dynamic.Service{
+		"a": {},
+		"b": {},
+	}
+	// Empty filter -> early return full map
+	out := HTTPServices(services, &config.ServicesConfig{Filter: config.ServiceFilter{}}, config.ProviderFilter{})
+	if len(out) != 2 {
+		t.Fatalf("expected 2 services, got %d", len(out))
+	}
+}
+
+func TestHTTPMiddlewaresEarlyReturn(t *testing.T) {
+	m := map[string]*dynamic.Middleware{
+		"m1": {},
+		"m2": {},
+	}
+	out := HTTPMiddlewares(m, &config.MiddlewaresConfig{Filter: config.MiddlewareFilter{}}, config.ProviderFilter{})
+	if len(out) != 2 {
+		t.Fatalf("expected 2 middlewares, got %d", len(out))
+	}
+}
+
+func TestHTTPServicesProviderOverride(t *testing.T) {
+	services := map[string]*dynamic.Service{
+		"s1@p1": {},
+		"s2@p2": {},
+	}
+	cfg := &config.ServicesConfig{Filter: config.ServiceFilter{Name: ".*", Provider: "p1"}}
+	out := HTTPServices(services, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["s2@p2"]; !ok {
+		t.Fatalf("expected s2@p2 to remain after provider override")
+	}
+}
+
+func TestHTTPMiddlewaresProviderOverride(t *testing.T) {
+	m := map[string]*dynamic.Middleware{
+		"m1@p1": {},
+		"m2@p2": {},
+	}
+	cfg := &config.MiddlewaresConfig{Filter: config.MiddlewareFilter{Name: ".*", Provider: "p1"}}
+	out := HTTPMiddlewares(m, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["m2@p2"]; !ok {
+		t.Fatalf("expected m2@p2 to remain after provider override")
+	}
+}
+
+func TestTCPServicesProviderOverride(t *testing.T) {
+	services := map[string]*dynamic.TCPService{
+		"ts1@p1": {},
+		"ts2@p2": {},
+	}
+	cfg := &config.ServicesConfig{Filter: config.ServiceFilter{Name: ".*", Provider: "p1"}}
+	out := TCPServices(services, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["ts2@p2"]; !ok {
+		t.Fatalf("expected ts2@p2 to remain after provider override")
+	}
+}
+
+func TestTCPMiddlewaresProviderOverride(t *testing.T) {
+	m := map[string]*dynamic.TCPMiddleware{
+		"tm1@p1": {},
+		"tm2@p2": {},
+	}
+	cfg := &config.MiddlewaresConfig{Filter: config.MiddlewareFilter{Name: ".*", Provider: "p1"}}
+	out := TCPMiddlewares(m, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["tm2@p2"]; !ok {
+		t.Fatalf("expected tm2@p2 to remain after provider override")
+	}
+}
+
+func TestTCPRoutersProviderOverride(t *testing.T) {
+	routers := map[string]*dynamic.TCPRouter{
+		"tr1@p1": {Rule: "HostSNI(`*`)", Service: "s1"},
+		"tr2@p2": {Rule: "HostSNI(`*`)", Service: "s2"},
+	}
+	cfg := &config.RoutersConfig{Filter: config.RouterFilter{Name: ".*", Provider: "p1"}}
+	out := TCPRouters(routers, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["tr2@p2"]; !ok {
+		t.Fatalf("expected tr2@p2 to remain after provider override")
+	}
+}
+
+func TestUDPRoutersProviderOverride(t *testing.T) {
+	routers := map[string]*dynamic.UDPRouter{
+		"ur1@p1": {Service: "s1"},
+		"ur2@p2": {Service: "s2"},
+	}
+	cfg := &config.UDPRoutersConfig{Filter: config.UDPRouterFilter{Name: ".*", Provider: "p1"}}
+	out := UDPRouters(routers, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["ur2@p2"]; !ok {
+		t.Fatalf("expected ur2@p2 to remain after provider override")
+	}
+}
+
+func TestUDPServicesProviderOverride(t *testing.T) {
+	services := map[string]*dynamic.UDPService{
+		"us1@p1": {},
+		"us2@p2": {},
+	}
+	cfg := &config.UDPServicesConfig{Filter: config.ServiceFilter{Name: ".*", Provider: "p1"}}
+	out := UDPServices(services, cfg, config.ProviderFilter{Provider: "p2"})
+	if len(out) != 1 {
+		t.Fatalf("expected 1, got %d", len(out))
+	}
+	if _, ok := out["us2@p2"]; !ok {
+		t.Fatalf("expected us2@p2 to remain after provider override")
+	}
+}
