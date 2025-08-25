@@ -53,10 +53,10 @@ func OverrideUDPRouters(filtered map[string]*dynamic.UDPRouter, overrides config
 func OverrideUDPServices(filtered map[string]*dynamic.UDPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
-		handleUDPServiceOverride(filtered, orule.Filters, orule.Value,
+		handleUDPServiceOverride(filtered, orule.Filter, orule.Value,
 			func(s *dynamic.UDPService, v []string) {
 				servers := []dynamic.UDPServer{}
-				
+
 				// If tunnel is specified, use tunnel addresses instead of v
 				if orule.Tunnel != "" {
 					for _, tunnel := range tunnels {
@@ -65,7 +65,7 @@ func OverrideUDPServices(filtered map[string]*dynamic.UDPService, overrides conf
 						}
 					}
 				}
-				
+
 				// Use the provided addresses (or tunnel addresses)
 				for _, addr := range v {
 					server := dynamic.UDPServer{Address: addr}

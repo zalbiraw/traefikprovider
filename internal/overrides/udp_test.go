@@ -19,7 +19,7 @@ func TestOverrideUDPRouters(t *testing.T) {
 		overrides := config.UDPOverrides{
 			Entrypoints: []config.OverrideEntrypoint{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "udp-router",
 					},
 					Value: []string{"udp-secure", "udp-alt"},
@@ -46,7 +46,7 @@ func TestOverrideUDPRouters(t *testing.T) {
 		overrides := config.UDPOverrides{
 			Entrypoints: []config.OverrideEntrypoint{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "udp-router",
 					},
 					Value: "udp-secure",
@@ -71,7 +71,7 @@ func TestOverrideUDPRouters(t *testing.T) {
 		overrides := config.UDPOverrides{
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "udp-router",
 					},
 					Value: "new-udp-service",
@@ -96,7 +96,7 @@ func TestOverrideUDPRouters(t *testing.T) {
 		overrides := config.UDPOverrides{
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "udp-router",
 					},
 					Value: "prefix-$1-suffix",
@@ -128,7 +128,7 @@ func TestOverrideUDPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "udp-service",
 					},
 					Value: []string{"new-server:8080", "backup-server:8080"},
@@ -161,7 +161,7 @@ func TestOverrideUDPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "udp-service",
 					},
 					Value: "new-server:8080",
@@ -201,7 +201,7 @@ func TestOverrideUDPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "tunnel-service",
 					},
 					Value:  []string{"ignored:8080"},

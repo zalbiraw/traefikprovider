@@ -226,7 +226,7 @@ func TestHTTPRoutersWithEntrypoints(t *testing.T) {
 
 	// Test entrypoint filtering
 	result := HTTPRouters(routers, &config.RoutersConfig{
-		Filters: config.RouterFilters{
+		Filter: config.RouterFilter{
 			Name:        ".*",
 			Entrypoints: []string{"web"},
 		},
@@ -255,7 +255,7 @@ func TestHTTPRoutersWithRuleFilter(t *testing.T) {
 
 	// Test rule filtering
 	result := HTTPRouters(routers, &config.RoutersConfig{
-		Filters: config.RouterFilters{
+		Filter: config.RouterFilter{
 			Name: ".*",
 			Rule: "Host\\(.*\\)",
 		},
@@ -284,7 +284,7 @@ func TestHTTPRoutersWithServiceFilter(t *testing.T) {
 
 	// Test service filtering
 	result := HTTPRouters(routers, &config.RoutersConfig{
-		Filters: config.RouterFilters{
+		Filter: config.RouterFilter{
 			Name:    ".*",
 			Service: "^my-.*",
 		},
@@ -309,7 +309,7 @@ func TestHTTPRoutersWithInvalidData(t *testing.T) {
 	}
 
 	result := HTTPRouters(routers, &config.RoutersConfig{
-		Filters: config.RouterFilters{Name: ".*"},
+		Filter: config.RouterFilter{Name: ".*"},
 	})
 
 	if len(result) != 1 {
@@ -336,7 +336,7 @@ func TestTCPRoutersWithEntrypoints(t *testing.T) {
 	}
 
 	result := TCPRouters(routers, &config.RoutersConfig{
-		Filters: config.RouterFilters{
+		Filter: config.RouterFilter{
 			Name:        ".*",
 			Entrypoints: []string{"tcp-web"},
 		},
@@ -364,7 +364,7 @@ func TestTCPRoutersWithRuleFilter(t *testing.T) {
 	}
 
 	result := TCPRouters(routers, &config.RoutersConfig{
-		Filters: config.RouterFilters{
+		Filter: config.RouterFilter{
 			Name: ".*",
 			Rule: "HostSNI\\(`\\*`\\)",
 		},
@@ -390,7 +390,7 @@ func TestUDPRoutersWithServiceFilter(t *testing.T) {
 	}
 
 	result := UDPRouters(routers, &config.UDPRoutersConfig{
-		Filters: config.UDPRouterFilters{
+		Filter: config.UDPRouterFilter{
 			Name:    ".*",
 			Service: "^dns-.*",
 		},

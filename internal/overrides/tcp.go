@@ -58,10 +58,10 @@ func OverrideTCPRouters(filtered map[string]*dynamic.TCPRouter, overrides config
 func OverrideTCPServices(filtered map[string]*dynamic.TCPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
-		handleTCPServiceOverride(filtered, orule.Filters, orule.Value,
+		handleTCPServiceOverride(filtered, orule.Filter, orule.Value,
 			func(s *dynamic.TCPService, v []string) {
 				servers := []dynamic.TCPServer{}
-				
+
 				// If tunnel is specified, use tunnel addresses instead of v
 				if orule.Tunnel != "" {
 					for _, tunnel := range tunnels {
@@ -70,7 +70,7 @@ func OverrideTCPServices(filtered map[string]*dynamic.TCPService, overrides conf
 						}
 					}
 				}
-				
+
 				// Use the provided addresses (or tunnel addresses)
 				for _, addr := range v {
 					server := dynamic.TCPServer{Address: addr}

@@ -7,7 +7,12 @@ import (
 
 func HTTPRouters(routers map[string]*dynamic.Router, config *config.RoutersConfig) map[string]*dynamic.Router {
 	result := make(map[string]*dynamic.Router)
-	filters := config.Filters
+	filters := config.Filter
+
+	if filters.Name == "" && len(filters.Entrypoints) == 0 && filters.Rule == "" && filters.Service == "" {
+		return routers
+	}
+
 	filtered := filterMapByNameRegex[dynamic.Router, *dynamic.Router](routers, filters.Name)
 	for name, router := range filtered {
 		if !config.DiscoverPriority {
@@ -37,8 +42,13 @@ func HTTPRouters(routers map[string]*dynamic.Router, config *config.RoutersConfi
 
 func HTTPServices(services map[string]*dynamic.Service, config *config.ServicesConfig) map[string]*dynamic.Service {
 	result := make(map[string]*dynamic.Service)
-	filters := config.Filters
-	filtered := filterMapByNameRegex[dynamic.Service, *dynamic.Service](services, filters.Name)
+	filter := config.Filter
+
+	if filter.Name == "" {
+		return services
+	}
+
+	filtered := filterMapByNameRegex[dynamic.Service, *dynamic.Service](services, filter.Name)
 	for name, service := range filtered {
 		result[name] = service
 	}
@@ -47,8 +57,13 @@ func HTTPServices(services map[string]*dynamic.Service, config *config.ServicesC
 
 func HTTPMiddlewares(middlewares map[string]*dynamic.Middleware, config *config.MiddlewaresConfig) map[string]*dynamic.Middleware {
 	result := make(map[string]*dynamic.Middleware)
-	filters := config.Filters
-	filtered := filterMapByNameRegex[dynamic.Middleware, *dynamic.Middleware](middlewares, filters.Name)
+	filter := config.Filter
+
+	if filter.Name == "" {
+		return middlewares
+	}
+
+	filtered := filterMapByNameRegex[dynamic.Middleware, *dynamic.Middleware](middlewares, filter.Name)
 	for name, middleware := range filtered {
 		result[name] = middleware
 	}

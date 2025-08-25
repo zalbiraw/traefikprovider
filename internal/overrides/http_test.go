@@ -19,7 +19,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Rules: []config.OverrideRule{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "test-router",
 					},
 					Value: "Host(`new.example.com`)",
@@ -45,7 +45,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Rules: []config.OverrideRule{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "api-router",
 					},
 					Value: "$1 && PathPrefix(`/v1`)",
@@ -72,7 +72,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "service-router",
 					},
 					Value: "new-service",
@@ -98,7 +98,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "service-router",
 					},
 					Value: "$1-v2",
@@ -125,7 +125,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Entrypoints: []config.OverrideEntrypoint{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "ep-router",
 					},
 					Value: "websecure",
@@ -153,7 +153,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Entrypoints: []config.OverrideEntrypoint{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "ep-router",
 					},
 					Value: []string{"web", "websecure"},
@@ -181,7 +181,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Middlewares: []config.OverrideMiddleware{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "mw-router",
 					},
 					Value: "cors",
@@ -209,7 +209,7 @@ func TestOverrideHTTPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Middlewares: []config.OverrideMiddleware{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "mw-router",
 					},
 					Value: []string{"cors", "ratelimit"},
@@ -241,7 +241,7 @@ func TestOverrideHTTPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "test-service",
 					},
 					Value: []string{"http://new-server:8080", "http://backup-server:8080"},
@@ -274,7 +274,7 @@ func TestOverrideHTTPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "test-service",
 					},
 					Value: "http://new-server:8080",
@@ -314,7 +314,7 @@ func TestOverrideHTTPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "tunnel-service",
 					},
 					Value:  []string{"http://ignored:8080"},
@@ -353,7 +353,7 @@ func TestOverrideHTTPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Healthchecks: []config.OverrideHealthcheck{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "health-service",
 					},
 					Path:     "/health",
@@ -402,7 +402,7 @@ func TestOverrideHTTPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Healthchecks: []config.OverrideHealthcheck{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "health-service",
 					},
 					Path: "/new-health",
@@ -441,7 +441,7 @@ func TestOverrideHTTPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Healthchecks: []config.OverrideHealthcheck{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "no-hc-service",
 					},
 					Path: "/health",

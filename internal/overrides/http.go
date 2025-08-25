@@ -10,7 +10,7 @@ import (
 func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.RouterOverrides) {
 	// Rule overrides
 	for _, orule := range overrides.Rules {
-		applyRouterOverride(filtered, orule.Filters, orule.Value, func(r *dynamic.Router, v string) {
+		applyRouterOverride(filtered, orule.Filter, orule.Value, func(r *dynamic.Router, v string) {
 			if strings.Contains(v, "$1") {
 				r.Rule = strings.ReplaceAll(v, "$1", r.Rule)
 			} else {
@@ -21,7 +21,7 @@ func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.R
 
 	// Entrypoint overrides
 	for _, oep := range overrides.Entrypoints {
-		handleRouterOverride(filtered, oep.Filters, oep.Value,
+		handleRouterOverride(filtered, oep.Filter, oep.Value,
 			func(r *dynamic.Router, arr []string) { r.EntryPoints = arr },
 			func(r *dynamic.Router, s string) { r.EntryPoints = append(r.EntryPoints, s) },
 		)
@@ -29,7 +29,7 @@ func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.R
 
 	// Service overrides
 	for _, osvc := range overrides.Services {
-		applyRouterOverride(filtered, osvc.Filters, osvc.Value, func(r *dynamic.Router, v string) {
+		applyRouterOverride(filtered, osvc.Filter, osvc.Value, func(r *dynamic.Router, v string) {
 			if strings.Contains(v, "$1") {
 				r.Service = strings.ReplaceAll(v, "$1", r.Service)
 			} else {
@@ -40,7 +40,7 @@ func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.R
 
 	// Middlewares overrides
 	for _, omw := range overrides.Middlewares {
-		handleRouterOverride(filtered, omw.Filters, omw.Value,
+		handleRouterOverride(filtered, omw.Filter, omw.Value,
 			func(r *dynamic.Router, arr []string) { r.Middlewares = arr },
 			func(r *dynamic.Router, s string) { r.Middlewares = append(r.Middlewares, s) },
 		)
@@ -51,7 +51,7 @@ func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.R
 func OverrideHTTPServices(filtered map[string]*dynamic.Service, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
-		handleServiceOverride(filtered, orule.Filters, orule.Value,
+		handleServiceOverride(filtered, orule.Filter, orule.Value,
 			func(s *dynamic.Service, v []string) {
 				servers := []dynamic.Server{}
 
@@ -77,7 +77,7 @@ func OverrideHTTPServices(filtered map[string]*dynamic.Service, overrides config
 	}
 	// Healthcheck overrides
 	for _, ohc := range overrides.Healthchecks {
-		applyServiceOverride(filtered, ohc.Filters, ohc, func(s *dynamic.Service, hc config.OverrideHealthcheck) {
+		applyServiceOverride(filtered, ohc.Filter, ohc, func(s *dynamic.Service, hc config.OverrideHealthcheck) {
 			if s.LoadBalancer != nil && s.LoadBalancer.HealthCheck != nil {
 				if hc.Path != "" {
 					s.LoadBalancer.HealthCheck.Path = hc.Path

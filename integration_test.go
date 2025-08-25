@@ -82,16 +82,14 @@ func TestIntegrationBasic(t *testing.T) {
 			t.Fatal("Configuration is nil")
 		}
 
-		// Check for expected provider1 routers (without @file suffix)
-		expectedRouters := []string{"provider1-api", "provider1-web", "provider1-admin", "provider1-test"}
+		expectedRouters := []string{"provider1-api@file", "provider1-web@file", "provider1-admin@file", "provider1-test@file"}
 		for _, routerName := range expectedRouters {
 			if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
 				t.Errorf("Expected router %s not found", routerName)
 			}
 		}
 
-		// Check for expected provider1 services (without @file suffix)
-		expectedServices := []string{"provider1-service", "provider1-web-service", "provider1-admin-service", "provider1-test-service"}
+		expectedServices := []string{"provider1-service@file", "provider1-web-service@file", "provider1-admin-service@file", "provider1-test-service@file"}
 		for _, serviceName := range expectedServices {
 			if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
 				t.Errorf("Expected service %s not found", serviceName)
@@ -113,16 +111,14 @@ func TestIntegrationBasic(t *testing.T) {
 			t.Fatal("Configuration is nil")
 		}
 
-		// Check for expected provider2 routers (without @file suffix)
-		expectedRouters := []string{"provider2-dashboard", "provider2-api", "provider2-secure", "provider2-metrics"}
+		expectedRouters := []string{"provider2-dashboard@file", "provider2-api@file", "provider2-secure@file", "provider2-metrics@file"}
 		for _, routerName := range expectedRouters {
 			if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
 				t.Errorf("Expected router %s not found", routerName)
 			}
 		}
 
-		// Check for expected provider2 services (without @file suffix)
-		expectedServices := []string{"provider2-service", "provider2-api-service", "provider2-secure-service", "provider2-metrics-service"}
+		expectedServices := []string{"provider2-service@file", "provider2-api-service@file", "provider2-secure-service@file", "provider2-metrics-service@file"}
 		for _, serviceName := range expectedServices {
 			if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
 				t.Errorf("Expected service %s not found", serviceName)
@@ -131,8 +127,8 @@ func TestIntegrationBasic(t *testing.T) {
 	})
 }
 
-// TestIntegrationFilters tests basic filtering functionality
-func TestIntegrationFilters(t *testing.T) {
+// TestIntegrationFilter tests basic filtering functionality
+func TestIntegrationFilter(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration tests in short mode")
 	}
@@ -152,7 +148,7 @@ func TestIntegrationFilters(t *testing.T) {
 				Discover: true,
 				Routers: &config.RoutersConfig{
 					Discover: true,
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "provider1-.*",
 					},
 				},
@@ -166,16 +162,6 @@ func TestIntegrationFilters(t *testing.T) {
 
 		if dynCfg.HTTP == nil {
 			t.Fatal("HTTP configuration is nil")
-		}
-
-		// Debug: Print what routers we actually got
-		t.Errorf("Found %d HTTP routers:", len(dynCfg.HTTP.Routers))
-		for name := range dynCfg.HTTP.Routers {
-			t.Errorf("  Router: %s", name)
-		}
-		t.Errorf("Found %d HTTP services:", len(dynCfg.HTTP.Services))
-		for name := range dynCfg.HTTP.Services {
-			t.Errorf("  Service: %s", name)
 		}
 
 		for name := range dynCfg.HTTP.Routers {
@@ -196,7 +182,7 @@ func TestIntegrationFilters(t *testing.T) {
 				Discover: true,
 				Services: &config.ServicesConfig{
 					Discover: true,
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: ".*-service",
 					},
 				},
@@ -246,8 +232,8 @@ func TestIntegrationOverrides(t *testing.T) {
 						Rules: []config.OverrideRule{
 							{
 								Value: "Host(`overridden.example.com`)",
-								Filters: config.RouterFilters{
-									Name: "provider1-api",
+								Filter: config.RouterFilter{
+									Name: "provider1-api@file",
 								},
 							},
 						},
@@ -285,8 +271,8 @@ func TestIntegrationOverrides(t *testing.T) {
 						Entrypoints: []config.OverrideEntrypoint{
 							{
 								Value: []string{"websecure"},
-								Filters: config.RouterFilters{
-									Name: "provider1-web",
+								Filter: config.RouterFilter{
+									Name: "provider1-web@file",
 								},
 							},
 						},
@@ -301,7 +287,7 @@ func TestIntegrationOverrides(t *testing.T) {
 		}
 
 		// Check that the override was applied (this is a basic test - actual override logic may vary)
-		if router, exists := dynCfg.HTTP.Routers["provider1-web"]; exists {
+		if router, exists := dynCfg.HTTP.Routers["provider1-web@file"]; exists {
 			// For now, just verify the router exists - override logic testing would need more complex setup
 			t.Logf("Found router 'provider1-web' with entrypoints: %v", router.EntryPoints)
 		} else {

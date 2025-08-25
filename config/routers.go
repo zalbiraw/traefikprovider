@@ -3,12 +3,12 @@ package config
 type RoutersConfig struct {
 	Discover         bool            `json:"discover,omitempty" yaml:"discover,omitempty"`
 	DiscoverPriority bool            `json:"discoverPriority,omitempty" yaml:"discoverPriority,omitempty"`
-	Filters          RouterFilters   `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Filter           RouterFilter    `json:"filter,omitempty" yaml:"filter,omitempty"`
 	Overrides        RouterOverrides `json:"overrides,omitempty" yaml:"overrides,omitempty"`
 	ExtraRoutes      []interface{}   `json:"extraRoutes,omitempty" yaml:"extraRoutes,omitempty"`
 }
 
-type RouterFilters struct {
+type RouterFilter struct {
 	Name        string   `json:"name,omitempty" yaml:"name,omitempty"`
 	Rule        string   `json:"rule,omitempty" yaml:"rule,omitempty"`
 	Entrypoints []string `json:"entrypoints,omitempty" yaml:"entrypoints,omitempty"`
@@ -24,21 +24,21 @@ type RouterOverrides struct {
 }
 
 type OverrideRule struct {
-	Value   string        `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value  string       `json:"value,omitempty" yaml:"value,omitempty"`
+	Filter RouterFilter `json:"filter,omitempty" yaml:"filter,omitempty"`
 }
 
 type OverrideEntrypoint struct {
-	Value   interface{}   `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value  interface{}  `json:"value,omitempty" yaml:"value,omitempty"`
+	Filter RouterFilter `json:"filter,omitempty" yaml:"filter,omitempty"`
 }
 
 type OverrideService struct {
-	Value   string        `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value  string       `json:"value,omitempty" yaml:"value,omitempty"`
+	Filter RouterFilter `json:"filter,omitempty" yaml:"filter,omitempty"`
 }
 
 type OverrideMiddleware struct {
-	Value   interface{}   `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value  interface{}  `json:"value,omitempty" yaml:"value,omitempty"`
+	Filter RouterFilter `json:"filter,omitempty" yaml:"filter,omitempty"`
 }

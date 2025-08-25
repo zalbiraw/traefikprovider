@@ -19,7 +19,7 @@ func regexMatch(pattern, value string) (bool, error) {
 	return re.MatchString(value), nil
 }
 
-// filterMapByNameRegex filters a map of typed objects by name as regex if set, otherwise exact match.
+// filterMapByNameRegex filter a map of typed objects by name as regex if set, otherwise exact match.
 func filterMapByNameRegex[T any, R any](
 	input map[string]*T,
 	name string,

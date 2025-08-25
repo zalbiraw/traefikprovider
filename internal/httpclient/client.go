@@ -83,10 +83,10 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	}
 
 	var (
-		httpConfig *dynamic.HTTPConfiguration
-		tcpConfig  *dynamic.TCPConfiguration
-		udpConfig  *dynamic.UDPConfiguration
-		tlsConfig  *dynamic.TLSConfiguration
+		httpConfig = &dynamic.HTTPConfiguration{}
+		tcpConfig  = &dynamic.TCPConfiguration{}
+		udpConfig  = &dynamic.UDPConfiguration{}
+		tlsConfig  = &dynamic.TLSConfiguration{}
 	)
 
 	if providerCfg.HTTP == nil {

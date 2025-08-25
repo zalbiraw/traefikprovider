@@ -2,6 +2,7 @@ package filters
 
 import (
 	"encoding/json"
+
 	dynamictls "github.com/traefik/genconf/dynamic/tls"
 	"github.com/zalbiraw/traefik-provider/config"
 )

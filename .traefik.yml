@@ -40,7 +40,7 @@ testData:
       routers:
         discover: true
         discoverPriority: false
-        filters:
+        filter:
           name: ""
           entrypoints: []
           rule: ""
@@ -49,77 +49,77 @@ testData:
           rules:
           # Set
           - value: "Host(`app.traefik.cloud`)"
-            filters: 
+            filter: 
               rule: "Host(`app.traefik.localhost`)"
           # Regex
           - value: "$1 && PathPrefix(`/api/`)"
-            filters: 
+            filter: 
               rule: "Host(`app.traefik`) && PathPrefix(`/api/`)"
           entrypoints:
           # Set
           - value: ["websecure"]
-            filters: 
+            filter: 
               entrypoints: ["web"]
           # Append
           - value: "websecure"
-            filters: 
+            filter: 
               entrypoints: ["web"]
           services:
           # Set
           - value: "apps"
-            filters: 
+            filter: 
               service: "app[123]"
           # Regex
           - value: "$1-service"
-            filters: 
+            filter: 
               service: "app[123]"
           middlewares:
           # Set
           - value: ["jwt", "ratelimit"]
-            filters: 
+            filter: 
               entrypoints: ["web"]
           # Append, if prepend is required, it can bed done at entrypoint level, this allows the notation to be simple
           - value: "ratelimit"
-            filters: 
+            filter: 
               name: "app[123]"
         extraRoutes: []
       middlewares: 
         discover: true
-        filters:
+        filter:
           name: ""
         extraMiddlewares: []
       services:
         discover: true
-        filters:
+        filter:
           name: ""
         overrides:
           servers:
           # Override web-app with specific servers
           - strategy: "wrr"
             value: ["http://new-web-app-1:80", "http://new-web-app-2:80"]
-            filters: 
+            filter: 
               name: "web-app"
           # Override api-service with tunnel
           - tunnel: "web-tunnel"
-            filters: 
+            filter: 
               name: "api-service"
           # Override load-balanced-app servers using regex
           - strategy: "p2c"
             value: ["http://production-lb:80"]
-            filters: 
+            filter: 
               name: "load-balanced.*"
           healthchecks:
           - path: "/api/health"
             interval: "10s"
             timeout: "3s"
-            filters: 
+            filter: 
               name: "health-checked-app"
         extraServices: []
     tcp:
       discover: true
       routers:
         discover: true
-        filters:
+        filter:
           name: ""
           entrypoints: []
           rule: ""
@@ -128,65 +128,65 @@ testData:
           rules:
           # Set
           - value: "HostSNI(`app.traefik.cloud`)"
-            filters: 
+            filter: 
               rule: "HostSNI(`app.traefik.localhost`)"
           # Regex
           - value: "$1 && HostSNI(`dev.app.traefik`)"
-            filters: 
+            filter: 
               rule: "HostSNI(`app.traefik`)"
           entrypoints:
           # Set
           - value: ["websecure"]
-            filters: 
+            filter: 
               entrypoints: ["web"]
           # Append
           - value: "websecure"
-            filters: 
+            filter: 
               entrypoints: ["web"]
           services:
           # Set
           - value: "apps"
-            filters: 
+            filter: 
               service: "app[123]"
           # Regex
           - value: "$1-service"
-            filters: 
+            filter: 
               service: "app[123]"
           middlewares:
           # Set
           - value: ["ip-allow-list"]
-            filters: 
+            filter: 
               entrypoints: ["web"]
           # Append
           - value: "internal-network-allow-list"
-            filters: 
+            filter: 
               name: "app[123]"
         extraRoutes: []
       middlewares:
         discover: true
-        filters:
+        filter:
           name: ""
         extraMiddlewares: []
       services:
         discover: true
-        filters:
+        filter:
           name: ""
         overrides:
           servers:
           - strategy: ""
             value: []
-            filters: {}
+            filter: {}
           - strategy: ""
             value: ""
-            filters: {}
+            filter: {}
           - tunnel: "tunnel1"
-            filters: {}
+            filter: {}
         extraServices: []
     udp:
       discover: true
       routers:
         discover: true
-        filters:
+        filter:
           name: ""
           entrypoints: []
           service: ""
@@ -194,27 +194,27 @@ testData:
           services:
           # Set
           - value: "apps"
-            filters: 
+            filter: 
               service: "app[123]"
           # Regex
           - value: "$1-service"
-            filters: 
+            filter: 
               service: "app[123]"
         extraRoutes: []
       services:
         discover: true
-        filters:
+        filter:
           name: ""
         overrides:
           servers:
           - strategy: ""
             value: []
-            filters: {}
+            filter: {}
           - strategy: ""
             value: ""
-            filters: {}
+            filter: {}
           - tunnel: "tunnel1"
-            filters: {}
+            filter: {}
         extraServices: []
     tls:
       discover: true

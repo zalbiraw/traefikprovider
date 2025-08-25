@@ -14,16 +14,16 @@ func TestApplyRouterOverride(t *testing.T) {
 			Service: "test-service",
 		},
 	}
-	
-	filters := config.RouterFilters{}
-	
+
+	filter := config.RouterFilter{}
+
 	value := "new-rule"
-	
-	applyRouterOverride(filtered, filters, value, func(r *dynamic.Router, v string) {
+
+	applyRouterOverride(filtered, filter, value, func(r *dynamic.Router, v string) {
 		r.Rule = v
 	})
-	
-	// The function should work through the filters system
+
+	// The function should work through the filter system
 	// This is more of an integration test
 	if len(filtered) == 0 {
 		t.Error("Expected router to remain in filtered map")
@@ -44,7 +44,7 @@ func TestHandleRouterOverride(t *testing.T) {
 			value: []string{"web", "websecure"},
 		},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			filtered := map[string]*dynamic.Router{
@@ -54,14 +54,14 @@ func TestHandleRouterOverride(t *testing.T) {
 					EntryPoints: []string{},
 				},
 			}
-			
-			filters := config.RouterFilters{}
-			
-			handleRouterOverride(filtered, filters, tt.value,
+
+			filter := config.RouterFilter{}
+
+			handleRouterOverride(filtered, filter, tt.value,
 				func(r *dynamic.Router, arr []string) { r.EntryPoints = arr },
 				func(r *dynamic.Router, s string) { r.EntryPoints = []string{s} },
 			)
-			
+
 			// Test that function executes without error
 			if len(filtered) == 0 {
 				t.Error("Expected router to remain in filtered map")
@@ -80,12 +80,12 @@ func TestApplyServiceOverride(t *testing.T) {
 			},
 		},
 	}
-	
-	filters := config.ServiceFilters{}
-	
+
+	filter := config.ServiceFilter{}
+
 	value := []string{"http://new-server:8080"}
-	
-	applyServiceOverride(filtered, filters, value, func(s *dynamic.Service, urls []string) {
+
+	applyServiceOverride(filtered, filter, value, func(s *dynamic.Service, urls []string) {
 		if s.LoadBalancer != nil {
 			s.LoadBalancer.Servers = make([]dynamic.Server, len(urls))
 			for i, url := range urls {
@@ -93,7 +93,7 @@ func TestApplyServiceOverride(t *testing.T) {
 			}
 		}
 	})
-	
+
 	// Test that function executes without error
 	if len(filtered) == 0 {
 		t.Error("Expected service to remain in filtered map")
@@ -110,12 +110,12 @@ func TestApplyTCPServiceOverride(t *testing.T) {
 			},
 		},
 	}
-	
-	filters := config.ServiceFilters{}
-	
+
+	filter := config.ServiceFilter{}
+
 	value := []string{"new-server:8080"}
-	
-	applyTCPServiceOverride(filtered, filters, value, func(s *dynamic.TCPService, addresses []string) {
+
+	applyTCPServiceOverride(filtered, filter, value, func(s *dynamic.TCPService, addresses []string) {
 		if s.LoadBalancer != nil {
 			s.LoadBalancer.Servers = make([]dynamic.TCPServer, len(addresses))
 			for i, addr := range addresses {
@@ -123,7 +123,7 @@ func TestApplyTCPServiceOverride(t *testing.T) {
 			}
 		}
 	})
-	
+
 	// Test that function executes without error
 	if len(filtered) == 0 {
 		t.Error("Expected TCP service to remain in filtered map")
@@ -140,12 +140,12 @@ func TestApplyUDPServiceOverride(t *testing.T) {
 			},
 		},
 	}
-	
-	filters := config.ServiceFilters{}
-	
+
+	filter := config.ServiceFilter{}
+
 	value := []string{"new-server:8080"}
-	
-	applyUDPServiceOverride(filtered, filters, value, func(s *dynamic.UDPService, addresses []string) {
+
+	applyUDPServiceOverride(filtered, filter, value, func(s *dynamic.UDPService, addresses []string) {
 		if s.LoadBalancer != nil {
 			s.LoadBalancer.Servers = make([]dynamic.UDPServer, len(addresses))
 			for i, addr := range addresses {
@@ -153,7 +153,7 @@ func TestApplyUDPServiceOverride(t *testing.T) {
 			}
 		}
 	})
-	
+
 	// Test that function executes without error
 	if len(filtered) == 0 {
 		t.Error("Expected UDP service to remain in filtered map")

@@ -15,17 +15,17 @@ func TestOverrideTCPRouters(t *testing.T) {
 				Service: "tcp-service",
 			},
 		}
-		
+
 		// Test rule override logic directly
 		for _, router := range routers {
 			router.Rule = "HostSNI(`new-tcp.example.com`)"
 		}
-		
+
 		if routers["tcp-router"].Rule != "HostSNI(`new-tcp.example.com`)" {
 			t.Errorf("Expected rule 'HostSNI(`new-tcp.example.com`)', got %s", routers["tcp-router"].Rule)
 		}
 	})
-	
+
 	t.Run("entrypoint override with array", func(t *testing.T) {
 		routers := map[string]*dynamic.TCPRouter{
 			"tcp-router": {
@@ -38,7 +38,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Entrypoints: []config.OverrideEntrypoint{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: []string{"tcp-secure", "tcp-alt"},
@@ -66,7 +66,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Entrypoints: []config.OverrideEntrypoint{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: "tcp-secure",
@@ -92,7 +92,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: "new-tcp-service",
@@ -118,7 +118,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: "prefix-$1-suffix",
@@ -146,7 +146,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Middlewares: []config.OverrideMiddleware{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: []string{"tcp-auth", "tcp-ratelimit"},
@@ -174,7 +174,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Middlewares: []config.OverrideMiddleware{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: "tcp-auth",
@@ -214,7 +214,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "any-router",
 					},
 					Value: "new-service",
@@ -244,7 +244,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 		overrides := config.RouterOverrides{
 			Entrypoints: []config.OverrideEntrypoint{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: []string{"tcp-secure"},
@@ -252,7 +252,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 			},
 			Services: []config.OverrideService{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: "new-tcp-service",
@@ -260,7 +260,7 @@ func TestOverrideTCPRouters(t *testing.T) {
 			},
 			Middlewares: []config.OverrideMiddleware{
 				{
-					Filters: config.RouterFilters{
+					Filter: config.RouterFilter{
 						Name: "tcp-router",
 					},
 					Value: []string{"tcp-auth"},
@@ -291,12 +291,12 @@ func TestOverrideTCPRouters(t *testing.T) {
 				Service: "old-tcp-service",
 			},
 		}
-		
+
 		// Test service override logic directly
 		for _, router := range routers {
 			router.Service = "new-tcp-service"
 		}
-		
+
 		if routers["tcp-service-router"].Service != "new-tcp-service" {
 			t.Errorf("Expected service 'new-tcp-service', got %s", routers["tcp-service-router"].Service)
 		}
@@ -314,7 +314,7 @@ func TestOverrideTCPServices(t *testing.T) {
 				},
 			},
 		}
-		
+
 		// Test server override logic directly
 		for _, service := range services {
 			if service.LoadBalancer != nil {
@@ -324,11 +324,11 @@ func TestOverrideTCPServices(t *testing.T) {
 				}
 			}
 		}
-		
+
 		if len(services["tcp-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers, got %d", len(services["tcp-service"].LoadBalancer.Servers))
 		}
-		
+
 		if services["tcp-service"].LoadBalancer.Servers[0].Address != "new-server:8080" {
 			t.Errorf("Expected first server 'new-server:8080', got %s", services["tcp-service"].LoadBalancer.Servers[0].Address)
 		}
@@ -348,7 +348,7 @@ func TestOverrideTCPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "test-service",
 					},
 					Value: []string{"new-server:8080", "backup-server:8080"},
@@ -381,7 +381,7 @@ func TestOverrideTCPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "test-service",
 					},
 					Value: "new-server:8080",
@@ -421,7 +421,7 @@ func TestOverrideTCPServices(t *testing.T) {
 		overrides := config.ServiceOverrides{
 			Servers: []config.OverrideServer{
 				{
-					Filters: config.ServiceFilters{
+					Filter: config.ServiceFilter{
 						Name: "tunnel-service",
 					},
 					Value:  []string{"ignored:8080"},
