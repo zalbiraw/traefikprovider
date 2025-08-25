@@ -1,31 +1,17 @@
 package filters
 
 import (
-	"encoding/json"
-
 	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
-func HTTPRouters(routers interface{}, config *config.RoutersConfig) map[string]*dynamic.Router {
+func HTTPRouters(routers map[string]*dynamic.Router, config *config.RoutersConfig) map[string]*dynamic.Router {
 	result := make(map[string]*dynamic.Router)
-	routersMap, ok := routers.(map[string]interface{})
-	if !ok {
-		return result
-	}
 	filters := config.Filters
-	filtered := filterMapByNameRegex(routersMap, filters.Name)
-	for name, routerMap := range filtered {
-		router := &dynamic.Router{}
-		routerMapTyped, ok := routerMap.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		if config.DiscoverPriority {
-			router.Priority = extractRouterPriority(routerMapTyped, name)
-		}
-		if err := unmarshalRouter(routerMapTyped, router); err != nil {
-			continue
+	filtered := filterMapByNameRegex[dynamic.Router, *dynamic.Router](routers, filters.Name)
+	for name, router := range filtered {
+		if !config.DiscoverPriority {
+			router.Priority = 0
 		}
 		if len(filters.Entrypoints) > 0 {
 			if !routerEntrypointsMatch(router.EntryPoints, filters.Entrypoints) {
@@ -49,67 +35,31 @@ func HTTPRouters(routers interface{}, config *config.RoutersConfig) map[string]*
 	return result
 }
 
-func HTTPServices(services interface{}, config *config.ServicesConfig) map[string]*dynamic.Service {
+func HTTPServices(services map[string]*dynamic.Service, config *config.ServicesConfig) map[string]*dynamic.Service {
 	result := make(map[string]*dynamic.Service)
-	servicesMap, ok := services.(map[string]interface{})
-	if !ok {
-		return result
-	}
 	filters := config.Filters
-	filtered := filterMapByNameRegex(servicesMap, filters.Name)
-	for name, serviceMap := range filtered {
-		service := &dynamic.Service{}
-		b, err := json.Marshal(serviceMap)
-		if err != nil {
-			continue
-		}
-		if err := json.Unmarshal(b, service); err != nil {
-			continue
-		}
+	filtered := filterMapByNameRegex[dynamic.Service, *dynamic.Service](services, filters.Name)
+	for name, service := range filtered {
 		result[name] = service
 	}
 	return result
 }
 
-func HTTPMiddlewares(middlewares interface{}, config *config.MiddlewaresConfig) map[string]*dynamic.Middleware {
+func HTTPMiddlewares(middlewares map[string]*dynamic.Middleware, config *config.MiddlewaresConfig) map[string]*dynamic.Middleware {
 	result := make(map[string]*dynamic.Middleware)
-	middlewaresMap, ok := middlewares.(map[string]interface{})
-	if !ok {
-		return result
-	}
 	filters := config.Filters
-	filtered := filterMapByNameRegex(middlewaresMap, filters.Name)
-	for name, middlewareMap := range filtered {
-		middleware := &dynamic.Middleware{}
-		b, err := json.Marshal(middlewareMap)
-		if err != nil {
-			continue
-		}
-		if err := json.Unmarshal(b, middleware); err != nil {
-			continue
-		}
+	filtered := filterMapByNameRegex[dynamic.Middleware, *dynamic.Middleware](middlewares, filters.Name)
+	for name, middleware := range filtered {
 		result[name] = middleware
 	}
 	return result
 }
 
-func HTTPServerTransports(serverTransports interface{}, config *config.ServerTransportsConfig) map[string]*dynamic.ServersTransport {
+func HTTPServerTransports(serverTransports map[string]*dynamic.ServersTransport, config *config.ServerTransportsConfig) map[string]*dynamic.ServersTransport {
 	result := make(map[string]*dynamic.ServersTransport)
-	stMap, ok := serverTransports.(map[string]interface{})
-	if !ok {
-		return result
-	}
 	filters := config.Filters
-	filtered := filterMapByNameRegex(stMap, filters.Name)
-	for name, stItemMap := range filtered {
-		st := &dynamic.ServersTransport{}
-		b, err := json.Marshal(stItemMap)
-		if err != nil {
-			continue
-		}
-		if err := json.Unmarshal(b, st); err != nil {
-			continue
-		}
+	filtered := filterMapByNameRegex[dynamic.ServersTransport, *dynamic.ServersTransport](serverTransports, filters.Name)
+	for name, st := range filtered {
 		result[name] = st
 	}
 	return result

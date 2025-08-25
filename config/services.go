@@ -17,15 +17,15 @@ type ServiceOverrides struct {
 }
 
 type OverrideServer struct {
-	Strategy string                 `json:"strategy,omitempty" yaml:"strategy,omitempty"`
-	Value    []string               `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters  map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
-	Tunnel   string                 `json:"tunnel,omitempty" yaml:"tunnel,omitempty"`
+	Strategy string         `json:"strategy,omitempty" yaml:"strategy,omitempty"`
+	Value    []string       `json:"value,omitempty" yaml:"value,omitempty"`
+	Filters  ServiceFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Tunnel   string         `json:"tunnel,omitempty" yaml:"tunnel,omitempty"`
 }
 
 type OverrideHealthcheck struct {
-	Path     string                 `json:"path,omitempty" yaml:"path,omitempty"`
-	Interval string                 `json:"interval,omitempty" yaml:"interval,omitempty"`
-	Timeout  string                 `json:"timeout,omitempty" yaml:"timeout,omitempty"`
-	Filters  map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Path     string         `json:"path,omitempty" yaml:"path,omitempty"`
+	Interval string         `json:"interval,omitempty" yaml:"interval,omitempty"`
+	Timeout  string         `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	Filters  ServiceFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 }

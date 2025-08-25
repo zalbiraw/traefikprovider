@@ -3,42 +3,33 @@ package filters
 import (
 	"testing"
 
+	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
 func TestFilterHTTPRouters(t *testing.T) {
 	tests := []struct {
 		name     string
-		routers  map[string]interface{}
+		routers  map[string]*dynamic.Router
 		pattern  string
 		expected []string
 	}{
 		{
 			name: "filter all routers",
-			routers: map[string]interface{}{
-				"web-router":     map[string]interface{}{"rule": "Host(`web.example.com`)", "service": "web-service"},
-				"api-router":     map[string]interface{}{"rule": "Host(`api.example.com`)", "service": "api-service"},
-				"admin@internal": map[string]interface{}{"rule": "Host(`admin.traefik`)", "service": "admin@internal"},
+			routers: map[string]*dynamic.Router{
+				"web-router": {Rule: "Host(`web.example.com`)", Service: "web-service"},
+				"api-router": {Rule: "Host(`api.example.com`)", Service: "api-service"},
 			},
 			pattern:  ".*",
 			expected: []string{"api-router", "web-router"},
 		},
 		{
 			name: "filter specific pattern",
-			routers: map[string]interface{}{
-				"web-router": map[string]interface{}{"rule": "Host(`web.example.com`)", "service": "web-service"},
-				"api-router": map[string]interface{}{"rule": "Host(`api.example.com`)", "service": "api-service"},
+			routers: map[string]*dynamic.Router{
+				"web-router": {Rule: "Host(`web.example.com`)", Service: "web-service"},
+				"api-router": {Rule: "Host(`api.example.com`)", Service: "api-service"},
 			},
 			pattern:  "web-.*",
-			expected: []string{"web-router"},
-		},
-		{
-			name: "exclude internal routers",
-			routers: map[string]interface{}{
-				"web-router":     map[string]interface{}{"rule": "Host(`web.example.com`)", "service": "web-service"},
-				"admin@internal": map[string]interface{}{"rule": "Host(`admin.traefik`)", "service": "admin@internal"},
-			},
-			pattern:  ".*",
 			expected: []string{"web-router"},
 		},
 	}
@@ -64,25 +55,40 @@ func TestFilterHTTPRouters(t *testing.T) {
 func TestFilterHTTPServices(t *testing.T) {
 	tests := []struct {
 		name     string
-		services map[string]interface{}
+		services map[string]*dynamic.Service
 		pattern  string
 		expected []string
 	}{
 		{
 			name: "filter all services",
-			services: map[string]interface{}{
-				"web-service":     map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"url": "http://web:80"}}}},
-				"api-service":     map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"url": "http://api:80"}}}},
-				"admin@internal":  map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"url": "http://admin:80"}}}},
+			services: map[string]*dynamic.Service{
+				"web-service": {
+					LoadBalancer: &dynamic.ServersLoadBalancer{
+						Servers: []dynamic.Server{{URL: "http://web:80"}},
+					},
+				},
+				"api-service": {
+					LoadBalancer: &dynamic.ServersLoadBalancer{
+						Servers: []dynamic.Server{{URL: "http://api:80"}},
+					},
+				},
 			},
 			pattern:  ".*",
 			expected: []string{"api-service", "web-service"},
 		},
 		{
 			name: "filter specific pattern",
-			services: map[string]interface{}{
-				"web-service": map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"url": "http://web:80"}}}},
-				"api-service": map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"url": "http://api:80"}}}},
+			services: map[string]*dynamic.Service{
+				"web-service": {
+					LoadBalancer: &dynamic.ServersLoadBalancer{
+						Servers: []dynamic.Server{{URL: "http://web:80"}},
+					},
+				},
+				"api-service": {
+					LoadBalancer: &dynamic.ServersLoadBalancer{
+						Servers: []dynamic.Server{{URL: "http://api:80"}},
+					},
+				},
 			},
 			pattern:  "web-.*",
 			expected: []string{"web-service"},
@@ -110,24 +116,40 @@ func TestFilterHTTPServices(t *testing.T) {
 func TestFilterHTTPMiddlewares(t *testing.T) {
 	tests := []struct {
 		name        string
-		middlewares map[string]interface{}
+		middlewares map[string]*dynamic.Middleware
 		pattern     string
 		expected    []string
 	}{
 		{
 			name: "filter all middlewares",
-			middlewares: map[string]interface{}{
-				"auth-middleware": map[string]interface{}{"basicAuth": map[string]interface{}{"users": []string{"user:pass"}}},
-				"cors-middleware": map[string]interface{}{"headers": map[string]interface{}{"accessControlAllowOriginList": []string{"*"}}},
+			middlewares: map[string]*dynamic.Middleware{
+				"auth-middleware": {
+					BasicAuth: &dynamic.BasicAuth{
+						Users: []string{"user:pass"},
+					},
+				},
+				"cors-middleware": {
+					Headers: &dynamic.Headers{
+						AccessControlAllowOriginList: []string{"*"},
+					},
+				},
 			},
 			pattern:  ".*",
 			expected: []string{"auth-middleware", "cors-middleware"},
 		},
 		{
 			name: "filter specific pattern",
-			middlewares: map[string]interface{}{
-				"auth-middleware": map[string]interface{}{"basicAuth": map[string]interface{}{"users": []string{"user:pass"}}},
-				"cors-middleware": map[string]interface{}{"headers": map[string]interface{}{"accessControlAllowOriginList": []string{"*"}}},
+			middlewares: map[string]*dynamic.Middleware{
+				"auth-middleware": {
+					BasicAuth: &dynamic.BasicAuth{
+						Users: []string{"user:pass"},
+					},
+				},
+				"cors-middleware": {
+					Headers: &dynamic.Headers{
+						AccessControlAllowOriginList: []string{"*"},
+					},
+				},
 			},
 			pattern:  "auth-.*",
 			expected: []string{"auth-middleware"},
@@ -155,24 +177,32 @@ func TestFilterHTTPMiddlewares(t *testing.T) {
 func TestFilterHTTPServersTransports(t *testing.T) {
 	tests := []struct {
 		name       string
-		transports map[string]interface{}
+		transports map[string]*dynamic.ServersTransport
 		pattern    string
 		expected   []string
 	}{
 		{
 			name: "filter all transports",
-			transports: map[string]interface{}{
-				"secure-transport":   map[string]interface{}{"serverName": "secure.example.com"},
-				"insecure-transport": map[string]interface{}{"insecureSkipVerify": true},
+			transports: map[string]*dynamic.ServersTransport{
+				"secure-transport": {
+					ServerName: "secure.example.com",
+				},
+				"insecure-transport": {
+					InsecureSkipVerify: true,
+				},
 			},
 			pattern:  ".*",
 			expected: []string{"insecure-transport", "secure-transport"},
 		},
 		{
 			name: "filter specific pattern",
-			transports: map[string]interface{}{
-				"secure-transport":   map[string]interface{}{"serverName": "secure.example.com"},
-				"insecure-transport": map[string]interface{}{"insecureSkipVerify": true},
+			transports: map[string]*dynamic.ServersTransport{
+				"secure-transport": {
+					ServerName: "secure.example.com",
+				},
+				"insecure-transport": {
+					InsecureSkipVerify: true,
+				},
 			},
 			pattern:  "^secure-transport$",
 			expected: []string{"secure-transport"},

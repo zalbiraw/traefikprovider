@@ -41,7 +41,7 @@ testData:
         discover: true
         discoverPriority: false
         filters:
-          name: "^(?!.*@internal$).*"
+          name: ""
           entrypoints: []
           rule: ""
           service: ""

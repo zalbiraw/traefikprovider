@@ -3,34 +3,58 @@ package filters
 import (
 	"testing"
 
+	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
 func TestUDPRouters(t *testing.T) {
 	tests := []struct {
 		name     string
-		routers  map[string]interface{}
+		routers  map[string]*dynamic.UDPRouter
 		pattern  string
 		expected []string
 	}{
 		{
 			name: "filter all UDP routers",
-			routers: map[string]interface{}{
-				"udp-router":     map[string]interface{}{"service": "udp-service"},
-				"dns-router":     map[string]interface{}{"service": "dns-service"},
-				"admin@internal": map[string]interface{}{"service": "admin@internal"},
+			routers: map[string]*dynamic.UDPRouter{
+				"udp-router": {
+					Service: "udp-service",
+				},
+				"dns-router": {
+					Service: "dns-service",
+				},
+				"admin": {
+					Service: "admin",
+				},
 			},
 			pattern:  ".*",
-			expected: []string{"dns-router", "udp-router"},
+			expected: []string{"admin", "dns-router", "udp-router"},
 		},
 		{
 			name: "filter specific pattern",
-			routers: map[string]interface{}{
-				"udp-router": map[string]interface{}{"service": "udp-service"},
-				"dns-router": map[string]interface{}{"service": "dns-service"},
+			routers: map[string]*dynamic.UDPRouter{
+				"udp-router": {
+					Service: "udp-service",
+				},
+				"dns-router": {
+					Service: "dns-service",
+				},
 			},
 			pattern:  "udp-.*",
 			expected: []string{"udp-router"},
+		},
+		{
+			name: "filter specific pattern",
+			routers: map[string]*dynamic.UDPRouter{
+				"udp-router": {
+					Service: "udp-service",
+				},
+				"dns-router": {
+					Service: "dns-service",
+				},
+			},
+			pattern:  "dns-.*",
+			expected: []string{"dns-router"},
 		},
 	}
 
@@ -55,25 +79,55 @@ func TestUDPRouters(t *testing.T) {
 func TestUDPServices(t *testing.T) {
 	tests := []struct {
 		name     string
-		services map[string]interface{}
+		services map[string]*dynamic.UDPService
 		pattern  string
 		expected []string
 	}{
 		{
 			name: "filter all UDP services",
-			services: map[string]interface{}{
-				"udp-service":     map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "udp1:53"}}}},
-				"dns-service":     map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "dns1:53"}}}},
-				"admin@internal":  map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "admin:53"}}}},
+			services: map[string]*dynamic.UDPService{
+				"udp-service": {
+					LoadBalancer: &dynamic.UDPServersLoadBalancer{
+						Servers: []dynamic.UDPServer{
+							{Address: "udp1:53"},
+						},
+					},
+				},
+				"dns-service": {
+					LoadBalancer: &dynamic.UDPServersLoadBalancer{
+						Servers: []dynamic.UDPServer{
+							{Address: "dns1:53"},
+						},
+					},
+				},
+				"admin": {
+					LoadBalancer: &dynamic.UDPServersLoadBalancer{
+						Servers: []dynamic.UDPServer{
+							{Address: "admin:53"},
+						},
+					},
+				},
 			},
 			pattern:  ".*",
-			expected: []string{"dns-service", "udp-service"},
+			expected: []string{"admin", "dns-service", "udp-service"},
 		},
 		{
 			name: "filter specific pattern",
-			services: map[string]interface{}{
-				"udp-service": map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "udp1:53"}}}},
-				"dns-service": map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "dns1:53"}}}},
+			services: map[string]*dynamic.UDPService{
+				"udp-service": {
+					LoadBalancer: &dynamic.UDPServersLoadBalancer{
+						Servers: []dynamic.UDPServer{
+							{Address: "udp1:53"},
+						},
+					},
+				},
+				"dns-service": {
+					LoadBalancer: &dynamic.UDPServersLoadBalancer{
+						Servers: []dynamic.UDPServer{
+							{Address: "dns1:53"},
+						},
+					},
+				},
 			},
 			pattern:  "udp-.*",
 			expected: []string{"udp-service"},

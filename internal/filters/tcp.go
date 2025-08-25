@@ -1,28 +1,15 @@
 package filters
 
 import (
-	"encoding/json"
 	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
-func TCPRouters(routers interface{}, config *config.RoutersConfig) map[string]*dynamic.TCPRouter {
+func TCPRouters(routers map[string]*dynamic.TCPRouter, config *config.RoutersConfig) map[string]*dynamic.TCPRouter {
 	result := make(map[string]*dynamic.TCPRouter)
-	routersMap, ok := routers.(map[string]interface{})
-	if !ok {
-		return result
-	}
 	filters := config.Filters
-	filtered := filterMapByNameRegex(routersMap, filters.Name)
-	for name, routerMap := range filtered {
-		router := &dynamic.TCPRouter{}
-		b, err := json.Marshal(routerMap)
-		if err != nil {
-			continue
-		}
-		if err := json.Unmarshal(b, router); err != nil {
-			continue
-		}
+	filtered := filterMapByNameRegex[dynamic.TCPRouter, *dynamic.TCPRouter](routers, filters.Name)
+	for name, router := range filtered {
 		if len(filters.Entrypoints) > 0 {
 			if !routerEntrypointsMatch(router.EntryPoints, filters.Entrypoints) {
 				continue
@@ -45,45 +32,21 @@ func TCPRouters(routers interface{}, config *config.RoutersConfig) map[string]*d
 	return result
 }
 
-func TCPServices(services interface{}, config *config.ServicesConfig) map[string]*dynamic.TCPService {
+func TCPServices(services map[string]*dynamic.TCPService, config *config.ServicesConfig) map[string]*dynamic.TCPService {
 	result := make(map[string]*dynamic.TCPService)
-	servicesMap, ok := services.(map[string]interface{})
-	if !ok {
-		return result
-	}
 	filters := config.Filters
-	filtered := filterMapByNameRegex(servicesMap, filters.Name)
-	for name, serviceMap := range filtered {
-		service := &dynamic.TCPService{}
-		b, err := json.Marshal(serviceMap)
-		if err != nil {
-			continue
-		}
-		if err := json.Unmarshal(b, service); err != nil {
-			continue
-		}
+	filtered := filterMapByNameRegex[dynamic.TCPService, *dynamic.TCPService](services, filters.Name)
+	for name, service := range filtered {
 		result[name] = service
 	}
 	return result
 }
 
-func TCPMiddlewares(middlewares interface{}, config *config.MiddlewaresConfig) map[string]*dynamic.TCPMiddleware {
+func TCPMiddlewares(middlewares map[string]*dynamic.TCPMiddleware, config *config.MiddlewaresConfig) map[string]*dynamic.TCPMiddleware {
 	result := make(map[string]*dynamic.TCPMiddleware)
-	middlewaresMap, ok := middlewares.(map[string]interface{})
-	if !ok {
-		return result
-	}
 	filters := config.Filters
-	filtered := filterMapByNameRegex(middlewaresMap, filters.Name)
-	for name, middlewareMap := range filtered {
-		middleware := &dynamic.TCPMiddleware{}
-		b, err := json.Marshal(middlewareMap)
-		if err != nil {
-			continue
-		}
-		if err := json.Unmarshal(b, middleware); err != nil {
-			continue
-		}
+	filtered := filterMapByNameRegex[dynamic.TCPMiddleware, *dynamic.TCPMiddleware](middlewares, filters.Name)
+	for name, middleware := range filtered {
 		result[name] = middleware
 	}
 	return result

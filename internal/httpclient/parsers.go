@@ -9,10 +9,26 @@ import (
 	"github.com/zalbiraw/traefik-provider/internal/overrides"
 )
 
+func convertToTyped[T any](data interface{}) map[string]*T {
+	result := make(map[string]*T)
+	if dataMap, ok := data.(map[string]interface{}); ok {
+		for name, itemData := range dataMap {
+			item := new(T)
+			if itemMap, ok := itemData.(map[string]interface{}); ok {
+				b, _ := json.Marshal(itemMap)
+				json.Unmarshal(b, item)
+				result[name] = item
+			}
+		}
+	}
+	return result
+}
+
 func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers != nil && providerConfig.Routers.Discover {
 		if routers, ok := raw["routers"]; ok {
-			httpConfig.Routers = filters.HTTPRouters(routers, providerConfig.Routers)
+			typedRouters := convertToTyped[dynamic.Router](routers)
+			httpConfig.Routers = filters.HTTPRouters(typedRouters, providerConfig.Routers)
 		}
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
 			b, err := json.Marshal(extra)
@@ -31,7 +47,8 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 	}
 	if providerConfig.Services != nil && providerConfig.Services.Discover {
 		if services, ok := raw["services"]; ok {
-			httpConfig.Services = filters.HTTPServices(services, providerConfig.Services)
+			typedServices := convertToTyped[dynamic.Service](services)
+			httpConfig.Services = filters.HTTPServices(typedServices, providerConfig.Services)
 		}
 		for _, extra := range providerConfig.Services.ExtraServices {
 			b, err := json.Marshal(extra)
@@ -50,7 +67,8 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 	}
 	if providerConfig.Middlewares != nil && providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["middlewares"]; ok {
-			httpConfig.Middlewares = filters.HTTPMiddlewares(middlewares, providerConfig.Middlewares)
+			typedMiddlewares := convertToTyped[dynamic.Middleware](middlewares)
+			httpConfig.Middlewares = filters.HTTPMiddlewares(typedMiddlewares, providerConfig.Middlewares)
 		}
 		for _, extra := range providerConfig.Middlewares.ExtraMiddlewares {
 			b, err := json.Marshal(extra)
@@ -68,7 +86,8 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 	}
 	if providerConfig.ServerTransports.Discover {
 		if serversTransports, ok := raw["serversTransports"]; ok {
-			httpConfig.ServersTransports = filters.HTTPServerTransports(serversTransports, &providerConfig.ServerTransports)
+			typedServerTransports := convertToTyped[dynamic.ServersTransport](serversTransports)
+			httpConfig.ServersTransports = filters.HTTPServerTransports(typedServerTransports, &providerConfig.ServerTransports)
 		}
 		// Append extraServerTransports
 		for _, extra := range providerConfig.ServerTransports.ExtraServerTransports {
@@ -91,7 +110,8 @@ func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfigu
 func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers != nil && providerConfig.Routers.Discover {
 		if routers, ok := raw["tcpRouters"]; ok {
-			tcpConfig.Routers = filters.TCPRouters(routers, providerConfig.Routers)
+			typedRouters := convertToTyped[dynamic.TCPRouter](routers)
+			tcpConfig.Routers = filters.TCPRouters(typedRouters, providerConfig.Routers)
 		}
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
 			b, err := json.Marshal(extra)
@@ -110,7 +130,8 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 	}
 	if providerConfig.Services != nil && providerConfig.Services.Discover {
 		if services, ok := raw["tcpServices"]; ok {
-			tcpConfig.Services = filters.TCPServices(services, providerConfig.Services)
+			typedServices := convertToTyped[dynamic.TCPService](services)
+			tcpConfig.Services = filters.TCPServices(typedServices, providerConfig.Services)
 		}
 		for _, extra := range providerConfig.Services.ExtraServices {
 			b, err := json.Marshal(extra)
@@ -129,7 +150,8 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 	}
 	if providerConfig.Middlewares != nil && providerConfig.Middlewares.Discover {
 		if middlewares, ok := raw["tcpMiddlewares"]; ok {
-			tcpConfig.Middlewares = filters.TCPMiddlewares(middlewares, providerConfig.Middlewares)
+			typedMiddlewares := convertToTyped[dynamic.TCPMiddleware](middlewares)
+			tcpConfig.Middlewares = filters.TCPMiddlewares(typedMiddlewares, providerConfig.Middlewares)
 		}
 		for _, extra := range providerConfig.Middlewares.ExtraMiddlewares {
 			b, err := json.Marshal(extra)
@@ -151,7 +173,8 @@ func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigurat
 func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection, tunnels []config.TunnelConfig) error {
 	if providerConfig.Routers != nil && providerConfig.Routers.Discover {
 		if routers, ok := raw["udpRouters"]; ok {
-			udpConfig.Routers = filters.UDPRouters(routers, providerConfig.Routers)
+			typedRouters := convertToTyped[dynamic.UDPRouter](routers)
+			udpConfig.Routers = filters.UDPRouters(typedRouters, providerConfig.Routers)
 		}
 		// Append extraRoutes
 		for _, extra := range providerConfig.Routers.ExtraRoutes {
@@ -171,7 +194,8 @@ func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfigurat
 	}
 	if providerConfig.Services != nil && providerConfig.Services.Discover {
 		if services, ok := raw["udpServices"]; ok {
-			udpConfig.Services = filters.UDPServices(services, providerConfig.Services)
+			typedServices := convertToTyped[dynamic.UDPService](services)
+			udpConfig.Services = filters.UDPServices(typedServices, providerConfig.Services)
 		}
 		// Append extraServices
 		for _, extra := range providerConfig.Services.ExtraServices {

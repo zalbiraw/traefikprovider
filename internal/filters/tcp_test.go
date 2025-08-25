@@ -3,31 +3,43 @@ package filters
 import (
 	"testing"
 
+	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
-func TestTCPRouters(t *testing.T) {
+func TestFilterTCPRouters(t *testing.T) {
 	tests := []struct {
 		name     string
-		routers  map[string]interface{}
+		routers  map[string]*dynamic.TCPRouter
 		pattern  string
 		expected []string
 	}{
 		{
-			name: "filter all TCP routers",
-			routers: map[string]interface{}{
-				"tcp-router":     map[string]interface{}{"rule": "HostSNI(`tcp.example.com`)", "service": "tcp-service"},
-				"mysql-router":   map[string]interface{}{"rule": "HostSNI(`mysql.example.com`)", "service": "mysql-service"},
-				"admin@internal": map[string]interface{}{"rule": "HostSNI(`admin.traefik`)", "service": "admin@internal"},
+			name: "filter all routers",
+			routers: map[string]*dynamic.TCPRouter{
+				"tcp-router": {
+					Rule:    "HostSNI(`tcp.example.com`)",
+					Service: "tcp-service",
+				},
+				"mysql-router": {
+					Rule:    "HostSNI(`mysql.example.com`)",
+					Service: "mysql-service",
+				},
 			},
 			pattern:  ".*",
 			expected: []string{"mysql-router", "tcp-router"},
 		},
 		{
 			name: "filter specific pattern",
-			routers: map[string]interface{}{
-				"tcp-router":   map[string]interface{}{"rule": "HostSNI(`tcp.example.com`)", "service": "tcp-service"},
-				"mysql-router": map[string]interface{}{"rule": "HostSNI(`mysql.example.com`)", "service": "mysql-service"},
+			routers: map[string]*dynamic.TCPRouter{
+				"tcp-router": {
+					Rule:    "HostSNI(`tcp.example.com`)",
+					Service: "tcp-service",
+				},
+				"mysql-router": {
+					Rule:    "HostSNI(`mysql.example.com`)",
+					Service: "mysql-service",
+				},
 			},
 			pattern:  "tcp-.*",
 			expected: []string{"tcp-router"},
@@ -55,25 +67,48 @@ func TestTCPRouters(t *testing.T) {
 func TestTCPServices(t *testing.T) {
 	tests := []struct {
 		name     string
-		services map[string]interface{}
+		services map[string]*dynamic.TCPService
 		pattern  string
 		expected []string
 	}{
 		{
 			name: "filter all TCP services",
-			services: map[string]interface{}{
-				"tcp-service":     map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "tcp1:3306"}}}},
-				"mysql-service":   map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "mysql1:3306"}}}},
-				"admin@internal":  map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "admin:3306"}}}},
+			services: map[string]*dynamic.TCPService{
+				"tcp-service": {
+					LoadBalancer: &dynamic.TCPServersLoadBalancer{
+						Servers: []dynamic.TCPServer{
+							{Address: "tcp1:3306"},
+						},
+					},
+				},
+				"mysql-service": {
+					LoadBalancer: &dynamic.TCPServersLoadBalancer{
+						Servers: []dynamic.TCPServer{
+							{Address: "mysql1:3306"},
+						},
+					},
+				},
 			},
 			pattern:  ".*",
 			expected: []string{"mysql-service", "tcp-service"},
 		},
 		{
 			name: "filter specific pattern",
-			services: map[string]interface{}{
-				"tcp-service":   map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "tcp1:3306"}}}},
-				"mysql-service": map[string]interface{}{"loadBalancer": map[string]interface{}{"servers": []interface{}{map[string]interface{}{"address": "mysql1:3306"}}}},
+			services: map[string]*dynamic.TCPService{
+				"tcp-service": {
+					LoadBalancer: &dynamic.TCPServersLoadBalancer{
+						Servers: []dynamic.TCPServer{
+							{Address: "tcp1:3306"},
+						},
+					},
+				},
+				"mysql-service": {
+					LoadBalancer: &dynamic.TCPServersLoadBalancer{
+						Servers: []dynamic.TCPServer{
+							{Address: "mysql1:3306"},
+						},
+					},
+				},
 			},
 			pattern:  "tcp-.*",
 			expected: []string{"tcp-service"},
@@ -101,24 +136,40 @@ func TestTCPServices(t *testing.T) {
 func TestTCPMiddlewares(t *testing.T) {
 	tests := []struct {
 		name        string
-		middlewares map[string]interface{}
+		middlewares map[string]*dynamic.TCPMiddleware
 		pattern     string
 		expected    []string
 	}{
 		{
 			name: "filter all TCP middlewares",
-			middlewares: map[string]interface{}{
-				"tcp-auth":     map[string]interface{}{"ipWhiteList": map[string]interface{}{"sourceRange": []string{"192.168.1.0/24"}}},
-				"tcp-limiter":  map[string]interface{}{"inFlightConn": map[string]interface{}{"amount": 100}},
+			middlewares: map[string]*dynamic.TCPMiddleware{
+				"tcp-auth": {
+					IPWhiteList: &dynamic.TCPIPWhiteList{
+						SourceRange: []string{"192.168.1.0/24"},
+					},
+				},
+				"tcp-limiter": {
+					InFlightConn: &dynamic.TCPInFlightConn{
+						Amount: 100,
+					},
+				},
 			},
 			pattern:  ".*",
 			expected: []string{"tcp-auth", "tcp-limiter"},
 		},
 		{
 			name: "filter specific pattern",
-			middlewares: map[string]interface{}{
-				"tcp-auth":    map[string]interface{}{"ipWhiteList": map[string]interface{}{"sourceRange": []string{"192.168.1.0/24"}}},
-				"tcp-limiter": map[string]interface{}{"inFlightConn": map[string]interface{}{"amount": 100}},
+			middlewares: map[string]*dynamic.TCPMiddleware{
+				"tcp-auth": {
+					IPWhiteList: &dynamic.TCPIPWhiteList{
+						SourceRange: []string{"192.168.1.0/24"},
+					},
+				},
+				"tcp-limiter": {
+					InFlightConn: &dynamic.TCPInFlightConn{
+						Amount: 100,
+					},
+				},
 			},
 			pattern:  "^tcp-auth$",
 			expected: []string{"tcp-auth"},

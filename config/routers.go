@@ -24,21 +24,21 @@ type RouterOverrides struct {
 }
 
 type OverrideRule struct {
-	Value   string                 `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value   string        `json:"value,omitempty" yaml:"value,omitempty"`
+	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
 
 type OverrideEntrypoint struct {
-	Value   []string               `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value   []string      `json:"value,omitempty" yaml:"value,omitempty"`
+	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
 
 type OverrideService struct {
-	Value   string                 `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value   string        `json:"value,omitempty" yaml:"value,omitempty"`
+	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
 
 type OverrideMiddleware struct {
-	Value   []string               `json:"value,omitempty" yaml:"value,omitempty"`
-	Filters map[string]interface{} `json:"filters,omitempty" yaml:"filters,omitempty"`
+	Value   []string      `json:"value,omitempty" yaml:"value,omitempty"`
+	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
