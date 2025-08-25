@@ -73,11 +73,9 @@ func TCPMiddlewares(middlewares interface{}, config *config.MiddlewaresConfig) m
 	if !ok {
 		return result
 	}
-	for name, val := range middlewaresMap {
-		middlewareMap, ok := val.(map[string]interface{})
-		if !ok {
-			continue
-		}
+	filters := config.Filters
+	filtered := filterMapByNameRegex(middlewaresMap, filters.Name)
+	for name, middlewareMap := range filtered {
 		middleware := &dynamic.TCPMiddleware{}
 		b, err := json.Marshal(middlewareMap)
 		if err != nil {

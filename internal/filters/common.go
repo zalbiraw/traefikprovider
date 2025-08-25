@@ -25,20 +25,21 @@ func regexMatch(pattern, value string) (bool, error) {
 func filterMapByNameRegex(
 	input map[string]interface{},
 	name string,
-) map[string]map[string]interface{} {
-	result := make(map[string]map[string]interface{})
+) map[string]interface{} {
+	result := make(map[string]interface{})
 	for k, v := range input {
-		item, ok := v.(map[string]interface{})
-		if !ok {
+		// Skip internal services by default
+		if k != "" && len(k) > 9 && k[len(k)-9:] == "@internal" {
 			continue
 		}
+		
 		if name != "" {
 			matched, err := regexMatch(name, k)
 			if err != nil || !matched {
 				continue
 			}
 		}
-		result[k] = item
+		result[k] = v
 	}
 	return result
 }

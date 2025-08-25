@@ -10,24 +10,31 @@ testData:
   providers:
   - name: "cluster-1"
     connection:
-      # host: ["localhost"]
-      # port: 8080
-      # path: "/api/rawdata"
-      # timeout: "15s"
-      # headers: {}
-      mTLS:
-        caFile: /path/to/ca.crt
-        certFile: /path/to/cert.crt
-        keyFile: /path/to/key
+      host: ["localhost"]
+      port: 8080
+      path: "/api/rawdata"
+      timeout: "15s"
+      headers: {}
+      # mTLS:
+      #   caFile: /path/to/ca.crt
+      #   certFile: /path/to/cert.crt
+      #   keyFile: /path/to/key
     tunnels:
-      # - name: tunnel1
-      #   addresses: [
-      #     "http://localhost:8080",
-      #   ]
-        mTLS:
-          caFile: /path/to/ca.crt
-          certFile: /path/to/cert.crt
-          keyFile: /path/to/key
+      - name: "web-tunnel"
+        addresses: [
+          "http://tunnel-web-1:8080",
+          "http://tunnel-web-2:8080"
+        ]
+      - name: "tcp-tunnel"
+        addresses: [
+          "tcp-tunnel-1:5432",
+          "tcp-tunnel-2:5432"
+        ]
+      - name: "udp-tunnel"
+        addresses: [
+          "udp-tunnel-1:9000",
+          "udp-tunnel-2:9000"
+        ]
     http:
       discover: true
       routers:
@@ -87,19 +94,26 @@ testData:
           name: ""
         overrides:
           servers:
-          - strategy: ""
-            value: []
-            filters: {}
-          - strategy: ""
-            value: ""
-            filters: {}
-          - tunnel: "tunnel1"
-            filters: {}
+          # Override web-app with specific servers
+          - strategy: "wrr"
+            value: ["http://new-web-app-1:80", "http://new-web-app-2:80"]
+            filters: 
+              name: "web-app"
+          # Override api-service with tunnel
+          - tunnel: "web-tunnel"
+            filters: 
+              name: "api-service"
+          # Override load-balanced-app servers using regex
+          - strategy: "p2c"
+            value: ["http://production-lb:80"]
+            filters: 
+              name: "load-balanced.*"
           healthchecks:
-          - path: ""
-            interval: "15s"
-            timeout: "10s"
-            filters: {}
+          - path: "/api/health"
+            interval: "10s"
+            timeout: "3s"
+            filters: 
+              name: "health-checked-app"
         extraServices: []
       serverTransports:
         discover: true

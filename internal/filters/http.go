@@ -17,10 +17,14 @@ func HTTPRouters(routers interface{}, config *config.RoutersConfig) map[string]*
 	filtered := filterMapByNameRegex(routersMap, filters.Name)
 	for name, routerMap := range filtered {
 		router := &dynamic.Router{}
-		if config.DiscoverPriority {
-			router.Priority = extractRouterPriority(routerMap, name)
+		routerMapTyped, ok := routerMap.(map[string]interface{})
+		if !ok {
+			continue
 		}
-		if err := unmarshalRouter(routerMap, router); err != nil {
+		if config.DiscoverPriority {
+			router.Priority = extractRouterPriority(routerMapTyped, name)
+		}
+		if err := unmarshalRouter(routerMapTyped, router); err != nil {
 			continue
 		}
 		if len(filters.Entrypoints) > 0 {

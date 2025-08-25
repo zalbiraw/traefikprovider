@@ -36,6 +36,10 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return &dynamic.Configuration{}
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return &dynamic.Configuration{}
@@ -89,35 +93,39 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 	)
 
 	// HTTP
-	httpConfig = &dynamic.HTTPConfiguration{}
 	if providerCfg.HTTP != nil && providerCfg.HTTP.Discover {
-		if err := parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Tunnels); err != nil {
-			return &dynamic.Configuration{}, err
+		httpConfig = &dynamic.HTTPConfiguration{
+			Routers:           make(map[string]*dynamic.Router),
+			Services:          make(map[string]*dynamic.Service),
+			Middlewares:       make(map[string]*dynamic.Middleware),
+			ServersTransports: make(map[string]*dynamic.ServersTransport),
 		}
+		parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Tunnels)
 	}
 
 	// TCP
-	tcpConfig = &dynamic.TCPConfiguration{}
 	if providerCfg.TCP != nil && providerCfg.TCP.Discover {
-		if err := parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Tunnels); err != nil {
-			return &dynamic.Configuration{}, err
+		tcpConfig = &dynamic.TCPConfiguration{
+			Routers:     make(map[string]*dynamic.TCPRouter),
+			Services:    make(map[string]*dynamic.TCPService),
+			Middlewares: make(map[string]*dynamic.TCPMiddleware),
 		}
+		parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Tunnels)
 	}
 
 	// UDP
-	udpConfig = &dynamic.UDPConfiguration{}
 	if providerCfg.UDP != nil && providerCfg.UDP.Discover {
-		if err := parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Tunnels); err != nil {
-			return &dynamic.Configuration{}, err
+		udpConfig = &dynamic.UDPConfiguration{
+			Routers:  make(map[string]*dynamic.UDPRouter),
+			Services: make(map[string]*dynamic.UDPService),
 		}
+		parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Tunnels)
 	}
 
 	// TLS
-	tlsConfig = &dynamic.TLSConfiguration{}
 	if providerCfg.TLS != nil && providerCfg.TLS.Discover {
-		if err := parseTLSConfig(raw, tlsConfig, providerCfg.TLS); err != nil {
-			return &dynamic.Configuration{}, err
-		}
+		tlsConfig = &dynamic.TLSConfiguration{}
+		parseTLSConfig(raw, tlsConfig, providerCfg.TLS)
 	}
 
 	cfg := &dynamic.Configuration{
