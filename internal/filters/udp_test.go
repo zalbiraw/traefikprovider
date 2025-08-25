@@ -151,3 +151,81 @@ func TestUDPServices(t *testing.T) {
 		})
 	}
 }
+
+func TestUDPRoutersAdvancedFiltering(t *testing.T) {
+	t.Run("filter by entrypoints", func(t *testing.T) {
+		routers := map[string]*dynamic.UDPRouter{
+			"udp-router-1": {
+				Service:     "udp-service-1",
+				EntryPoints: []string{"udp", "udp-secure"},
+			},
+			"udp-router-2": {
+				Service:     "udp-service-2",
+				EntryPoints: []string{"udp-alt"},
+			},
+		}
+
+		config := &config.UDPRoutersConfig{
+			Filters: config.UDPRouterFilters{
+				Entrypoints: []string{"udp"},
+			},
+		}
+
+		result := UDPRouters(routers, config)
+
+		if len(result) != 1 {
+			t.Errorf("Expected 1 router, got %d", len(result))
+		}
+
+		if _, exists := result["udp-router-1"]; !exists {
+			t.Error("Expected udp-router-1 to be in result")
+		}
+	})
+
+	t.Run("filter by service", func(t *testing.T) {
+		routers := map[string]*dynamic.UDPRouter{
+			"udp-router-1": {
+				Service: "udp-service-1",
+			},
+			"udp-router-2": {
+				Service: "udp-service-2",
+			},
+		}
+
+		config := &config.UDPRoutersConfig{
+			Filters: config.UDPRouterFilters{
+				Service: "udp-service-1",
+			},
+		}
+
+		result := UDPRouters(routers, config)
+
+		if len(result) != 1 {
+			t.Errorf("Expected 1 router, got %d", len(result))
+		}
+
+		if _, exists := result["udp-router-1"]; !exists {
+			t.Error("Expected udp-router-1 to be in result")
+		}
+	})
+
+	t.Run("invalid service regex", func(t *testing.T) {
+		routers := map[string]*dynamic.UDPRouter{
+			"udp-router-1": {
+				Service: "udp-service-1",
+			},
+		}
+
+		config := &config.UDPRoutersConfig{
+			Filters: config.UDPRouterFilters{
+				Service: "*", // Invalid regex
+			},
+		}
+
+		result := UDPRouters(routers, config)
+
+		if len(result) != 0 {
+			t.Errorf("Expected 0 routers due to invalid regex, got %d", len(result))
+		}
+	})
+}

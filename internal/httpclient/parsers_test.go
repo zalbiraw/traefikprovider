@@ -1095,3 +1095,490 @@ func TestParseDynamicConfigurationNilSectionPointers(t *testing.T) {
 		t.Error("Expected non-nil configuration")
 	}
 }
+
+func TestParseHTTPConfigExtraItemsWithoutName(t *testing.T) {
+	httpConfig := &dynamic.HTTPConfiguration{
+		Routers:           make(map[string]*dynamic.Router),
+		Services:          make(map[string]*dynamic.Service),
+		Middlewares:       make(map[string]*dynamic.Middleware),
+		ServersTransports: make(map[string]*dynamic.ServersTransport),
+	}
+
+	providerConfig := &config.HTTPSection{
+		Routers: &config.RoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				map[string]interface{}{
+					"rule":    "Host(`test.com`)",
+					"service": "test-service",
+					// Missing "name" field
+				},
+			},
+		},
+		Services: &config.ServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				map[string]interface{}{
+					"loadBalancer": map[string]interface{}{
+						"servers": []interface{}{
+							map[string]interface{}{"url": "http://test:8080"},
+						},
+					},
+					// Missing "name" field
+				},
+			},
+		},
+		Middlewares: &config.MiddlewaresConfig{
+			Discover: true,
+			ExtraMiddlewares: []interface{}{
+				map[string]interface{}{
+					"basicAuth": map[string]interface{}{
+						"users": []string{"test:password"},
+					},
+					// Missing "name" field
+				},
+			},
+		},
+		ServerTransports: config.ServerTransportsConfig{
+			Discover: true,
+			ExtraServerTransports: []interface{}{
+				map[string]interface{}{
+					"serverName": "test.com",
+					// Missing "name" field
+				},
+			},
+		},
+	}
+
+	raw := map[string]interface{}{}
+	err := parseHTTPConfig(raw, httpConfig, providerConfig, nil)
+	if err != nil {
+		t.Errorf("parseHTTPConfig should not return error: %v", err)
+	}
+
+	// Items without name should not be added
+	if len(httpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers, got %d", len(httpConfig.Routers))
+	}
+	if len(httpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services, got %d", len(httpConfig.Services))
+	}
+	if len(httpConfig.Middlewares) != 0 {
+		t.Errorf("Expected 0 middlewares, got %d", len(httpConfig.Middlewares))
+	}
+	if len(httpConfig.ServersTransports) != 0 {
+		t.Errorf("Expected 0 server transports, got %d", len(httpConfig.ServersTransports))
+	}
+}
+
+func TestParseTCPConfigExtraItemsWithoutName(t *testing.T) {
+	tcpConfig := &dynamic.TCPConfiguration{
+		Routers:     make(map[string]*dynamic.TCPRouter),
+		Services:    make(map[string]*dynamic.TCPService),
+		Middlewares: make(map[string]*dynamic.TCPMiddleware),
+	}
+
+	providerConfig := &config.TCPSection{
+		Routers: &config.RoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				map[string]interface{}{
+					"rule":    "HostSNI(`test.com`)",
+					"service": "test-service",
+					// Missing "name" field
+				},
+			},
+		},
+		Services: &config.ServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				map[string]interface{}{
+					"loadBalancer": map[string]interface{}{
+						"servers": []interface{}{
+							map[string]interface{}{"address": "test:8081"},
+						},
+					},
+					// Missing "name" field
+				},
+			},
+		},
+		Middlewares: &config.MiddlewaresConfig{
+			Discover: true,
+			ExtraMiddlewares: []interface{}{
+				map[string]interface{}{
+					"ipWhiteList": map[string]interface{}{
+						"sourceRange": []string{"192.168.1.0/24"},
+					},
+					// Missing "name" field
+				},
+			},
+		},
+	}
+
+	raw := map[string]interface{}{}
+	err := parseTCPConfig(raw, tcpConfig, providerConfig, nil)
+	if err != nil {
+		t.Errorf("parseTCPConfig should not return error: %v", err)
+	}
+
+	// Items without name should not be added
+	if len(tcpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers, got %d", len(tcpConfig.Routers))
+	}
+	if len(tcpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services, got %d", len(tcpConfig.Services))
+	}
+	if len(tcpConfig.Middlewares) != 0 {
+		t.Errorf("Expected 0 middlewares, got %d", len(tcpConfig.Middlewares))
+	}
+}
+
+func TestParseUDPConfigExtraItemsWithoutName(t *testing.T) {
+	udpConfig := &dynamic.UDPConfiguration{
+		Routers:  make(map[string]*dynamic.UDPRouter),
+		Services: make(map[string]*dynamic.UDPService),
+	}
+
+	providerConfig := &config.UDPSection{
+		Routers: &config.UDPRoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				map[string]interface{}{
+					"service": "test-service",
+					// Missing "name" field
+				},
+			},
+		},
+		Services: &config.UDPServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				map[string]interface{}{
+					"loadBalancer": map[string]interface{}{
+						"servers": []interface{}{
+							map[string]interface{}{"address": "test:8082"},
+						},
+					},
+					// Missing "name" field
+				},
+			},
+		},
+	}
+
+	raw := map[string]interface{}{}
+	err := parseUDPConfig(raw, udpConfig, providerConfig, nil)
+	if err != nil {
+		t.Errorf("parseUDPConfig should not return error: %v", err)
+	}
+
+	// Items without name should not be added
+	if len(udpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers, got %d", len(udpConfig.Routers))
+	}
+	if len(udpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services, got %d", len(udpConfig.Services))
+	}
+}
+
+func TestParseConfigMarshalErrors(t *testing.T) {
+	// Test HTTP config marshal errors
+	httpConfig := &dynamic.HTTPConfiguration{
+		Routers:           make(map[string]*dynamic.Router),
+		Services:          make(map[string]*dynamic.Service),
+		Middlewares:       make(map[string]*dynamic.Middleware),
+		ServersTransports: make(map[string]*dynamic.ServersTransport),
+	}
+
+	httpProviderConfig := &config.HTTPSection{
+		Routers: &config.RoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+		Services: &config.ServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+		Middlewares: &config.MiddlewaresConfig{
+			Discover: true,
+			ExtraMiddlewares: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+		ServerTransports: config.ServerTransportsConfig{
+			Discover: true,
+			ExtraServerTransports: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+	}
+
+	err := parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, nil)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// All should be empty due to marshal errors
+	if len(httpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers, got %d", len(httpConfig.Routers))
+	}
+	if len(httpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services, got %d", len(httpConfig.Services))
+	}
+	if len(httpConfig.Middlewares) != 0 {
+		t.Errorf("Expected 0 middlewares, got %d", len(httpConfig.Middlewares))
+	}
+	if len(httpConfig.ServersTransports) != 0 {
+		t.Errorf("Expected 0 server transports, got %d", len(httpConfig.ServersTransports))
+	}
+
+	// Test TCP config marshal errors
+	tcpConfig := &dynamic.TCPConfiguration{
+		Routers:     make(map[string]*dynamic.TCPRouter),
+		Services:    make(map[string]*dynamic.TCPService),
+		Middlewares: make(map[string]*dynamic.TCPMiddleware),
+	}
+
+	tcpProviderConfig := &config.TCPSection{
+		Routers: &config.RoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+		Services: &config.ServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+		Middlewares: &config.MiddlewaresConfig{
+			Discover: true,
+			ExtraMiddlewares: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+	}
+
+	err = parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, nil)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// All should be empty due to marshal errors
+	if len(tcpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers, got %d", len(tcpConfig.Routers))
+	}
+	if len(tcpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services, got %d", len(tcpConfig.Services))
+	}
+	if len(tcpConfig.Middlewares) != 0 {
+		t.Errorf("Expected 0 middlewares, got %d", len(tcpConfig.Middlewares))
+	}
+
+	// Test UDP config marshal errors
+	udpConfig := &dynamic.UDPConfiguration{
+		Routers:  make(map[string]*dynamic.UDPRouter),
+		Services: make(map[string]*dynamic.UDPService),
+	}
+
+	udpProviderConfig := &config.UDPSection{
+		Routers: &config.UDPRoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+		Services: &config.UDPServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				// Channel cannot be marshaled - triggers marshal error continue
+				make(chan int),
+			},
+		},
+	}
+
+	err = parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, nil)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// All should be empty due to marshal errors
+	if len(udpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers, got %d", len(udpConfig.Routers))
+	}
+	if len(udpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services, got %d", len(udpConfig.Services))
+	}
+}
+
+func TestParseConfigUnmarshalErrors(t *testing.T) {
+	// Test HTTP config unmarshal errors
+	httpConfig := &dynamic.HTTPConfiguration{
+		Routers:           make(map[string]*dynamic.Router),
+		Services:          make(map[string]*dynamic.Service),
+		Middlewares:       make(map[string]*dynamic.Middleware),
+		ServersTransports: make(map[string]*dynamic.ServersTransport),
+	}
+
+	httpProviderConfig := &config.HTTPSection{
+		Routers: &config.RoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				map[string]interface{}{
+					"name": "test-router",
+					"rule": 123, // Invalid type - should cause unmarshal error
+				},
+			},
+		},
+		Services: &config.ServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				map[string]interface{}{
+					"name":         "test-service",
+					"loadBalancer": "invalid", // Invalid structure - should cause unmarshal error
+				},
+			},
+		},
+		Middlewares: &config.MiddlewaresConfig{
+			Discover: true,
+			ExtraMiddlewares: []interface{}{
+				map[string]interface{}{
+					"name":      "test-middleware",
+					"basicAuth": "invalid", // Invalid structure - should cause unmarshal error
+				},
+			},
+		},
+		ServerTransports: config.ServerTransportsConfig{
+			Discover: true,
+			ExtraServerTransports: []interface{}{
+				map[string]interface{}{
+					"name":       "test-transport",
+					"serverName": 123, // Invalid type - should cause unmarshal error
+				},
+			},
+		},
+	}
+
+	err := parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, nil)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// All should be empty due to unmarshal errors
+	if len(httpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers due to unmarshal error, got %d", len(httpConfig.Routers))
+	}
+	if len(httpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services due to unmarshal error, got %d", len(httpConfig.Services))
+	}
+	if len(httpConfig.Middlewares) != 0 {
+		t.Errorf("Expected 0 middlewares due to unmarshal error, got %d", len(httpConfig.Middlewares))
+	}
+	if len(httpConfig.ServersTransports) != 0 {
+		t.Errorf("Expected 0 server transports due to unmarshal error, got %d", len(httpConfig.ServersTransports))
+	}
+
+	// Test TCP config unmarshal errors
+	tcpConfig := &dynamic.TCPConfiguration{
+		Routers:     make(map[string]*dynamic.TCPRouter),
+		Services:    make(map[string]*dynamic.TCPService),
+		Middlewares: make(map[string]*dynamic.TCPMiddleware),
+	}
+
+	tcpProviderConfig := &config.TCPSection{
+		Routers: &config.RoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				map[string]interface{}{
+					"name": "test-tcp-router",
+					"rule": 123, // Invalid type - should cause unmarshal error
+				},
+			},
+		},
+		Services: &config.ServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				map[string]interface{}{
+					"name":         "test-tcp-service",
+					"loadBalancer": "invalid", // Invalid structure - should cause unmarshal error
+				},
+			},
+		},
+		Middlewares: &config.MiddlewaresConfig{
+			Discover: true,
+			ExtraMiddlewares: []interface{}{
+				map[string]interface{}{
+					"name":        "test-tcp-middleware",
+					"ipWhiteList": "invalid", // Invalid structure - should cause unmarshal error
+				},
+			},
+		},
+	}
+
+	err = parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, nil)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// All should be empty due to unmarshal errors
+	if len(tcpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers due to unmarshal error, got %d", len(tcpConfig.Routers))
+	}
+	if len(tcpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services due to unmarshal error, got %d", len(tcpConfig.Services))
+	}
+	if len(tcpConfig.Middlewares) != 0 {
+		t.Errorf("Expected 0 middlewares due to unmarshal error, got %d", len(tcpConfig.Middlewares))
+	}
+
+	// Test UDP config unmarshal errors
+	udpConfig := &dynamic.UDPConfiguration{
+		Routers:  make(map[string]*dynamic.UDPRouter),
+		Services: make(map[string]*dynamic.UDPService),
+	}
+
+	udpProviderConfig := &config.UDPSection{
+		Routers: &config.UDPRoutersConfig{
+			Discover: true,
+			ExtraRoutes: []interface{}{
+				map[string]interface{}{
+					"name":        "test-udp-router",
+					"entryPoints": "invalid", // Invalid type - should cause unmarshal error
+				},
+			},
+		},
+		Services: &config.UDPServicesConfig{
+			Discover: true,
+			ExtraServices: []interface{}{
+				map[string]interface{}{
+					"name":         "test-udp-service",
+					"loadBalancer": "invalid", // Invalid structure - should cause unmarshal error
+				},
+			},
+		},
+	}
+
+	err = parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, nil)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// All should be empty due to unmarshal errors
+	if len(udpConfig.Routers) != 0 {
+		t.Errorf("Expected 0 routers due to unmarshal error, got %d", len(udpConfig.Routers))
+	}
+	if len(udpConfig.Services) != 0 {
+		t.Errorf("Expected 0 services due to unmarshal error, got %d", len(udpConfig.Services))
+	}
+}

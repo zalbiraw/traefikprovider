@@ -117,6 +117,17 @@ func TestRegexMatchInvalidPattern(t *testing.T) {
 	}
 }
 
+func TestRegexMatchEmptyPattern(t *testing.T) {
+	// Test empty pattern should return true
+	matched, err := regexMatch("", "test")
+	if err != nil {
+		t.Errorf("Expected no error for empty pattern, got: %v", err)
+	}
+	if !matched {
+		t.Error("Expected match for empty pattern")
+	}
+}
+
 func TestRouterEntrypointsMatch(t *testing.T) {
 	tests := []struct {
 		name      string

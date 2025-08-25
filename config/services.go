@@ -18,7 +18,7 @@ type ServiceOverrides struct {
 
 type OverrideServer struct {
 	Strategy string         `json:"strategy,omitempty" yaml:"strategy,omitempty"`
-	Value    []string       `json:"value,omitempty" yaml:"value,omitempty"`
+	Value    interface{}    `json:"value,omitempty" yaml:"value,omitempty"`
 	Filters  ServiceFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 	Tunnel   string         `json:"tunnel,omitempty" yaml:"tunnel,omitempty"`
 }

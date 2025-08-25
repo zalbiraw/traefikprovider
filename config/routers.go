@@ -29,7 +29,7 @@ type OverrideRule struct {
 }
 
 type OverrideEntrypoint struct {
-	Value   []string      `json:"value,omitempty" yaml:"value,omitempty"`
+	Value   interface{}   `json:"value,omitempty" yaml:"value,omitempty"`
 	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 }
 
@@ -39,6 +39,6 @@ type OverrideService struct {
 }
 
 type OverrideMiddleware struct {
-	Value   []string      `json:"value,omitempty" yaml:"value,omitempty"`
+	Value   interface{}   `json:"value,omitempty" yaml:"value,omitempty"`
 	Filters RouterFilters `json:"filters,omitempty" yaml:"filters,omitempty"`
 }

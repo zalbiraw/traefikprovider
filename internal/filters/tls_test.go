@@ -184,3 +184,46 @@ func TestTLSInvalidData(t *testing.T) {
 		t.Error("Expected empty result for unmarshalable TLS stores")
 	}
 }
+
+func TestTLSCertificatesJSONUnmarshalError(t *testing.T) {
+	// Test certificate with valid JSON marshal but invalid unmarshal
+	certificates := []interface{}{
+		map[string]interface{}{
+			"certFile": 123, // Invalid type for certFile
+			"keyFile":  456, // Invalid type for keyFile
+		},
+	}
+
+	result := TLSCertificates(certificates, nil)
+	if len(result) != 0 {
+		t.Error("Expected empty result for certificate with unmarshal error")
+	}
+}
+
+func TestTLSOptionsJSONUnmarshalError(t *testing.T) {
+	// Test option with valid JSON marshal but invalid unmarshal
+	options := map[string]interface{}{
+		"test": map[string]interface{}{
+			"minVersion": 123, // Invalid type for minVersion
+		},
+	}
+
+	result := TLSOptions(options, nil)
+	if len(result) != 0 {
+		t.Error("Expected empty result for option with unmarshal error")
+	}
+}
+
+func TestTLSStoresJSONUnmarshalError(t *testing.T) {
+	// Test store with valid JSON marshal but invalid unmarshal
+	stores := map[string]interface{}{
+		"test": map[string]interface{}{
+			"defaultCertificate": 123, // Invalid type for defaultCertificate
+		},
+	}
+
+	result := TLSStores(stores, nil)
+	if len(result) != 0 {
+		t.Error("Expected empty result for store with unmarshal error")
+	}
+}

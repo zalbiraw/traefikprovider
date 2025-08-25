@@ -20,9 +20,6 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 
 	url := buildProviderURL(providerCfg)
 	req := buildProviderRequest(url, providerCfg.Connection.Headers)
-	if req == nil {
-		return &dynamic.Configuration{}
-	}
 
 	client := http.DefaultClient
 	if providerCfg.Connection.Timeout != "" {

@@ -762,3 +762,279 @@ func TestParseDynamicConfigurationDiscoverFalse(t *testing.T) {
 		t.Error("Expected non-nil configuration")
 	}
 }
+
+func TestGenerateConfigurationReadBodyError(t *testing.T) {
+	// Test server that closes connection immediately to cause body read error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Length", "100") // Set content length but don't write body
+		w.WriteHeader(200)
+		// Don't write any body, causing a read error
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration even with body read error")
+	}
+}
+
+func TestGenerateConfigurationHTTPClientDoError(t *testing.T) {
+	// Test with a server that immediately closes to cause client.Do error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// This handler won't be reached because we'll close the server
+	}))
+	server.Close() // Close immediately to cause connection error
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration even with HTTP client error")
+	}
+}
+
+func TestGenerateConfigurationNon200Status(t *testing.T) {
+	// Test with server returning non-200 status
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+		w.Write([]byte("Not Found"))
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration even with non-200 status")
+	}
+}
+
+func TestGenerateConfigurationParseError(t *testing.T) {
+	// Test with server returning invalid JSON that causes parse error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration even with parse error")
+	}
+}
+
+func TestGenerateConfigurationValidTimeoutParsing(t *testing.T) {
+	// Test with valid timeout that gets parsed correctly
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte(`{"routers": {}}`))
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host:    server.URL[7:], // Remove http://
+			Path:    "/api",
+			Timeout: "5s", // Valid timeout
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration with valid timeout")
+	}
+}
+
+func TestGenerateConfigurationInvalidTimeoutParsing(t *testing.T) {
+	// Test with invalid timeout that fails to parse
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte(`{"routers": {}}`))
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host:    server.URL[7:], // Remove http://
+			Path:    "/api",
+			Timeout: "invalid-timeout", // Invalid timeout format
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration even with invalid timeout")
+	}
+}
+
+func TestGenerateConfigurationBodyReadError(t *testing.T) {
+	// Create a custom response body that will fail on Read
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		// Don't write anything, but set a content length to trigger read
+	}))
+	server.Close() // Close server to cause read error
+	
+	// Use the closed server URL to trigger network error during body read
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration even with body read error")
+	}
+}
+
+func TestGenerateConfigurationSuccessfulParse(t *testing.T) {
+	// Test successful parsing path where parseDynamicConfiguration returns no error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)", "service": "test-service"}}}`))
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{
+			Discover: true,
+			Routers:  &config.RoutersConfig{Discover: true},
+		},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration for successful parse")
+	}
+}
+
+func TestGenerateConfigurationParseErrorReturnsConfig(t *testing.T) {
+	// Test that when parseDynamicConfiguration returns an error, we still return the config
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Write([]byte(`invalid json that will cause parse error`))
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration even when parse returns error")
+	}
+}
+
+func TestGenerateConfigurationAllPaths(t *testing.T) {
+	tests := []struct {
+		name         string
+		setupServer  func() *httptest.Server
+		expectResult bool
+	}{
+		{
+			name: "successful 200 response with valid JSON",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(200)
+					w.Write([]byte(`{"routers": {}}`))
+				}))
+			},
+			expectResult: true,
+		},
+		{
+			name: "non-200 status code",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(500)
+					w.Write([]byte("Internal Server Error"))
+				}))
+			},
+			expectResult: true,
+		},
+		{
+			name: "200 status with parse error",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(200)
+					w.Write([]byte("invalid json"))
+				}))
+			},
+			expectResult: true,
+		},
+		{
+			name: "200 status with successful parse",
+			setupServer: func() *httptest.Server {
+				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+					w.WriteHeader(200)
+					w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)"}}}`))
+				}))
+			},
+			expectResult: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := tt.setupServer()
+			defer server.Close()
+
+			providerConfig := &config.ProviderConfig{
+				Connection: config.ConnectionConfig{
+					Host: server.URL[7:], // Remove http://
+					Path: "/api",
+				},
+				HTTP: &config.HTTPSection{
+					Discover: true,
+					Routers:  &config.RoutersConfig{Discover: true},
+				},
+			}
+
+			result := GenerateConfiguration(providerConfig)
+			if tt.expectResult && result == nil {
+				t.Error("Expected non-nil configuration")
+			}
+		})
+	}
+}
