@@ -1,0 +1,160 @@
+# Integration Test Configuration
+# This file defines test scenarios for comprehensive integration testing
+
+test_scenarios:
+  http_filters:
+    - name: "Router Name Pattern Filter"
+      provider: "provider1"
+      filter_type: "router_name"
+      pattern: "provider1-.*"
+      expected_count: 4
+      
+    - name: "Router Rule Content Filter"
+      provider: "provider1"
+      filter_type: "router_rule"
+      pattern: ".*admin.*"
+      expected_matches: ["provider1-admin"]
+      
+    - name: "Router Entrypoint Filter"
+      provider: "provider1"
+      filter_type: "router_entrypoint"
+      entrypoints: ["web"]
+      expected_all_match: true
+      
+    - name: "Service Name Filter"
+      provider: "provider2"
+      filter_type: "service_name"
+      pattern: "provider2-.*-service"
+      expected_count: 4
+      
+    - name: "Middleware Type Filter"
+      provider: "provider2"
+      filter_type: "middleware_name"
+      pattern: "provider2-.*"
+      expected_types: ["headers", "rateLimit", "retry", "basicAuth", "stripPrefix"]
+
+  tcp_filters:
+    - name: "TCP Router Name Filter"
+      provider: "provider1"
+      filter_type: "tcp_router_name"
+      pattern: "provider1-redis"
+      expected_count: 1
+      
+    - name: "TCP Service Filter"
+      provider: "provider2"
+      filter_type: "tcp_service_name"
+      pattern: ".*-service"
+      expected_count: 2
+
+  udp_filters:
+    - name: "UDP Router Filter"
+      provider: "provider1"
+      filter_type: "udp_router_name"
+      pattern: "provider1-dns"
+      expected_count: 1
+      
+    - name: "UDP Service Filter"
+      provider: "provider2"
+      filter_type: "udp_service_name"
+      pattern: ".*syslog.*"
+      expected_count: 1
+
+  tls_filters:
+    - name: "TLS Certificate Filter"
+      provider: "provider1"
+      filter_type: "tls_cert_file"
+      pattern: ".*provider1.*"
+      expected_count: 1
+      
+    - name: "TLS Options Filter"
+      provider: "provider2"
+      filter_type: "tls_options_name"
+      pattern: "provider2-tls"
+      expected_count: 1
+      
+    - name: "TLS Store Filter"
+      provider: "provider1"
+      filter_type: "tls_store_name"
+      pattern: "provider1"
+      expected_count: 1
+
+  overrides:
+    - name: "HTTP Router Rule Override"
+      provider: "provider1"
+      override_type: "router_rule"
+      target: "provider1-api"
+      new_value: "Host(`overridden.example.com`)"
+      
+    - name: "HTTP Router Entrypoint Override"
+      provider: "provider1"
+      override_type: "router_entrypoint"
+      target: "provider1-web"
+      new_value: ["websecure"]
+      
+    - name: "HTTP Service Override"
+      provider: "provider1"
+      override_type: "service_name"
+      target: "provider1-service"
+      new_value: "overridden-service"
+      
+    - name: "TCP Router Rule Override"
+      provider: "provider2"
+      override_type: "tcp_router_rule"
+      target: "provider2-database"
+      new_value: "HostSNI(`overridden-tcp.example.com`)"
+      
+    - name: "Middleware Override"
+      provider: "provider2"
+      override_type: "router_middleware"
+      target: "provider2-api"
+      new_value: ["custom-middleware"]
+
+providers:
+  provider1:
+    url: "http://localhost:8081/api/rawdata"
+    host: "localhost"
+    port: 8081
+    path: "/api/rawdata"
+    
+  provider2:
+    url: "http://localhost:8082/api/rawdata"
+    host: "localhost"
+    port: 8082
+    path: "/api/rawdata"
+
+expected_data:
+  provider1:
+    http:
+      routers: 4
+      services: 4
+      middlewares: 4
+      server_transports: 1
+    tcp:
+      routers: 2
+      services: 2
+      middlewares: 1
+    udp:
+      routers: 2
+      services: 2
+    tls:
+      certificates: 1
+      options: 1
+      stores: 1
+      
+  provider2:
+    http:
+      routers: 4
+      services: 4
+      middlewares: 5
+      server_transports: 1
+    tcp:
+      routers: 2
+      services: 2
+      middlewares: 1
+    udp:
+      routers: 2
+      services: 2
+    tls:
+      certificates: 1
+      options: 1
+      stores: 1
