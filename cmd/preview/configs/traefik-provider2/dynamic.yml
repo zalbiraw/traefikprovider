@@ -1,0 +1,81 @@
+http:
+  routers:
+    provider2-dashboard:
+      rule: "Host(`provider2.example.com`)"
+      service: "provider2-service"
+      middlewares:
+        - "provider2-cors"
+    
+    provider2-api:
+      rule: "Host(`provider2.example.com`) && PathPrefix(`/api`)"
+      service: "provider2-api-service"
+      middlewares:
+        - "provider2-rate-limit"
+
+  services:
+    provider2-service:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"
+        healthCheck:
+          path: "/health"
+          interval: "10s"
+    
+    provider2-api-service:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"
+          - url: "http://nginx:80"
+
+  middlewares:
+    provider2-cors:
+      headers:
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+        accessControlAllowOriginList:
+          - "https://provider2.example.com"
+    
+    provider2-rate-limit:
+      rateLimit:
+        burst: 50
+        average: 25
+    
+    provider2-retry:
+      retry:
+        attempts: 3
+
+tcp:
+  routers:
+    provider2-database:
+      rule: "HostSNI(`db-provider2.example.com`)"
+      service: "provider2-db-service"
+
+  services:
+    provider2-db-service:
+      loadBalancer:
+        servers:
+          - address: "redis:6379"
+
+  middlewares:
+    provider2-tcp-limit:
+      inFlightConn:
+        amount: 5
+
+udp:
+  routers:
+    provider2-logs:
+      service: "provider2-log-service"
+
+  services:
+    provider2-log-service:
+      loadBalancer:
+        servers:
+          - address: "udp-echo:8080"
+
+tls:
+  options:
+    provider2-tls:
+      minVersion: "VersionTLS13"
+      cipherSuites:
+        - "TLS_AES_256_GCM_SHA384"

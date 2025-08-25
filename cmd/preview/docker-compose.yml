@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  traefik-main:
+    image: traefik:v3.5
+    container_name: traefik-main
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.tcp-ep.address=:8000"
+      - "--entrypoints.udp-ep.address=:9000/udp"
+      - "--api.dashboard=true"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+      - "8000:8000"
+      - "9000:9000/udp"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./configs/traefik-main:/etc/traefik/dynamic:ro
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.api.service=api@internal"
+
+  traefik-provider1:
+    image: traefik:v3.5
+    container_name: traefik-provider1
+    command:
+      - "--api.insecure=true"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./configs/traefik-provider1:/etc/traefik/dynamic:ro
+    networks:
+      - traefik
+
+  traefik-provider2:
+    image: traefik:v3.5
+    container_name: traefik-provider2
+    command:
+      - "--api.insecure=true"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./configs/traefik-provider2:/etc/traefik/dynamic:ro
+    networks:
+      - traefik
+
+  whoami:
+    image: traefik/whoami
+    container_name: whoami
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.localhost`)"
+      - "traefik.http.routers.whoami.entrypoints=web"
+    networks:
+      - traefik
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.rule=Host(`nginx.localhost`)"
+      - "traefik.http.routers.nginx.entrypoints=web"
+    networks:
+      - traefik
+
+  tcp-echo:
+    image: hashicorp/http-echo
+    container_name: tcp-echo
+    command: ["-text=TCP Echo Service", "-listen=:8080"]
+    networks:
+      - traefik
+
+  udp-echo:
+    image: alpine
+    container_name: udp-echo
+    command: ["sh", "-c", "apk add --no-cache netcat-openbsd && while true; do nc -u -l -p 8080 -e echo 'UDP Echo Response'; done"]
+    networks:
+      - traefik
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    driver: bridge

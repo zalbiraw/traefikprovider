@@ -1,0 +1,56 @@
+http:
+  routers:
+    provider1-api:
+      rule: "Host(`provider1.example.com`)"
+      service: "provider1-service"
+      middlewares:
+        - "provider1-auth"
+    
+    provider1-web:
+      rule: "Host(`provider1.example.com`) && PathPrefix(`/web`)"
+      service: "provider1-web-service"
+
+  services:
+    provider1-service:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"
+    
+    provider1-web-service:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80"
+
+  middlewares:
+    provider1-auth:
+      basicAuth:
+        users:
+          - "provider1:$2y$10$..."
+    
+    provider1-headers:
+      headers:
+        customRequestHeaders:
+          X-Provider: "provider1"
+
+tcp:
+  routers:
+    provider1-tcp:
+      rule: "HostSNI(`tcp-provider1.example.com`)"
+      service: "provider1-tcp-service"
+
+  services:
+    provider1-tcp-service:
+      loadBalancer:
+        servers:
+          - address: "tcp-echo:8080"
+
+udp:
+  routers:
+    provider1-udp:
+      service: "provider1-udp-service"
+
+  services:
+    provider1-udp-service:
+      loadBalancer:
+        servers:
+          - address: "udp-echo:8080"

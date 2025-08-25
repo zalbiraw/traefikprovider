@@ -1,4 +1,4 @@
-.PHONY: lint test vendor clean
+.PHONY: lint test vendor clean traefik-up traefik-down traefik-logs
 
 export GO111MODULE=on
 
@@ -18,3 +18,16 @@ vendor:
 
 clean:
 	rm -rf ./vendor
+
+# Traefik Docker commands
+traefik-up:
+	@echo "Starting Traefik v3.5 with test services..."
+	docker-compose -f docker-compose.test.yml up -d
+
+traefik-down:
+	@echo "Stopping Traefik and test services..."
+	docker-compose -f docker-compose.test.yml down
+
+traefik-logs:
+	@echo "Showing Traefik logs..."
+	docker-compose -f docker-compose.test.yml logs -f traefik
