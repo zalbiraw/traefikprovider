@@ -37,9 +37,6 @@ func CreateConfig() *Config {
 					Middlewares: &MiddlewaresConfig{
 						Discover: true,
 					},
-					ServerTransports: ServerTransportsConfig{
-						Discover: true,
-					},
 				},
 				TCP: &TCPSection{
 					Discover: true,

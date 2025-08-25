@@ -54,13 +54,3 @@ func HTTPMiddlewares(middlewares map[string]*dynamic.Middleware, config *config.
 	}
 	return result
 }
-
-func HTTPServerTransports(serverTransports map[string]*dynamic.ServersTransport, config *config.ServerTransportsConfig) map[string]*dynamic.ServersTransport {
-	result := make(map[string]*dynamic.ServersTransport)
-	filters := config.Filters
-	filtered := filterMapByNameRegex[dynamic.ServersTransport, *dynamic.ServersTransport](serverTransports, filters.Name)
-	for name, st := range filtered {
-		result[name] = st
-	}
-	return result
-}

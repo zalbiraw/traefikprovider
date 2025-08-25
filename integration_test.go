@@ -75,18 +75,6 @@ func TestIntegrationBasic(t *testing.T) {
 				Port: 8081,
 				Path: "/api/rawdata",
 			},
-			HTTP: &config.HTTPSection{
-				Discover: true,
-			},
-			TCP: &config.TCPSection{
-				Discover: true,
-			},
-			UDP: &config.UDPSection{
-				Discover: true,
-			},
-			TLS: &config.TLSSection{
-				Discover: true,
-			},
 		}
 		dynCfg := httpclient.GenerateConfiguration(cfg)
 
@@ -94,16 +82,16 @@ func TestIntegrationBasic(t *testing.T) {
 			t.Fatal("Configuration is nil")
 		}
 
-		// Check for expected provider1 routers (with @file suffix)
-		expectedRouters := []string{"provider1-api@file", "provider1-web@file", "provider1-admin@file", "provider1-test@file"}
+		// Check for expected provider1 routers (without @file suffix)
+		expectedRouters := []string{"provider1-api", "provider1-web", "provider1-admin", "provider1-test"}
 		for _, routerName := range expectedRouters {
 			if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
 				t.Errorf("Expected router %s not found", routerName)
 			}
 		}
 
-		// Check for expected provider1 services (with @file suffix)
-		expectedServices := []string{"provider1-service@file", "provider1-web-service@file", "provider1-admin-service@file", "provider1-test-service@file"}
+		// Check for expected provider1 services (without @file suffix)
+		expectedServices := []string{"provider1-service", "provider1-web-service", "provider1-admin-service", "provider1-test-service"}
 		for _, serviceName := range expectedServices {
 			if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
 				t.Errorf("Expected service %s not found", serviceName)
@@ -118,18 +106,6 @@ func TestIntegrationBasic(t *testing.T) {
 				Port: 8082,
 				Path: "/api/rawdata",
 			},
-			HTTP: &config.HTTPSection{
-				Discover: true,
-			},
-			TCP: &config.TCPSection{
-				Discover: true,
-			},
-			UDP: &config.UDPSection{
-				Discover: true,
-			},
-			TLS: &config.TLSSection{
-				Discover: true,
-			},
 		}
 		dynCfg := httpclient.GenerateConfiguration(cfg)
 
@@ -137,7 +113,7 @@ func TestIntegrationBasic(t *testing.T) {
 			t.Fatal("Configuration is nil")
 		}
 
-		// Check for expected provider2 routers
+		// Check for expected provider2 routers (without @file suffix)
 		expectedRouters := []string{"provider2-dashboard", "provider2-api", "provider2-secure", "provider2-metrics"}
 		for _, routerName := range expectedRouters {
 			if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
@@ -145,7 +121,7 @@ func TestIntegrationBasic(t *testing.T) {
 			}
 		}
 
-		// Check for expected provider2 services
+		// Check for expected provider2 services (without @file suffix)
 		expectedServices := []string{"provider2-service", "provider2-api-service", "provider2-secure-service", "provider2-metrics-service"}
 		for _, serviceName := range expectedServices {
 			if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
@@ -184,8 +160,22 @@ func TestIntegrationFilters(t *testing.T) {
 		}
 		dynCfg := httpclient.GenerateConfiguration(cfg)
 
+		if dynCfg == nil {
+			t.Fatal("Configuration is nil")
+		}
+
 		if dynCfg.HTTP == nil {
 			t.Fatal("HTTP configuration is nil")
+		}
+
+		// Debug: Print what routers we actually got
+		t.Errorf("Found %d HTTP routers:", len(dynCfg.HTTP.Routers))
+		for name := range dynCfg.HTTP.Routers {
+			t.Errorf("  Router: %s", name)
+		}
+		t.Errorf("Found %d HTTP services:", len(dynCfg.HTTP.Services))
+		for name := range dynCfg.HTTP.Services {
+			t.Errorf("  Service: %s", name)
 		}
 
 		for name := range dynCfg.HTTP.Routers {
@@ -340,4 +330,3 @@ func waitForService(ctx context.Context, url string) error {
 		}
 	}
 }
-

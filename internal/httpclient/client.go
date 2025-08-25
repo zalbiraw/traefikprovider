@@ -89,39 +89,43 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 		tlsConfig  *dynamic.TLSConfiguration
 	)
 
+	if providerCfg.HTTP == nil {
+		providerCfg.HTTP = &config.HTTPSection{Discover: true}
+	}
+
+	if providerCfg.TCP == nil {
+		providerCfg.TCP = &config.TCPSection{Discover: true}
+	}
+
+	if providerCfg.UDP == nil {
+		providerCfg.UDP = &config.UDPSection{Discover: true}
+	}
+
+	if providerCfg.TLS == nil {
+		providerCfg.TLS = &config.TLSSection{Discover: true}
+	}
+
+	if providerCfg.Tunnels == nil {
+		providerCfg.Tunnels = []config.TunnelConfig{}
+	}
+
 	// HTTP
-	if providerCfg.HTTP != nil && providerCfg.HTTP.Discover {
-		httpConfig = &dynamic.HTTPConfiguration{
-			Routers:           make(map[string]*dynamic.Router),
-			Services:          make(map[string]*dynamic.Service),
-			Middlewares:       make(map[string]*dynamic.Middleware),
-			ServersTransports: make(map[string]*dynamic.ServersTransport),
-		}
+	if providerCfg.HTTP.Discover {
 		parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Tunnels)
 	}
 
 	// TCP
-	if providerCfg.TCP != nil && providerCfg.TCP.Discover {
-		tcpConfig = &dynamic.TCPConfiguration{
-			Routers:     make(map[string]*dynamic.TCPRouter),
-			Services:    make(map[string]*dynamic.TCPService),
-			Middlewares: make(map[string]*dynamic.TCPMiddleware),
-		}
+	if providerCfg.TCP.Discover {
 		parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Tunnels)
 	}
 
 	// UDP
-	if providerCfg.UDP != nil && providerCfg.UDP.Discover {
-		udpConfig = &dynamic.UDPConfiguration{
-			Routers:  make(map[string]*dynamic.UDPRouter),
-			Services: make(map[string]*dynamic.UDPService),
-		}
+	if providerCfg.UDP.Discover {
 		parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Tunnels)
 	}
 
 	// TLS
-	if providerCfg.TLS != nil && providerCfg.TLS.Discover {
-		tlsConfig = &dynamic.TLSConfiguration{}
+	if providerCfg.TLS.Discover {
 		parseTLSConfig(raw, tlsConfig, providerCfg.TLS)
 	}
 

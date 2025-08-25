@@ -424,11 +424,6 @@ func TestInvalidInputHandling(t *testing.T) {
 		t.Error("Expected empty result for empty HTTP middlewares input")
 	}
 
-	httpTransportsResult := HTTPServerTransports(map[string]*dynamic.ServersTransport{}, &config.ServerTransportsConfig{})
-	if len(httpTransportsResult) != 0 {
-		t.Error("Expected empty result for empty HTTP transports input")
-	}
-
 	// TCP functions
 	tcpResult := TCPRouters(map[string]*dynamic.TCPRouter{}, &config.RoutersConfig{})
 	if len(tcpResult) != 0 {

@@ -115,11 +115,6 @@ testData:
             filters: 
               name: "health-checked-app"
         extraServices: []
-      serverTransports:
-        discover: true
-        filters:
-          name: ""
-        extraServerTransports: []
     tcp:
       discover: true
       routers:

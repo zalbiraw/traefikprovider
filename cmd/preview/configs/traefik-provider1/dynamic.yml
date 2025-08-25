@@ -83,17 +83,46 @@ http:
     provider1-transport:
       serverName: "provider1.internal"
       insecureSkipVerify: false
+      rootCAs:
+        - "/etc/ssl/certs/provider1-ca.crt"
+      certificates:
+        - certFile: "/etc/ssl/certs/provider1-client.crt"
+          keyFile: "/etc/ssl/private/provider1-client.key"
+      maxIdleConnsPerHost: 10
+      forwardingTimeouts:
+        dialTimeout: "30s"
+        responseHeaderTimeout: "60s"
+        idleConnTimeout: "90s"
+    
+    provider1-secure-transport:
+      serverName: "secure.provider1.internal"
+      insecureSkipVerify: false
+      rootCAs:
+        - "/etc/ssl/certs/provider1-secure-ca.crt"
+      maxIdleConnsPerHost: 5
+      forwardingTimeouts:
+        dialTimeout: "10s"
+        responseHeaderTimeout: "30s"
+    
+    provider1-insecure-transport:
+      serverName: "insecure.provider1.internal"
+      insecureSkipVerify: true
+      maxIdleConnsPerHost: 20
+      forwardingTimeouts:
+        dialTimeout: "5s"
+        responseHeaderTimeout: "15s"
+        idleConnTimeout: "60s"
 
 tcp:
   routers:
     provider1-tcp:
-      rule: "HostSNI(`tcp-provider1.example.com`)"
+      rule: "HostSNI(`*`)"
       service: "provider1-tcp-service"
       entryPoints:
         - "tcp-ep"
     
     provider1-redis:
-      rule: "HostSNI(`redis-provider1.example.com`)"
+      rule: "HostSNI(`*`)"
       service: "provider1-redis-service"
       entryPoints:
         - "tcp-ep"
@@ -137,7 +166,7 @@ udp:
     provider1-dns-service:
       loadBalancer:
         servers:
-          - address: "udp-echo:8080"
+          - address: "dns:53"
 
 tls:
   certificates:

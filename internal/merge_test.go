@@ -18,10 +18,9 @@ func TestMergeConfigurations(t *testing.T) {
 			configs: []*dynamic.Configuration{},
 			expected: &dynamic.Configuration{
 				HTTP: &dynamic.HTTPConfiguration{
-					Routers:           map[string]*dynamic.Router{},
-					Services:          map[string]*dynamic.Service{},
-					Middlewares:       map[string]*dynamic.Middleware{},
-					ServersTransports: map[string]*dynamic.ServersTransport{},
+					Routers:     map[string]*dynamic.Router{},
+					Services:    map[string]*dynamic.Service{},
+					Middlewares: map[string]*dynamic.Middleware{},
 				},
 				TCP: &dynamic.TCPConfiguration{
 					Routers:     map[string]*dynamic.TCPRouter{},
@@ -79,8 +78,7 @@ func TestMergeConfigurations(t *testing.T) {
 							},
 						},
 					},
-					Middlewares:       map[string]*dynamic.Middleware{},
-					ServersTransports: map[string]*dynamic.ServersTransport{},
+					Middlewares: map[string]*dynamic.Middleware{},
 				},
 				TCP: &dynamic.TCPConfiguration{
 					Routers:     map[string]*dynamic.TCPRouter{},
@@ -381,11 +379,6 @@ func TestMergeConfigurations(t *testing.T) {
 								},
 							},
 						},
-						ServersTransports: map[string]*dynamic.ServersTransport{
-							"default": {
-								ServerName: "example.com",
-							},
-						},
 					},
 					TCP: &dynamic.TCPConfiguration{
 						Routers: map[string]*dynamic.TCPRouter{
@@ -498,9 +491,6 @@ func TestMergeConfigurations(t *testing.T) {
 			}
 			if result.HTTP.Middlewares == nil {
 				t.Error("Expected HTTP middlewares map to be initialized")
-			}
-			if result.HTTP.ServersTransports == nil {
-				t.Error("Expected HTTP server transports map to be initialized")
 			}
 			if result.TCP.Routers == nil {
 				t.Error("Expected TCP routers map to be initialized")

@@ -311,15 +311,13 @@ func TestParseDynamicConfiguration(t *testing.T) {
 				"routers": {"test-router": {}},
 				"services": {"test-service": {}},
 				"middlewares": {"test-middleware": {}},
-				"serversTransports": {"test-transport": {}}
 			}`),
 			providerConfig: &config.ProviderConfig{
 				HTTP: &config.HTTPSection{
-					Discover:         true,
-					Routers:          &config.RoutersConfig{Discover: true},
-					Services:         &config.ServicesConfig{Discover: true},
-					Middlewares:      &config.MiddlewaresConfig{Discover: true},
-					ServerTransports: config.ServerTransportsConfig{Discover: true},
+					Discover:    true,
+					Routers:     &config.RoutersConfig{Discover: true},
+					Services:    &config.ServicesConfig{Discover: true},
+					Middlewares: &config.MiddlewaresConfig{Discover: true},
 				},
 				TCP: &config.TCPSection{
 					Discover:    true,
@@ -454,11 +452,10 @@ func TestGenerateConfigurationIntegration(t *testing.T) {
 			},
 		},
 		HTTP: &config.HTTPSection{
-			Discover:         true,
-			Routers:          &config.RoutersConfig{Discover: true},
-			Services:         &config.ServicesConfig{Discover: true},
-			Middlewares:      &config.MiddlewaresConfig{Discover: true},
-			ServerTransports: config.ServerTransportsConfig{Discover: true},
+			Discover:    true,
+			Routers:     &config.RoutersConfig{Discover: true},
+			Services:    &config.ServicesConfig{Discover: true},
+			Middlewares: &config.MiddlewaresConfig{Discover: true},
 		},
 		TCP: &config.TCPSection{
 			Discover:    true,
@@ -669,7 +666,7 @@ func TestParseDynamicConfigurationErrorPaths(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cfg, err := parseDynamicConfiguration([]byte(tt.jsonData), tt.providerConfig)
-			
+
 			if tt.expectError && err == nil {
 				t.Error("Expected error but got none")
 			}
@@ -734,7 +731,7 @@ func TestParseDynamicConfigurationWithNilSections(t *testing.T) {
 
 	jsonData := `{"routers": {}, "services": {}}`
 	cfg, err := parseDynamicConfiguration([]byte(jsonData), providerConfig)
-	
+
 	if err != nil {
 		t.Errorf("Expected no error with nil sections, got: %v", err)
 	}
@@ -754,7 +751,7 @@ func TestParseDynamicConfigurationDiscoverFalse(t *testing.T) {
 
 	jsonData := `{"routers": {}, "services": {}, "tcpRouters": {}, "udpRouters": {}}`
 	cfg, err := parseDynamicConfiguration([]byte(jsonData), providerConfig)
-	
+
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -904,7 +901,7 @@ func TestGenerateConfigurationBodyReadError(t *testing.T) {
 		// Don't write anything, but set a content length to trigger read
 	}))
 	server.Close() // Close server to cause read error
-	
+
 	// Use the closed server URL to trigger network error during body read
 	providerConfig := &config.ProviderConfig{
 		Connection: config.ConnectionConfig{

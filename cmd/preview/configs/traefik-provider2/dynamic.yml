@@ -100,24 +100,82 @@ http:
       insecureSkipVerify: true
       rootCAs:
         - "/etc/ssl/certs/provider2-ca.crt"
+      certificates:
+        - certFile: "/etc/ssl/certs/provider2-client.crt"
+          keyFile: "/etc/ssl/private/provider2-client.key"
+      maxIdleConnsPerHost: 15
+      forwardingTimeouts:
+        dialTimeout: "20s"
+        responseHeaderTimeout: "45s"
+        idleConnTimeout: "120s"
+    
+    provider2-api-transport:
+      serverName: "api.provider2.internal"
+      insecureSkipVerify: false
+      rootCAs:
+        - "/etc/ssl/certs/provider2-api-ca.crt"
+        - "/etc/ssl/certs/provider2-root-ca.crt"
+      certificates:
+        - certFile: "/etc/ssl/certs/provider2-api-client.crt"
+          keyFile: "/etc/ssl/private/provider2-api-client.key"
+      maxIdleConnsPerHost: 25
+      forwardingTimeouts:
+        dialTimeout: "15s"
+        responseHeaderTimeout: "30s"
+        idleConnTimeout: "180s"
+    
+    provider2-metrics-transport:
+      serverName: "metrics.provider2.internal"
+      insecureSkipVerify: false
+      maxIdleConnsPerHost: 5
+      forwardingTimeouts:
+        dialTimeout: "5s"
+        responseHeaderTimeout: "10s"
+        idleConnTimeout: "30s"
+    
+    provider2-legacy-transport:
+      serverName: "legacy.provider2.internal"
+      insecureSkipVerify: true
+      maxIdleConnsPerHost: 50
+      forwardingTimeouts:
+        dialTimeout: "60s"
+        responseHeaderTimeout: "120s"
+        idleConnTimeout: "300s"
 
 tcp:
   routers:
+    provider2-tcp:
+      rule: "HostSNI(`tcp.provider2.example.com`)"
+      service: "provider2-tcp-service"
+      entryPoints:
+        - "tcp-ep"
+      tls:
+        passthrough: true
+    
     provider2-database:
-      rule: "HostSNI(`db-provider2.example.com`)"
+      rule: "HostSNI(`db.provider2.example.com`)"
       service: "provider2-db-service"
       entryPoints:
         - "tcp-ep"
       middlewares:
         - "provider2-tcp-limit"
+      tls:
+        passthrough: true
     
     provider2-ssh:
-      rule: "HostSNI(`ssh-provider2.example.com`)"
+      rule: "HostSNI(`ssh.provider2.example.com`)"
       service: "provider2-ssh-service"
       entryPoints:
         - "tcp-ep"
+      tls:
+        passthrough: true
 
   services:
+    provider2-tcp-service:
+      loadBalancer:
+        servers:
+          - address: "tcp-echo:8080"
+    
     provider2-db-service:
       loadBalancer:
         servers:
@@ -132,7 +190,6 @@ tcp:
     provider2-tcp-limit:
       inFlightConn:
         amount: 5
-
 udp:
   routers:
     provider2-logs:
@@ -154,24 +211,4 @@ udp:
     provider2-syslog-service:
       loadBalancer:
         servers:
-          - address: "udp-echo:8080"
-
-tls:
-  certificates:
-    - certFile: "/etc/ssl/certs/provider2.crt"
-      keyFile: "/etc/ssl/private/provider2.key"
-      stores:
-        - "provider2"
-  
-  options:
-    provider2-tls:
-      minVersion: "VersionTLS13"
-      cipherSuites:
-        - "TLS_AES_256_GCM_SHA384"
-        - "TLS_CHACHA20_POLY1305_SHA256"
-  
-  stores:
-    provider2:
-      defaultCertificate:
-        certFile: "/etc/ssl/certs/provider2-default.crt"
-        keyFile: "/etc/ssl/private/provider2-default.key"
+          - address: "udp-echo:8081"

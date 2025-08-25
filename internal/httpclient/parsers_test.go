@@ -9,10 +9,9 @@ import (
 
 func TestParseHTTPConfigMarshalErrors(t *testing.T) {
 	httpConfig := &dynamic.HTTPConfiguration{
-		Routers:           make(map[string]*dynamic.Router),
-		Services:          make(map[string]*dynamic.Service),
-		Middlewares:       make(map[string]*dynamic.Middleware),
-		ServersTransports: make(map[string]*dynamic.ServersTransport),
+		Routers:     make(map[string]*dynamic.Router),
+		Services:    make(map[string]*dynamic.Service),
+		Middlewares: make(map[string]*dynamic.Middleware),
 	}
 
 	providerConfig := &config.HTTPSection{
@@ -35,12 +34,6 @@ func TestParseHTTPConfigMarshalErrors(t *testing.T) {
 		Middlewares: &config.MiddlewaresConfig{
 			Discover: true,
 			ExtraMiddlewares: []interface{}{
-				make(chan int), // Unmarshalable type
-			},
-		},
-		ServerTransports: config.ServerTransportsConfig{
-			Discover: true,
-			ExtraServerTransports: []interface{}{
 				make(chan int), // Unmarshalable type
 			},
 		},
@@ -89,9 +82,6 @@ func TestParseHTTPConfig(t *testing.T) {
 				Middlewares: &config.MiddlewaresConfig{
 					Discover: false,
 				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: false,
-				},
 			},
 		},
 		{
@@ -120,9 +110,6 @@ func TestParseHTTPConfig(t *testing.T) {
 				Middlewares: &config.MiddlewaresConfig{
 					Discover: false,
 				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: false,
-				},
 			},
 		},
 		{
@@ -149,36 +136,6 @@ func TestParseHTTPConfig(t *testing.T) {
 				Middlewares: &config.MiddlewaresConfig{
 					Discover: true,
 				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: false,
-				},
-			},
-		},
-		{
-			name: "parse server transports when discover enabled",
-			raw: map[string]interface{}{
-				"serversTransports": map[string]interface{}{
-					"test-transport": map[string]interface{}{
-						"serverName": "example.com",
-					},
-				},
-			},
-			httpConfig: &dynamic.HTTPConfiguration{
-				ServersTransports: make(map[string]*dynamic.ServersTransport),
-			},
-			providerConfig: &config.HTTPSection{
-				Routers: &config.RoutersConfig{
-					Discover: false,
-				},
-				Services: &config.ServicesConfig{
-					Discover: false,
-				},
-				Middlewares: &config.MiddlewaresConfig{
-					Discover: false,
-				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: true,
-				},
 			},
 		},
 		{
@@ -202,9 +159,6 @@ func TestParseHTTPConfig(t *testing.T) {
 					Discover: false,
 				},
 				Middlewares: &config.MiddlewaresConfig{
-					Discover: false,
-				},
-				ServerTransports: config.ServerTransportsConfig{
 					Discover: false,
 				},
 			},
@@ -235,9 +189,6 @@ func TestParseHTTPConfig(t *testing.T) {
 				Middlewares: &config.MiddlewaresConfig{
 					Discover: false,
 				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: false,
-				},
 			},
 		},
 		{
@@ -261,36 +212,6 @@ func TestParseHTTPConfig(t *testing.T) {
 							"stripPrefix": map[string]interface{}{
 								"prefixes": []string{"/extra"},
 							},
-						},
-					},
-				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: false,
-				},
-			},
-		},
-		{
-			name: "add extra server transports",
-			raw:  map[string]interface{}{},
-			httpConfig: &dynamic.HTTPConfiguration{
-				ServersTransports: make(map[string]*dynamic.ServersTransport),
-			},
-			providerConfig: &config.HTTPSection{
-				Routers: &config.RoutersConfig{
-					Discover: false,
-				},
-				Services: &config.ServicesConfig{
-					Discover: false,
-				},
-				Middlewares: &config.MiddlewaresConfig{
-					Discover: false,
-				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: true,
-					ExtraServerTransports: []interface{}{
-						map[string]interface{}{
-							"name":       "extra-transport",
-							"serverName": "extra.com",
 						},
 					},
 				},
@@ -319,9 +240,6 @@ func TestParseHTTPConfig(t *testing.T) {
 				Middlewares: &config.MiddlewaresConfig{
 					Discover: false,
 				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: false,
-				},
 			},
 		},
 		{
@@ -343,9 +261,6 @@ func TestParseHTTPConfig(t *testing.T) {
 				Middlewares: &config.MiddlewaresConfig{
 					Discover: false,
 				},
-				ServerTransports: config.ServerTransportsConfig{
-					Discover: false,
-				},
 			},
 		},
 		{
@@ -353,10 +268,9 @@ func TestParseHTTPConfig(t *testing.T) {
 			raw:        map[string]interface{}{},
 			httpConfig: &dynamic.HTTPConfiguration{},
 			providerConfig: &config.HTTPSection{
-				Routers:          &config.RoutersConfig{Discover: false},
-				Services:         &config.ServicesConfig{Discover: false},
-				Middlewares:      &config.MiddlewaresConfig{Discover: false},
-				ServerTransports: config.ServerTransportsConfig{Discover: false},
+				Routers:     &config.RoutersConfig{Discover: false},
+				Services:    &config.ServicesConfig{Discover: false},
+				Middlewares: &config.MiddlewaresConfig{Discover: false},
 			},
 		},
 	}
@@ -835,10 +749,9 @@ func TestParseTLSConfig(t *testing.T) {
 
 func TestParseHTTPConfigJSONMarshalErrors(t *testing.T) {
 	httpConfig := &dynamic.HTTPConfiguration{
-		Routers:           make(map[string]*dynamic.Router),
-		Services:          make(map[string]*dynamic.Service),
-		Middlewares:       make(map[string]*dynamic.Middleware),
-		ServersTransports: make(map[string]*dynamic.ServersTransport),
+		Routers:     make(map[string]*dynamic.Router),
+		Services:    make(map[string]*dynamic.Service),
+		Middlewares: make(map[string]*dynamic.Middleware),
 	}
 
 	providerConfig := &config.HTTPSection{
@@ -878,15 +791,6 @@ func TestParseHTTPConfigJSONMarshalErrors(t *testing.T) {
 				},
 			},
 		},
-		ServerTransports: config.ServerTransportsConfig{
-			Discover: true,
-			ExtraServerTransports: []interface{}{
-				make(chan int), // Unmarshalable type
-				map[string]interface{}{
-					"name": "valid-transport",
-				},
-			},
-		},
 	}
 
 	raw := map[string]interface{}{}
@@ -905,17 +809,13 @@ func TestParseHTTPConfigJSONMarshalErrors(t *testing.T) {
 	if len(httpConfig.Middlewares) != 1 {
 		t.Errorf("Expected 1 middleware, got %d", len(httpConfig.Middlewares))
 	}
-	if len(httpConfig.ServersTransports) != 1 {
-		t.Errorf("Expected 1 server transport, got %d", len(httpConfig.ServersTransports))
-	}
 }
 
 func TestParseHTTPConfigJSONUnmarshalErrors(t *testing.T) {
 	httpConfig := &dynamic.HTTPConfiguration{
-		Routers:           make(map[string]*dynamic.Router),
-		Services:          make(map[string]*dynamic.Service),
-		Middlewares:       make(map[string]*dynamic.Middleware),
-		ServersTransports: make(map[string]*dynamic.ServersTransport),
+		Routers:     make(map[string]*dynamic.Router),
+		Services:    make(map[string]*dynamic.Service),
+		Middlewares: make(map[string]*dynamic.Middleware),
 	}
 
 	providerConfig := &config.HTTPSection{
@@ -946,15 +846,6 @@ func TestParseHTTPConfigJSONUnmarshalErrors(t *testing.T) {
 				},
 			},
 		},
-		ServerTransports: config.ServerTransportsConfig{
-			Discover: true,
-			ExtraServerTransports: []interface{}{
-				map[string]interface{}{
-					"name":               "test-transport",
-					"insecureSkipVerify": make(chan int), // Invalid data
-				},
-			},
-		},
 	}
 
 	raw := map[string]interface{}{}
@@ -972,9 +863,6 @@ func TestParseHTTPConfigJSONUnmarshalErrors(t *testing.T) {
 	}
 	if len(httpConfig.Middlewares) != 0 {
 		t.Errorf("Expected 0 middlewares, got %d", len(httpConfig.Middlewares))
-	}
-	if len(httpConfig.ServersTransports) != 0 {
-		t.Errorf("Expected 0 server transports, got %d", len(httpConfig.ServersTransports))
 	}
 }
 
@@ -1063,11 +951,10 @@ func TestParseDynamicConfigurationNilSectionPointers(t *testing.T) {
 	// Test when section pointers are nil but Discover is true
 	providerConfig := &config.ProviderConfig{
 		HTTP: &config.HTTPSection{
-			Discover:         true,
-			Routers:          nil, // This should not cause panic
-			Services:         nil,
-			Middlewares:      nil,
-			ServerTransports: config.ServerTransportsConfig{Discover: false},
+			Discover:    true,
+			Routers:     nil, // This should not cause panic
+			Services:    nil,
+			Middlewares: nil,
 		},
 		TCP: &config.TCPSection{
 			Discover:    true,
@@ -1098,10 +985,9 @@ func TestParseDynamicConfigurationNilSectionPointers(t *testing.T) {
 
 func TestParseHTTPConfigExtraItemsWithoutName(t *testing.T) {
 	httpConfig := &dynamic.HTTPConfiguration{
-		Routers:           make(map[string]*dynamic.Router),
-		Services:          make(map[string]*dynamic.Service),
-		Middlewares:       make(map[string]*dynamic.Middleware),
-		ServersTransports: make(map[string]*dynamic.ServersTransport),
+		Routers:     make(map[string]*dynamic.Router),
+		Services:    make(map[string]*dynamic.Service),
+		Middlewares: make(map[string]*dynamic.Middleware),
 	}
 
 	providerConfig := &config.HTTPSection{
@@ -1139,15 +1025,6 @@ func TestParseHTTPConfigExtraItemsWithoutName(t *testing.T) {
 				},
 			},
 		},
-		ServerTransports: config.ServerTransportsConfig{
-			Discover: true,
-			ExtraServerTransports: []interface{}{
-				map[string]interface{}{
-					"serverName": "test.com",
-					// Missing "name" field
-				},
-			},
-		},
 	}
 
 	raw := map[string]interface{}{}
@@ -1165,9 +1042,6 @@ func TestParseHTTPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 	if len(httpConfig.Middlewares) != 0 {
 		t.Errorf("Expected 0 middlewares, got %d", len(httpConfig.Middlewares))
-	}
-	if len(httpConfig.ServersTransports) != 0 {
-		t.Errorf("Expected 0 server transports, got %d", len(httpConfig.ServersTransports))
 	}
 }
 
@@ -1282,10 +1156,9 @@ func TestParseUDPConfigExtraItemsWithoutName(t *testing.T) {
 func TestParseConfigMarshalErrors(t *testing.T) {
 	// Test HTTP config marshal errors
 	httpConfig := &dynamic.HTTPConfiguration{
-		Routers:           make(map[string]*dynamic.Router),
-		Services:          make(map[string]*dynamic.Service),
-		Middlewares:       make(map[string]*dynamic.Middleware),
-		ServersTransports: make(map[string]*dynamic.ServersTransport),
+		Routers:     make(map[string]*dynamic.Router),
+		Services:    make(map[string]*dynamic.Service),
+		Middlewares: make(map[string]*dynamic.Middleware),
 	}
 
 	httpProviderConfig := &config.HTTPSection{
@@ -1310,13 +1183,6 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 				make(chan int),
 			},
 		},
-		ServerTransports: config.ServerTransportsConfig{
-			Discover: true,
-			ExtraServerTransports: []interface{}{
-				// Channel cannot be marshaled - triggers marshal error continue
-				make(chan int),
-			},
-		},
 	}
 
 	err := parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, nil)
@@ -1333,9 +1199,6 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 	}
 	if len(httpConfig.Middlewares) != 0 {
 		t.Errorf("Expected 0 middlewares, got %d", len(httpConfig.Middlewares))
-	}
-	if len(httpConfig.ServersTransports) != 0 {
-		t.Errorf("Expected 0 server transports, got %d", len(httpConfig.ServersTransports))
 	}
 
 	// Test TCP config marshal errors
@@ -1425,10 +1288,9 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 func TestParseConfigUnmarshalErrors(t *testing.T) {
 	// Test HTTP config unmarshal errors
 	httpConfig := &dynamic.HTTPConfiguration{
-		Routers:           make(map[string]*dynamic.Router),
-		Services:          make(map[string]*dynamic.Service),
-		Middlewares:       make(map[string]*dynamic.Middleware),
-		ServersTransports: make(map[string]*dynamic.ServersTransport),
+		Routers:     make(map[string]*dynamic.Router),
+		Services:    make(map[string]*dynamic.Service),
+		Middlewares: make(map[string]*dynamic.Middleware),
 	}
 
 	httpProviderConfig := &config.HTTPSection{
@@ -1459,15 +1321,6 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 				},
 			},
 		},
-		ServerTransports: config.ServerTransportsConfig{
-			Discover: true,
-			ExtraServerTransports: []interface{}{
-				map[string]interface{}{
-					"name":       "test-transport",
-					"serverName": 123, // Invalid type - should cause unmarshal error
-				},
-			},
-		},
 	}
 
 	err := parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, nil)
@@ -1484,9 +1337,6 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 	}
 	if len(httpConfig.Middlewares) != 0 {
 		t.Errorf("Expected 0 middlewares due to unmarshal error, got %d", len(httpConfig.Middlewares))
-	}
-	if len(httpConfig.ServersTransports) != 0 {
-		t.Errorf("Expected 0 server transports due to unmarshal error, got %d", len(httpConfig.ServersTransports))
 	}
 
 	// Test TCP config unmarshal errors

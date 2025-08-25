@@ -392,10 +392,6 @@ func TestCreateConfig(t *testing.T) {
 				t.Error("Expected HTTP.Middlewares.Discover to be true")
 			}
 		}
-
-		if !provider.HTTP.ServerTransports.Discover {
-			t.Error("Expected HTTP.ServerTransports.Discover to be true")
-		}
 	}
 
 	if provider.TCP == nil {

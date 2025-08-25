@@ -9,7 +9,7 @@ import (
 // MergeConfigurations merges multiple dynamic.Configurations into one.
 func MergeConfigurations(configs ...*dynamic.Configuration) *dynamic.Configuration {
 	merged := &dynamic.Configuration{
-		HTTP: &dynamic.HTTPConfiguration{Routers: map[string]*dynamic.Router{}, Services: map[string]*dynamic.Service{}, Middlewares: map[string]*dynamic.Middleware{}, ServersTransports: map[string]*dynamic.ServersTransport{}},
+		HTTP: &dynamic.HTTPConfiguration{Routers: map[string]*dynamic.Router{}, Services: map[string]*dynamic.Service{}, Middlewares: map[string]*dynamic.Middleware{}},
 		TCP:  &dynamic.TCPConfiguration{Routers: map[string]*dynamic.TCPRouter{}, Services: map[string]*dynamic.TCPService{}, Middlewares: map[string]*dynamic.TCPMiddleware{}},
 		UDP:  &dynamic.UDPConfiguration{Routers: map[string]*dynamic.UDPRouter{}, Services: map[string]*dynamic.UDPService{}},
 		TLS:  &dynamic.TLSConfiguration{Certificates: []*tlstypes.CertAndStores{}, Options: map[string]tlstypes.Options{}, Stores: map[string]tlstypes.Store{}},
@@ -27,9 +27,6 @@ func MergeConfigurations(configs ...*dynamic.Configuration) *dynamic.Configurati
 			}
 			for k, v := range cfg.HTTP.Middlewares {
 				merged.HTTP.Middlewares[k] = v
-			}
-			for k, v := range cfg.HTTP.ServersTransports {
-				merged.HTTP.ServersTransports[k] = v
 			}
 		}
 		if cfg.TCP != nil {

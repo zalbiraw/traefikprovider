@@ -74,13 +74,13 @@ http:
 tcp:
   routers:
     redis-router:
-      rule: "HostSNI(`redis.example.com`)"
+      rule: "HostSNI(`*`)"
       service: "redis-service"
       entryPoints:
         - "tcp-ep"
     
     ssh-router:
-      rule: "HostSNI(`ssh.example.com`)"
+      rule: "HostSNI(`*`)"
       service: "ssh-service"
       entryPoints:
         - "tcp-ep"
