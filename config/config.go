@@ -1,7 +1,5 @@
 package config
 
-// Core provider config
-
 // CreateConfig creates the default plugin configuration.
 func CreateConfig() *Config {
 	return &Config{

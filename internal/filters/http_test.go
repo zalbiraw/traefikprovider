@@ -36,7 +36,7 @@ func TestFilterHTTPRouters(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := HTTPRouters(tt.routers, &config.RoutersConfig{Filter: config.RouterFilter{Name: tt.pattern}})
+			result := HTTPRouters(tt.routers, &config.RoutersConfig{Filter: config.RouterFilter{Name: tt.pattern}}, config.ProviderFilter{})
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d routers, got %d", len(tt.expected), len(result))
@@ -97,7 +97,7 @@ func TestFilterHTTPServices(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := HTTPServices(tt.services, &config.ServicesConfig{Filter: config.ServiceFilter{Name: tt.pattern}})
+			result := HTTPServices(tt.services, &config.ServicesConfig{Filter: config.ServiceFilter{Name: tt.pattern}}, config.ProviderFilter{})
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d services, got %d", len(tt.expected), len(result))
@@ -158,7 +158,7 @@ func TestFilterHTTPMiddlewares(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := HTTPMiddlewares(tt.middlewares, &config.MiddlewaresConfig{Filter: config.MiddlewareFilter{Name: tt.pattern}})
+			result := HTTPMiddlewares(tt.middlewares, &config.MiddlewaresConfig{Filter: config.MiddlewareFilter{Name: tt.pattern}}, config.ProviderFilter{})
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d middlewares, got %d", len(tt.expected), len(result))

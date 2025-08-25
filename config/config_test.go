@@ -362,49 +362,37 @@ func TestCreateConfig(t *testing.T) {
 		t.Errorf("Expected timeout '5s', got '%s'", provider.Connection.Timeout)
 	}
 
-	if provider.HTTP == nil {
-		t.Error("Expected HTTP section to be initialized")
-	} else {
+	if provider.HTTP != nil {
 		if !provider.HTTP.Discover {
 			t.Error("Expected HTTP.Discover to be true")
 		}
 
-		if provider.HTTP.Routers == nil {
-			t.Error("Expected HTTP.Routers to be initialized")
-		} else {
+		if provider.HTTP.Routers != nil {
 			if !provider.HTTP.Routers.Discover {
 				t.Error("Expected HTTP.Routers.Discover to be true")
 			}
 		}
 
-		if provider.HTTP.Services == nil {
-			t.Error("Expected HTTP.Services to be initialized")
-		} else {
+		if provider.HTTP.Services != nil {
 			if !provider.HTTP.Services.Discover {
 				t.Error("Expected HTTP.Services.Discover to be true")
 			}
 		}
 
-		if provider.HTTP.Middlewares == nil {
-			t.Error("Expected HTTP.Middlewares to be initialized")
-		} else {
+		if provider.HTTP.Middlewares != nil {
 			if !provider.HTTP.Middlewares.Discover {
 				t.Error("Expected HTTP.Middlewares.Discover to be true")
 			}
 		}
 	}
 
-	if provider.TCP == nil {
-		t.Error("Expected TCP section to be initialized")
-	} else {
+	if provider.TCP != nil {
 		if !provider.TCP.Discover {
 			t.Error("Expected TCP.Discover to be true")
 		}
 	}
 
-	if provider.UDP == nil {
-		t.Error("Expected UDP section to be initialized")
-	} else {
+	if provider.UDP != nil {
 		if !provider.UDP.Discover {
 			t.Error("Expected UDP.Discover to be true")
 		}

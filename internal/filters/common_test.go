@@ -171,45 +171,6 @@ func TestRouterEntrypointsMatch(t *testing.T) {
 	}
 }
 
-func TestUnmarshalRouter(t *testing.T) {
-	tests := []struct {
-		name        string
-		routerMap   map[string]interface{}
-		expectError bool
-	}{
-		{
-			name: "valid router",
-			routerMap: map[string]interface{}{
-				"rule":        "Host(`example.com`)",
-				"entryPoints": []string{"web"},
-				"service":     "my-service",
-			},
-			expectError: false,
-		},
-		{
-			name:        "invalid router data",
-			routerMap:   map[string]interface{}{"invalid": make(chan int)},
-			expectError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var router dynamic.Router
-			err := unmarshalRouter(tt.routerMap, &router)
-			if tt.expectError {
-				if err == nil {
-					t.Error("Expected error but got none")
-				}
-			} else {
-				if err != nil {
-					t.Errorf("Unexpected error: %v", err)
-				}
-			}
-		})
-	}
-}
-
 func TestHTTPRoutersWithEntrypoints(t *testing.T) {
 	routers := map[string]*dynamic.Router{
 		"web-router": {
@@ -230,7 +191,7 @@ func TestHTTPRoutersWithEntrypoints(t *testing.T) {
 			Name:        ".*",
 			Entrypoints: []string{"web"},
 		},
-	})
+	}, config.ProviderFilter{})
 
 	if len(result) != 1 {
 		t.Errorf("Expected 1 router with web entrypoint, got %d", len(result))
@@ -259,7 +220,7 @@ func TestHTTPRoutersWithRuleFilter(t *testing.T) {
 			Name: ".*",
 			Rule: "Host\\(.*\\)",
 		},
-	})
+	}, config.ProviderFilter{})
 
 	if len(result) != 1 {
 		t.Errorf("Expected 1 router with Host rule, got %d", len(result))
@@ -288,7 +249,7 @@ func TestHTTPRoutersWithServiceFilter(t *testing.T) {
 			Name:    ".*",
 			Service: "^my-.*",
 		},
-	})
+	}, config.ProviderFilter{})
 
 	if len(result) != 1 {
 		t.Errorf("Expected 1 router with my-service, got %d", len(result))
@@ -310,7 +271,7 @@ func TestHTTPRoutersWithInvalidData(t *testing.T) {
 
 	result := HTTPRouters(routers, &config.RoutersConfig{
 		Filter: config.RouterFilter{Name: ".*"},
-	})
+	}, config.ProviderFilter{})
 
 	if len(result) != 1 {
 		t.Errorf("Expected 1 valid router, got %d", len(result))
@@ -340,7 +301,7 @@ func TestTCPRoutersWithEntrypoints(t *testing.T) {
 			Name:        ".*",
 			Entrypoints: []string{"tcp-web"},
 		},
-	})
+	}, config.ProviderFilter{})
 
 	if len(result) != 1 {
 		t.Errorf("Expected 1 TCP router with tcp-web entrypoint, got %d", len(result))
@@ -368,7 +329,7 @@ func TestTCPRoutersWithRuleFilter(t *testing.T) {
 			Name: ".*",
 			Rule: "HostSNI\\(`\\*`\\)",
 		},
-	})
+	}, config.ProviderFilter{})
 
 	if len(result) != 1 {
 		t.Errorf("Expected 1 TCP router with catch-all rule, got %d", len(result))
@@ -394,7 +355,7 @@ func TestUDPRoutersWithServiceFilter(t *testing.T) {
 			Name:    ".*",
 			Service: "^dns-.*",
 		},
-	})
+	}, config.ProviderFilter{})
 
 	if len(result) != 1 {
 		t.Errorf("Expected 1 UDP router with dns service, got %d", len(result))
@@ -409,44 +370,44 @@ func TestInvalidInputHandling(t *testing.T) {
 	// Test with empty maps - the functions now expect typed maps, not interface{}
 
 	// HTTP functions
-	httpResult := HTTPRouters(map[string]*dynamic.Router{}, &config.RoutersConfig{})
+	httpResult := HTTPRouters(map[string]*dynamic.Router{}, &config.RoutersConfig{}, config.ProviderFilter{})
 	if len(httpResult) != 0 {
 		t.Error("Expected empty result for empty HTTP routers input")
 	}
 
-	httpServicesResult := HTTPServices(map[string]*dynamic.Service{}, &config.ServicesConfig{})
+	httpServicesResult := HTTPServices(map[string]*dynamic.Service{}, &config.ServicesConfig{}, config.ProviderFilter{})
 	if len(httpServicesResult) != 0 {
 		t.Error("Expected empty result for empty HTTP services input")
 	}
 
-	httpMiddlewaresResult := HTTPMiddlewares(map[string]*dynamic.Middleware{}, &config.MiddlewaresConfig{})
+	httpMiddlewaresResult := HTTPMiddlewares(map[string]*dynamic.Middleware{}, &config.MiddlewaresConfig{}, config.ProviderFilter{})
 	if len(httpMiddlewaresResult) != 0 {
 		t.Error("Expected empty result for empty HTTP middlewares input")
 	}
 
 	// TCP functions
-	tcpResult := TCPRouters(map[string]*dynamic.TCPRouter{}, &config.RoutersConfig{})
+	tcpResult := TCPRouters(map[string]*dynamic.TCPRouter{}, &config.RoutersConfig{}, config.ProviderFilter{})
 	if len(tcpResult) != 0 {
 		t.Error("Expected empty result for empty TCP routers input")
 	}
 
-	tcpServicesResult := TCPServices(map[string]*dynamic.TCPService{}, &config.ServicesConfig{})
+	tcpServicesResult := TCPServices(map[string]*dynamic.TCPService{}, &config.ServicesConfig{}, config.ProviderFilter{})
 	if len(tcpServicesResult) != 0 {
 		t.Error("Expected empty result for empty TCP services input")
 	}
 
-	tcpMiddlewaresResult := TCPMiddlewares(map[string]*dynamic.TCPMiddleware{}, &config.MiddlewaresConfig{})
+	tcpMiddlewaresResult := TCPMiddlewares(map[string]*dynamic.TCPMiddleware{}, &config.MiddlewaresConfig{}, config.ProviderFilter{})
 	if len(tcpMiddlewaresResult) != 0 {
 		t.Error("Expected empty result for empty TCP middlewares input")
 	}
 
 	// UDP functions
-	udpResult := UDPRouters(map[string]*dynamic.UDPRouter{}, &config.UDPRoutersConfig{})
+	udpResult := UDPRouters(map[string]*dynamic.UDPRouter{}, &config.UDPRoutersConfig{}, config.ProviderFilter{})
 	if len(udpResult) != 0 {
 		t.Error("Expected empty result for empty UDP routers input")
 	}
 
-	udpServicesResult := UDPServices(map[string]*dynamic.UDPService{}, &config.UDPServicesConfig{})
+	udpServicesResult := UDPServices(map[string]*dynamic.UDPService{}, &config.UDPServicesConfig{}, config.ProviderFilter{})
 	if len(udpServicesResult) != 0 {
 		t.Error("Expected empty result for empty UDP services input")
 	}

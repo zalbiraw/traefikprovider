@@ -1,10 +1,7 @@
 package filters
 
 import (
-	"encoding/json"
 	"regexp"
-
-	"github.com/traefik/genconf/dynamic"
 )
 
 // regexMatch is a helper to match a string with a regex pattern.
@@ -57,14 +54,6 @@ func routerEntrypointsMatch(routerEPs, filterEPs []string) bool {
 		}
 	}
 	return true
-}
-
-func unmarshalRouter(routerMap map[string]interface{}, router *dynamic.Router) error {
-	b, err := json.Marshal(routerMap)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(b, router)
 }
 
 // extractProviderFromName retrieves the postfix after the last '@' in a resource name.

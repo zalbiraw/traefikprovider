@@ -310,7 +310,7 @@ func TestParseDynamicConfiguration(t *testing.T) {
 			body: []byte(`{
 				"routers": {"test-router": {}},
 				"services": {"test-service": {}},
-				"middlewares": {"test-middleware": {}},
+				"middlewares": {"test-middleware": {}}
 			}`),
 			providerConfig: &config.ProviderConfig{
 				HTTP: &config.HTTPSection{
