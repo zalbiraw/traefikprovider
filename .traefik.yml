@@ -1,7 +1,7 @@
 displayName: Provider Plugin Demo
 type: provider
 
-import: github.com/zalbiraw/traefik-provider
+import: github.com/zalbiraw/traefikprovider
 
 summary: 'Traefik provider that will allow you to discover other Traefik instances configuration. The plugin will allow you to filter and overide discovered config as well as group discvered services and introduces tunneling concept for services.'
 

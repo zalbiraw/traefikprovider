@@ -1,6 +1,6 @@
 # Traefik Provider Preview Environment
 
-This directory contains Docker resources for testing the traefik-provider with multiple Traefik instances.
+This directory contains Docker resources for testing the traefikprovider with multiple Traefik instances.
 
 ## Quick Start
 

@@ -1,4 +1,4 @@
-module github.com/zalbiraw/traefik-provider
+module github.com/zalbiraw/traefikprovider
 
 go 1.19
 

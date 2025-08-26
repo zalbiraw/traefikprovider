@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 func TestGenerateConfiguration_HostHeaderOverride(t *testing.T) {

@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 // GenerateConfiguration fetches and parses the dynamic configuration from the remote provider.
@@ -45,6 +46,19 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 	if err != nil {
 		return cfg
 	}
+
+	// Log response body as string; pretty-print if it's JSON
+	var anyBody interface{}
+	if err := json.Unmarshal(body, &anyBody); err == nil {
+		if pretty, err := json.MarshalIndent(anyBody, "", "  "); err == nil {
+			log.Printf("provider response body (pretty JSON):\n%s", string(pretty))
+		} else {
+			log.Printf("provider response body (json, unindented): %s", string(body))
+		}
+	} else {
+		log.Printf("provider response body (raw): %s", string(body))
+	}
+
 	return cfg
 }
 
@@ -114,6 +128,7 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 		UDP:  udpConfig,
 		TLS:  tlsConfig,
 	}
+
 	return cfg, nil
 }
 

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 // OverrideHTTPRouters applies override rules to the given HTTP routers map.

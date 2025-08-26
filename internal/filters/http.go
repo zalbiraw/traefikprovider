@@ -3,7 +3,7 @@ package filters
 
 import (
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 // HTTPRouters filters HTTP routers based on `cfg.Filter` and optional provider filter.

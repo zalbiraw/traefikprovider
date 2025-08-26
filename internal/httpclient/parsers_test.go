@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 func TestParseHTTPConfigMarshalErrors(t *testing.T) {

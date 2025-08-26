@@ -10,13 +10,13 @@ import (
 	"log"
 	"os"
 
-	provider "github.com/zalbiraw/traefik-provider"
-	"github.com/zalbiraw/traefik-provider/config"
+	provider "github.com/zalbiraw/traefikprovider"
+	"github.com/zalbiraw/traefikprovider/config"
 	"gopkg.in/yaml.v3"
 )
 
 func main() {
-	cfg := config.CreateConfig()
+	cfg := provider.CreateConfig()
 
 	// Override defaults for preview: pull from local Docker-exposed provider1 and provider2
 	cfg.PollInterval = "5s"

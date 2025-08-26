@@ -1,5 +1,5 @@
-// Package provider implements a Traefik dynamic configuration provider plugin.
-package provider
+// Package traefikprovider implements a Traefik dynamic configuration provider plugin.
+package traefikprovider
 
 import (
 	"context"
@@ -9,21 +9,50 @@ import (
 	"time"
 
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
-	"github.com/zalbiraw/traefik-provider/internal"
-	"github.com/zalbiraw/traefik-provider/internal/httpclient"
+	"github.com/zalbiraw/traefikprovider/config"
+	"github.com/zalbiraw/traefikprovider/internal"
+	"github.com/zalbiraw/traefikprovider/internal/httpclient"
 )
+
+// CreateConfig creates the default plugin configuration.
+func CreateConfig() *Config {
+	return &Config{
+		PollInterval: "5s",
+		Providers: []config.ProviderConfig{
+			{
+				Name: "Traefik Provider",
+				Connection: config.ConnectionConfig{
+					Host:    "localhost",
+					Port:    8080,
+					Path:    "/api/rawdata",
+					Timeout: "5s",
+				},
+				Filter: config.ProviderFilter{
+					Provider: "file",
+				},
+			},
+		},
+	}
+}
+
+// Config is the root configuration for the provider plugin.
+// It controls the polling interval and the list of upstream providers
+// to fetch and filter dynamic configuration from.
+type Config struct {
+	PollInterval string                  `json:"pollInterval,omitempty" yaml:"pollInterval,omitempty"`
+	Providers    []config.ProviderConfig `json:"providers,omitempty" yaml:"providers,omitempty"`
+}
 
 // Provider implements the Traefik provider plugin lifecycle.
 type Provider struct {
 	name         string
 	pollInterval time.Duration
-	config       *config.Config
+	config       *Config
 	cancel       func()
 }
 
 // New creates a new Provider using the given configuration and name.
-func New(ctx context.Context, config *config.Config, name string) (*Provider, error) {
+func New(ctx context.Context, config *Config, name string) (*Provider, error) {
 	if config.PollInterval == "" {
 		return nil, fmt.Errorf("PollInterval is required")
 	}

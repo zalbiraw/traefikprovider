@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 func applyOverrideTCP[T any](filtered map[string]*dynamic.TCPRouter, value T, apply func(r *dynamic.TCPRouter, v T)) {

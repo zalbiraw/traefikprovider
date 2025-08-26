@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
-	"github.com/zalbiraw/traefik-provider/internal/filters"
-	"github.com/zalbiraw/traefik-provider/internal/overrides"
+	"github.com/zalbiraw/traefikprovider/config"
+	"github.com/zalbiraw/traefikprovider/internal/filters"
+	"github.com/zalbiraw/traefikprovider/internal/overrides"
 )
 
 //nolint:nestif // deeply nested due to JSON shape handling

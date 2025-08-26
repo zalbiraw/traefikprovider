@@ -1,4 +1,4 @@
-package provider
+package traefikprovider
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zalbiraw/traefik-provider/config"
-	"github.com/zalbiraw/traefik-provider/internal/httpclient"
+	"github.com/zalbiraw/traefikprovider/config"
+	"github.com/zalbiraw/traefikprovider/internal/httpclient"
 )
 
 const (

@@ -3,7 +3,7 @@ package filters
 
 import (
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 // tcpRouterMatchesFilter reports whether a TCP router matches the given filter.

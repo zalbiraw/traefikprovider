@@ -3,10 +3,9 @@ api:
   dashboard: true
 
 experimental:
-  plugins:
+  localPlugins:
     traefik:
-      moduleName: github.com/zalbiraw/traefik-provider
-      version: v0.0.1
+      moduleName: github.com/zalbiraw/traefikprovider
 
 entryPoints:
   web:
@@ -29,9 +28,13 @@ providers:
             port: 8080
             path: /api/rawdata
             timeout: "10s"
+          filter:
+            provider: file
         - name: provider2
           connection:
             host: traefik-provider2
             port: 8080
             path: /api/rawdata
             timeout: "10s"
+          filter:
+            provider: file

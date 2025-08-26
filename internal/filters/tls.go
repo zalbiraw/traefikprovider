@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	dynamictls "github.com/traefik/genconf/dynamic/tls"
-	"github.com/zalbiraw/traefik-provider/config"
+	"github.com/zalbiraw/traefikprovider/config"
 )
 
 // TLSCertificates converts a raw certificates section into typed TLS certificates.

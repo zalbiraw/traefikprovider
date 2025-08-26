@@ -1,37 +1,6 @@
 // Package config defines the provider configuration model and parsing helpers.
 package config
 
-//revive:disable:tagliatelle
-
-// CreateConfig creates the default plugin configuration.
-func CreateConfig() *Config {
-    return &Config{
-        PollInterval: "5s",
-        Providers: []ProviderConfig{
-            {
-                Name: "Traefik Provider",
-                Connection: ConnectionConfig{
-                    Host:    "localhost",
-                    Port:    8080,
-                    Path:    "/api/rawdata",
-                    Timeout: "5s",
-                },
-                Filter: ProviderFilter{
-                    Provider: "file",
-                },
-            },
-        },
-    }
-}
-
-// Config is the root configuration for the provider plugin.
-// It controls the polling interval and the list of upstream providers
-// to fetch and filter dynamic configuration from.
-type Config struct {
-	PollInterval string           `json:"pollInterval,omitempty" yaml:"pollInterval,omitempty"`
-	Providers    []ProviderConfig `json:"providers,omitempty" yaml:"providers,omitempty"`
-}
-
 // ProviderConfig defines a single upstream provider to poll and filter.
 type ProviderConfig struct {
 	Name       string           `json:"name,omitempty" yaml:"name,omitempty"`

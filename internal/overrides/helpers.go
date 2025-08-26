@@ -2,8 +2,8 @@ package overrides
 
 import (
 	"github.com/traefik/genconf/dynamic"
-	"github.com/zalbiraw/traefik-provider/config"
-	"github.com/zalbiraw/traefik-provider/internal/filters"
+	"github.com/zalbiraw/traefikprovider/config"
+	"github.com/zalbiraw/traefikprovider/internal/filters"
 )
 
 func applyRouterOverride[T any](filtered map[string]*dynamic.Router, routerFilter config.RouterFilter, value T, apply func(r *dynamic.Router, v T)) {

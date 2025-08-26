@@ -17,6 +17,7 @@ services:
       - "9000:9000/udp"
     volumes:
       - ./configs/traefik-main/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ../..:/plugins-local/src/github.com/zalbiraw/traefikprovider:ro
     networks:
       - traefik
     labels:
