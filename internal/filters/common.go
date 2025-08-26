@@ -18,7 +18,7 @@ func regexMatch(pattern, value string) (bool, error) {
 
 // filterMapByNameRegex filters a map of typed objects by name (regex if set) and provider postfix (regex if set).
 // The provider is extracted from the resource name as the substring after the last '@'.
-func filterMapByNameRegex[T any, R any](input map[string]*T, name, provider string) map[string]R {
+func filterMapByNameRegex[T, R any](input map[string]*T, name, provider string) map[string]R {
 	result := make(map[string]R)
 	for k, v := range input {
 		if name != "" {

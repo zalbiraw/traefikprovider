@@ -928,7 +928,6 @@ func TestParseDynamicConfigurationNilSectionPointers(t *testing.T) {
 
 	jsonData := `{"routers": {}, "services": {}, "tcpRouters": {}, "udpRouters": {}}`
 	cfg, err := parseDynamicConfiguration([]byte(jsonData), providerConfig)
-
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}

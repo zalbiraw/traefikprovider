@@ -7,161 +7,35 @@ import (
 	"testing"
 	"time"
 
-	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefik-provider/config"
 )
 
-func TestGenerateConfiguration(t *testing.T) {
-	tests := []struct {
-		name           string
-		providerConfig *config.ProviderConfig
-		serverResponse string
-		serverStatus   int
-		expected       *dynamic.Configuration
-		expectEmpty    bool
-	}{
-		{
-			name: "empty host returns empty config",
-			providerConfig: &config.ProviderConfig{
-				Connection: config.ConnectionConfig{Host: ""},
+func TestGenerateConfiguration_HostHeaderOverride(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Host != "custom-host.com" {
+			t.Errorf("Expected Host header custom-host.com, got %s", r.Host)
+		}
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(`{}`)); err != nil {
+			t.Fatal(err)
+		}
+	}))
+	defer server.Close()
+
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: server.URL[7:], // Remove http://
+			Path: "/api",
+			Headers: map[string]string{
+				"Host": "custom-host.com",
 			},
-			expectEmpty: true,
 		},
-		{
-			name: "successful request with valid JSON",
-			providerConfig: &config.ProviderConfig{
-				Connection: config.ConnectionConfig{
-					Host: "localhost",
-					Port: 8080,
-					Path: "/api",
-					Headers: map[string]string{
-						"Authorization": "Bearer token",
-						"Content-Type":  "application/json",
-					},
-				},
-				HTTP: &config.HTTPSection{Discover: true},
-				TCP:  &config.TCPSection{Discover: true},
-				UDP:  &config.UDPSection{Discover: true},
-				TLS:  &config.TLSSection{Discover: true},
-			},
-			serverResponse: `{"routers": {}, "services": {}}`,
-			serverStatus:   200,
-		},
-		{
-			name: "request with timeout",
-			providerConfig: &config.ProviderConfig{
-				Connection: config.ConnectionConfig{
-					Host:    "localhost",
-					Port:    8080,
-					Path:    "/api",
-					Timeout: "5s",
-				},
-			},
-			serverResponse: `{}`,
-			serverStatus:   200,
-		},
-		{
-			name: "invalid timeout format",
-			providerConfig: &config.ProviderConfig{
-				Connection: config.ConnectionConfig{
-					Host:    "localhost",
-					Port:    8080,
-					Path:    "/api",
-					Timeout: "invalid",
-				},
-			},
-			serverResponse: `{}`,
-			serverStatus:   200,
-		},
-		{
-			name: "server error returns empty config",
-			providerConfig: &config.ProviderConfig{
-				Connection: config.ConnectionConfig{
-					Host: "localhost",
-					Port: 8080,
-					Path: "/api",
-				},
-			},
-			serverStatus: 500,
-			expectEmpty:  true,
-		},
-		{
-			name: "invalid JSON response",
-			providerConfig: &config.ProviderConfig{
-				Connection: config.ConnectionConfig{
-					Host: "localhost",
-					Port: 8080,
-					Path: "/api",
-				},
-			},
-			serverResponse: `invalid json`,
-			serverStatus:   200,
-		},
-		{
-			name: "host header override",
-			providerConfig: &config.ProviderConfig{
-				Connection: config.ConnectionConfig{
-					Host: "localhost",
-					Port: 8080,
-					Path: "/api",
-					Headers: map[string]string{
-						"Host": "custom-host.com",
-					},
-				},
-			},
-			serverResponse: `{}`,
-			serverStatus:   200,
-		},
+		HTTP: &config.HTTPSection{Discover: true},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.name != "empty host returns empty config" {
-				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					// Verify headers are set correctly
-					if tt.providerConfig.Connection.Headers != nil {
-						for k, v := range tt.providerConfig.Connection.Headers {
-							if k == "Host" {
-								if r.Host != v {
-									t.Errorf("Expected Host header %s, got %s", v, r.Host)
-								}
-							} else {
-								if r.Header.Get(k) != v {
-									t.Errorf("Expected header %s: %s, got %s", k, v, r.Header.Get(k))
-								}
-							}
-						}
-					}
-
-					w.WriteHeader(tt.serverStatus)
-					if tt.serverResponse != "" {
-						if _, err := w.Write([]byte(tt.serverResponse)); err != nil {
-							t.Fatal(err)
-						}
-					}
-				}))
-				defer server.Close()
-
-				// Update config to use test server
-				tt.providerConfig.Connection.Host = server.URL[7:] // Remove http://
-				tt.providerConfig.Connection.Port = 0              // Will be ignored since we use full URL
-			}
-
-			result := GenerateConfiguration(tt.providerConfig)
-
-			if tt.expectEmpty {
-				if result.HTTP != nil && len(result.HTTP.Routers) > 0 ||
-					result.TCP != nil && len(result.TCP.Routers) > 0 ||
-					result.UDP != nil && len(result.UDP.Routers) > 0 ||
-					result.TLS != nil && len(result.TLS.Certificates) > 0 {
-					t.Error("Expected empty configuration")
-				}
-			} else {
-				if result == nil {
-					t.Error("Expected non-nil configuration")
-				}
-			}
-		})
+	result := GenerateConfiguration(providerConfig)
+	if result == nil {
+		t.Error("Expected non-nil configuration")
 	}
 }
 
@@ -216,87 +90,61 @@ func TestBuildProviderURL(t *testing.T) {
 	}
 }
 
-func TestBuildProviderRequest(t *testing.T) {
-	tests := []struct {
-		name      string
-		url       string
-		headers   map[string]string
-		expectNil bool
-	}{
-		{
-			name: "valid URL with headers",
-			url:  "http://localhost:8080/api",
-			headers: map[string]string{
-				"Authorization": "Bearer token",
-				"Content-Type":  "application/json",
-			},
-		},
-		{
-			name:    "valid URL without headers",
-			url:     "http://example.com/test",
-			headers: nil,
-		},
-		{
-			name: "valid URL with Host header",
-			url:  "http://localhost:8080/api",
-			headers: map[string]string{
-				"Host": "custom-host.com",
-			},
-		},
-		{
-			name:      "invalid URL",
-			url:       "://invalid-url",
-			headers:   nil,
-			expectNil: true,
-		},
-		{
-			name: "with headers",
-			url:  "http://localhost:8080/api",
-			headers: map[string]string{
-				"Authorization": "Bearer token",
-				"Content-Type":  "application/json",
-			},
-			expectNil: false,
-		},
+func TestBuildProviderRequest_ValidWithHeaders(t *testing.T) {
+	url := "http://localhost:8080/api"
+	headers := map[string]string{
+		"Authorization": "Bearer token",
+		"Content-Type":  "application/json",
 	}
+	req := buildProviderRequest(url, headers)
+	if req == nil {
+		t.Fatal("Expected non-nil request")
+	}
+	if req.Method != http.MethodGet {
+		t.Errorf("Expected GET method, got %s", req.Method)
+	}
+	if req.URL.String() != url {
+		t.Errorf("Expected URL %s, got %s", url, req.URL.String())
+	}
+	for k, v := range headers {
+		if req.Header.Get(k) != v {
+			t.Errorf("Expected header %s: %s, got %s", k, v, req.Header.Get(k))
+		}
+	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := buildProviderRequest(tt.url, tt.headers)
+func TestBuildProviderRequest_ValidNoHeaders(t *testing.T) {
+	url := "http://example.com/test"
+	req := buildProviderRequest(url, nil)
+	if req == nil {
+		t.Fatal("Expected non-nil request")
+	}
+	if req.Method != http.MethodGet {
+		t.Errorf("Expected GET method, got %s", req.Method)
+	}
+	if req.URL.String() != url {
+		t.Errorf("Expected URL %s, got %s", url, req.URL.String())
+	}
+}
 
-			if tt.expectNil {
-				if result != nil {
-					t.Error("Expected nil request for invalid URL")
-				}
-				return
-			}
+func TestBuildProviderRequest_HostHeader(t *testing.T) {
+	url := "http://localhost:8080/api"
+	headers := map[string]string{
+		"Host": "custom-host.com",
+	}
+	req := buildProviderRequest(url, headers)
+	if req == nil {
+		t.Fatal("Expected non-nil request")
+	}
+	if req.Host != "custom-host.com" {
+		t.Errorf("Expected Host custom-host.com, got %s", req.Host)
+	}
+}
 
-			if result == nil {
-				t.Error("Expected non-nil request")
-				return
-			}
-
-			if result.Method != "GET" {
-				t.Errorf("Expected GET method, got %s", result.Method)
-			}
-
-			if result.URL.String() != tt.url {
-				t.Errorf("Expected URL %s, got %s", tt.url, result.URL.String())
-			}
-
-			// Check headers
-			for k, v := range tt.headers {
-				if k == "Host" {
-					if result.Host != v {
-						t.Errorf("Expected Host %s, got %s", v, result.Host)
-					}
-				} else {
-					if result.Header.Get(k) != v {
-						t.Errorf("Expected header %s: %s, got %s", k, v, result.Header.Get(k))
-					}
-				}
-			}
-		})
+func TestBuildProviderRequest_InvalidURL(t *testing.T) {
+	req := buildProviderRequest("://invalid-url", nil)
+	if req != nil {
+		t.Error("Expected nil request for invalid URL")
 	}
 }
 
@@ -435,11 +283,14 @@ func TestGenerateConfigurationIntegration(t *testing.T) {
 		},
 	}
 
-	responseBytes, _ := json.Marshal(complexResponse)
+	responseBytes, err := json.Marshal(complexResponse)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write(responseBytes); err != nil {
 			t.Fatal(err)
 		}
@@ -739,7 +590,6 @@ func TestParseDynamicConfigurationWithNilSections(t *testing.T) {
 
 	jsonData := `{"routers": {}, "services": {}}`
 	cfg, err := parseDynamicConfiguration([]byte(jsonData), providerConfig)
-
 	if err != nil {
 		t.Errorf("Expected no error with nil sections, got: %v", err)
 	}
@@ -759,7 +609,6 @@ func TestParseDynamicConfigurationDiscoverFalse(t *testing.T) {
 
 	jsonData := `{"routers": {}, "services": {}, "tcpRouters": {}, "udpRouters": {}}`
 	cfg, err := parseDynamicConfiguration([]byte(jsonData), providerConfig)
-
 	if err != nil {
 		t.Errorf("Expected no error, got: %v", err)
 	}
@@ -772,7 +621,7 @@ func TestGenerateConfigurationReadBodyError(t *testing.T) {
 	// Test server that closes connection immediately to cause body read error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Length", "100") // Set content length but don't write body
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		// Don't write any body, causing a read error
 	}))
 	defer server.Close()
@@ -815,7 +664,7 @@ func TestGenerateConfigurationHTTPClientDoError(t *testing.T) {
 func TestGenerateConfigurationNon200Status(t *testing.T) {
 	// Test with server returning non-200 status
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		if _, err := w.Write([]byte("Not Found")); err != nil {
 			t.Fatal(err)
 		}
@@ -839,7 +688,7 @@ func TestGenerateConfigurationNon200Status(t *testing.T) {
 func TestGenerateConfigurationParseError(t *testing.T) {
 	// Test with server returning invalid JSON that causes parse error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte("invalid json")); err != nil {
 			t.Fatal(err)
 		}
@@ -863,7 +712,7 @@ func TestGenerateConfigurationParseError(t *testing.T) {
 func TestGenerateConfigurationValidTimeoutParsing(t *testing.T) {
 	// Test with valid timeout that gets parsed correctly
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte(`{"routers": {}}`)); err != nil {
 			t.Fatal(err)
 		}
@@ -888,7 +737,7 @@ func TestGenerateConfigurationValidTimeoutParsing(t *testing.T) {
 func TestGenerateConfigurationInvalidTimeoutParsing(t *testing.T) {
 	// Test with invalid timeout that fails to parse
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte(`{"routers": {}}`)); err != nil {
 			t.Fatal(err)
 		}
@@ -913,7 +762,7 @@ func TestGenerateConfigurationInvalidTimeoutParsing(t *testing.T) {
 func TestGenerateConfigurationBodyReadError(t *testing.T) {
 	// Create a custom response body that will fail on Read
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		// Don't write anything, but set a content length to trigger read
 	}))
 	server.Close() // Close server to cause read error
@@ -936,7 +785,7 @@ func TestGenerateConfigurationBodyReadError(t *testing.T) {
 func TestGenerateConfigurationSuccessfulParse(t *testing.T) {
 	// Test successful parsing path where parseDynamicConfiguration returns no error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)", "service": "test-service"}}}`)); err != nil {
 			t.Fatal(err)
 		}
@@ -963,7 +812,7 @@ func TestGenerateConfigurationSuccessfulParse(t *testing.T) {
 func TestGenerateConfigurationParseErrorReturnsConfig(t *testing.T) {
 	// Test that when parseDynamicConfiguration returns an error, we still return the config
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte(`invalid json that will cause parse error`)); err != nil {
 			t.Fatal(err)
 		}
@@ -994,7 +843,7 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			name: "successful 200 response with valid JSON",
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(200)
+					w.WriteHeader(http.StatusOK)
 					if _, err := w.Write([]byte(`{"routers": {}}`)); err != nil {
 						t.Fatal(err)
 					}
@@ -1006,7 +855,7 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			name: "non-200 status code",
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(500)
+					w.WriteHeader(http.StatusInternalServerError)
 					if _, err := w.Write([]byte("Internal Server Error")); err != nil {
 						t.Fatal(err)
 					}
@@ -1018,7 +867,7 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			name: "200 status with parse error",
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(200)
+					w.WriteHeader(http.StatusOK)
 					if _, err := w.Write([]byte("invalid json")); err != nil {
 						t.Fatal(err)
 					}
@@ -1030,7 +879,7 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			name: "200 status with successful parse",
 			setupServer: func() *httptest.Server {
 				return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(200)
+					w.WriteHeader(http.StatusOK)
 					if _, err := w.Write([]byte(`{"routers": {"test": {"rule": "Host(test.com)"}}}`)); err != nil {
 						t.Fatal(err)
 					}

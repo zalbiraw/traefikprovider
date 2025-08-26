@@ -326,75 +326,71 @@ func TestServicesConfig_ShouldApplyOverrides(t *testing.T) {
 	}
 }
 
-func TestCreateConfig(t *testing.T) {
-	config := CreateConfig()
-
-	if config == nil {
+func TestCreateConfig_PollInterval(t *testing.T) {
+	cfg := CreateConfig()
+	if cfg == nil {
 		t.Fatal("CreateConfig returned nil")
 	}
-
-	if config.PollInterval != "5s" {
-		t.Errorf("Expected PollInterval '5s', got '%s'", config.PollInterval)
+	if cfg.PollInterval != "5s" {
+		t.Errorf("expected PollInterval '5s', got '%s'", cfg.PollInterval)
 	}
+}
 
-	if len(config.Providers) != 1 {
-		t.Errorf("Expected 1 provider, got %d", len(config.Providers))
+func TestCreateConfig_ProviderCount(t *testing.T) {
+	cfg := CreateConfig()
+	if cfg == nil {
+		t.Fatal("CreateConfig returned nil")
 	}
-
-	provider := config.Providers[0]
-	if provider.Name != "Traefik Provider" {
-		t.Errorf("Expected provider name 'Traefik Provider', got '%s'", provider.Name)
+	if len(cfg.Providers) != 1 {
+		t.Fatalf("expected 1 provider, got %d", len(cfg.Providers))
 	}
+}
 
-	if provider.Connection.Host != "localhost" {
-		t.Errorf("Expected host 'localhost', got '%s'", provider.Connection.Host)
+func TestCreateConfig_ProviderDefaults(t *testing.T) {
+	cfg := CreateConfig()
+	if cfg == nil {
+		t.Fatal("CreateConfig returned nil")
 	}
-
-	if provider.Connection.Port != 8080 {
-		t.Errorf("Expected port 8080, got %d", provider.Connection.Port)
+	if len(cfg.Providers) != 1 {
+		t.Fatalf("expected 1 provider, got %d", len(cfg.Providers))
 	}
-
-	if provider.Connection.Path != "/api/rawdata" {
-		t.Errorf("Expected path '/api/rawdata', got '%s'", provider.Connection.Path)
+	p := cfg.Providers[0]
+	if p.Name != "Traefik Provider" {
+		t.Errorf("expected provider name 'Traefik Provider', got '%s'", p.Name)
 	}
-
-	if provider.Connection.Timeout != "5s" {
-		t.Errorf("Expected timeout '5s', got '%s'", provider.Connection.Timeout)
+	if p.Connection.Host != "localhost" {
+		t.Errorf("expected host 'localhost', got '%s'", p.Connection.Host)
 	}
-
-	if provider.HTTP != nil {
-		if !provider.HTTP.Discover {
-			t.Error("Expected HTTP.Discover to be true")
-		}
-
-		if provider.HTTP.Routers != nil {
-			if !provider.HTTP.Routers.Discover {
-				t.Error("Expected HTTP.Routers.Discover to be true")
-			}
-		}
-
-		if provider.HTTP.Services != nil {
-			if !provider.HTTP.Services.Discover {
-				t.Error("Expected HTTP.Services.Discover to be true")
-			}
-		}
-
-		if provider.HTTP.Middlewares != nil {
-			if !provider.HTTP.Middlewares.Discover {
-				t.Error("Expected HTTP.Middlewares.Discover to be true")
-			}
-		}
+	if p.Connection.Port != 8080 {
+		t.Errorf("expected port 8080, got %d", p.Connection.Port)
 	}
-
-	if provider.TCP != nil {
-		if !provider.TCP.Discover {
-			t.Error("Expected TCP.Discover to be true")
-		}
+	if p.Connection.Path != "/api/rawdata" {
+		t.Errorf("expected path '/api/rawdata', got '%s'", p.Connection.Path)
 	}
+	if p.Connection.Timeout != "5s" {
+		t.Errorf("expected timeout '5s', got '%s'", p.Connection.Timeout)
+	}
+}
 
-	if provider.UDP != nil {
-		if !provider.UDP.Discover {
-			t.Error("Expected UDP.Discover to be true")
-		}
+func TestCreateConfig_OptionalSectionsNil(t *testing.T) {
+	cfg := CreateConfig()
+	if cfg == nil {
+		t.Fatal("CreateConfig returned nil")
+	}
+	if len(cfg.Providers) == 0 {
+		t.Fatal("expected at least one provider")
+	}
+	p := cfg.Providers[0]
+	if p.HTTP != nil {
+		t.Error("expected HTTP to be nil by default")
+	}
+	if p.TCP != nil {
+		t.Error("expected TCP to be nil by default")
+	}
+	if p.UDP != nil {
+		t.Error("expected UDP to be nil by default")
+	}
+	if p.TLS != nil {
+		t.Error("expected TLS to be nil by default")
 	}
 }

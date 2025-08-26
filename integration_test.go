@@ -20,8 +20,10 @@ const (
 )
 
 var (
+	// setupOnce ensures docker services are started only once across tests.
+	//nolint:gochecknoglobals // Intentionally global to coordinate integration test setup.
 	setupOnce sync.Once
-	setupErr  error
+	errSetup  error
 )
 
 // ensureDockerServices ensures Docker services are running (called once)
@@ -29,14 +31,14 @@ func ensureDockerServices() error {
 	setupOnce.Do(func() {
 		// Check if Docker is available
 		if _, err := exec.LookPath("docker-compose"); err != nil {
-			setupErr = fmt.Errorf("docker-compose not available: %v", err)
+			errSetup = fmt.Errorf("docker-compose not available: %w", err)
 			return
 		}
 
 		// Start Docker Compose services
 		cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "up", "-d")
 		if err := cmd.Run(); err != nil {
-			setupErr = fmt.Errorf("failed to start Docker services: %v", err)
+			errSetup = fmt.Errorf("failed to start Docker services: %w", err)
 			return
 		}
 
@@ -45,16 +47,16 @@ func ensureDockerServices() error {
 		defer cancel()
 
 		if err := waitForService(ctx, "http://localhost:8081/api/rawdata"); err != nil {
-			setupErr = fmt.Errorf("provider1 service not ready: %v", err)
+			errSetup = fmt.Errorf("provider1 service not ready: %w", err)
 			return
 		}
 
 		if err := waitForService(ctx, "http://localhost:8082/api/rawdata"); err != nil {
-			setupErr = fmt.Errorf("provider2 service not ready: %v", err)
+			errSetup = fmt.Errorf("provider2 service not ready: %w", err)
 			return
 		}
 	})
-	return setupErr
+	return errSetup
 }
 
 // TestIntegrationBasic tests basic functionality with live Docker services
@@ -298,23 +300,22 @@ func TestIntegrationOverrides(t *testing.T) {
 
 // Helper function to wait for a service to be ready
 func waitForService(ctx context.Context, url string) error {
-    client := &http.Client{Timeout: 5 * time.Second}
+	client := &http.Client{Timeout: 5 * time.Second}
 
-    for {
-        select {
-        case <-ctx.Done():
-            return ctx.Err()
-        default:
-            resp, err := client.Get(url)
-            if err == nil {
-                if cerr := resp.Body.Close(); cerr != nil {
-                    // Closing error is non-fatal for readiness; continue polling.
-                }
-                if resp.StatusCode == 200 {
-                    return nil
-                }
-            }
-            time.Sleep(2 * time.Second)
-        }
-    }
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			resp, err := client.Get(url)
+			if err == nil {
+				// Best-effort close; error is non-fatal for readiness.
+				_ = resp.Body.Close()
+				if resp.StatusCode == http.StatusOK {
+					return nil
+				}
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}
 }
