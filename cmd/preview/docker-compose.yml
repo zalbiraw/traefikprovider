@@ -4,10 +4,6 @@ services:
     container_name: traefik-main
     command:
       - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.file.directory=/etc/traefik/dynamic"
-      - "--providers.file.watch=true"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.tcp-ep.address=:8000"
@@ -20,9 +16,7 @@ services:
       - "8000:8000"
       - "9000:9000/udp"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./configs/traefik-main:/etc/traefik/dynamic:ro
-      - ./configs/traefik-main/ssl:/etc/ssl:ro
+      - ./configs/traefik-main/traefik.yml:/etc/traefik/traefik.yml:ro
     networks:
       - traefik
     labels:

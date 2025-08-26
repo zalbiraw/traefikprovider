@@ -18,6 +18,43 @@ import (
 func main() {
 	cfg := config.CreateConfig()
 
+	// Override defaults for preview: pull from local Docker-exposed provider1 and provider2
+	cfg.PollInterval = "5s"
+	cfg.Providers = []config.ProviderConfig{
+		{
+			Name: "provider1",
+			Connection: config.ConnectionConfig{
+				Host:    "localhost",
+				Port:    8081,
+				Path:    "/api/rawdata",
+				Timeout: "10s",
+			},
+			HTTP: &config.HTTPSection{
+				Discover: true,
+				Routers: &config.RoutersConfig{
+					Discover:         true,
+					DiscoverPriority: false,
+				},
+			},
+		},
+		{
+			Name: "provider2",
+			Connection: config.ConnectionConfig{
+				Host:    "localhost",
+				Port:    8082,
+				Path:    "/api/rawdata",
+				Timeout: "10s",
+			},
+			HTTP: &config.HTTPSection{
+				Discover: true,
+				Routers: &config.RoutersConfig{
+					Discover:         true,
+					DiscoverPriority: false,
+				},
+			},
+		},
+	}
+
 	p, err := provider.New(context.Background(), cfg, "preview")
 	if err != nil {
 		log.Fatalf("init error: %v", err)

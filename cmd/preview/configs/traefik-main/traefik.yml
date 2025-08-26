@@ -1,0 +1,37 @@
+api:
+  insecure: true
+  dashboard: true
+
+experimental:
+  plugins:
+    traefik:
+      moduleName: github.com/zalbiraw/traefik-provider
+      version: v0.0.1
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+  tcp-ep:
+    address: ":8000"
+  udp-ep:
+    address: ":9000/udp"
+
+providers:
+  plugin:
+    traefik:
+      pollInterval: "5s"
+      providers:
+        - name: provider1
+          connection:
+            host: traefik-provider1
+            port: 8080
+            path: /api/rawdata
+            timeout: "10s"
+        - name: provider2
+          connection:
+            host: traefik-provider2
+            port: 8080
+            path: /api/rawdata
+            timeout: "10s"
