@@ -308,7 +308,7 @@ func TestOverrideTCPServices(t *testing.T) {
 			},
 		}
 
-		OverrideTCPServices(services, overrides)
+		OverrideTCPServices(services, overrides, nil)
 
 		if len(services["test-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers, got %d", len(services["test-service"].LoadBalancer.Servers))
@@ -339,7 +339,7 @@ func TestOverrideTCPServices(t *testing.T) {
 			},
 		}
 
-		OverrideTCPServices(services, overrides)
+		OverrideTCPServices(services, overrides, nil)
 
 		if len(services["test-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers, got %d", len(services["test-service"].LoadBalancer.Servers))
@@ -378,10 +378,7 @@ func TestOverrideTCPServices(t *testing.T) {
 			},
 		}
 
-		OverrideTCPServices(services, overrides)
-
-		// Apply tunnels in a separate pass per new design
-		ApplyTunnels(services, overrides, tunnels)
+		OverrideTCPServices(services, overrides, tunnels)
 
 		if len(services["tunnel-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers from tunnel, got %d", len(services["tunnel-service"].LoadBalancer.Servers))

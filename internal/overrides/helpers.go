@@ -108,35 +108,3 @@ func resolveServerURLs(tunnelName string, tunnels []config.TunnelConfig) []strin
 	}
 	return []string{}
 }
-
-// ApplyTunnels applies tunnels after other overrides. If a server override rule
-// specifies a Tunnel, the matched services' servers are replaced with the tunnel addresses.
-func ApplyTunnels(matched interface{}, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
-	for _, orule := range overrides.Servers {
-		if orule.Tunnel == "" {
-			continue
-		}
-		addrs := resolveServerURLs(orule.Tunnel, tunnels)
-		if len(addrs) == 0 {
-			continue
-		}
-
-		switch m := matched.(type) {
-		case map[string]*dynamic.Service:
-			handleServiceOverride(m, orule.Matcher, addrs,
-				func(s *dynamic.Service, v []string) { s.LoadBalancer.Servers = buildServers(v) },
-				func(s *dynamic.Service, v string) {},
-			)
-		case map[string]*dynamic.TCPService:
-			handleTCPServiceOverride(m, orule.Matcher, addrs,
-				func(s *dynamic.TCPService, v []string) { s.LoadBalancer.Servers = buildTCPServers(v) },
-				func(s *dynamic.TCPService, v string) {},
-			)
-		case map[string]*dynamic.UDPService:
-			handleUDPServiceOverride(m, orule.Matcher, addrs,
-				func(s *dynamic.UDPService, v []string) { s.LoadBalancer.Servers = buildUDPServers(v) },
-				func(s *dynamic.UDPService, v string) {},
-			)
-		}
-	}
-}

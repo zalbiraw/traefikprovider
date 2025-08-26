@@ -51,24 +51,38 @@ func OverrideUDPRouters(matched map[string]*dynamic.UDPRouter, overrides config.
 }
 
 // OverrideUDPServices applies overrides to matched UDP services.
-func OverrideUDPServices(matched map[string]*dynamic.UDPService, overrides config.ServiceOverrides) {
-	// Server overrides
-	for _, orule := range overrides.Servers {
-		handleUDPServiceOverride(matched, orule.Matcher, orule.Value,
-			func(s *dynamic.UDPService, v []string) {
-				servers := []dynamic.UDPServer{}
-				for _, addr := range v {
-					server := dynamic.UDPServer{Address: addr}
-					servers = append(servers, server)
-				}
+// If a server override specifies a Tunnel, the matched services' servers are
+// replaced with the tunnel addresses.
+func OverrideUDPServices(matched map[string]*dynamic.UDPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
+    // Server overrides
+    for _, orule := range overrides.Servers {
+        // If tunnel is specified and resolves to addresses, prefer it
+        if orule.Tunnel != "" {
+            addrs := resolveServerURLs(orule.Tunnel, tunnels)
+            if len(addrs) > 0 {
+                handleUDPServiceOverride(matched, orule.Matcher, addrs,
+                    func(s *dynamic.UDPService, v []string) { s.LoadBalancer.Servers = buildUDPServers(v) },
+                    func(s *dynamic.UDPService, v string) {},
+                )
+                continue
+            }
+        }
 
-				s.LoadBalancer.Servers = servers
-			},
-			func(s *dynamic.UDPService, v string) {
-				s.LoadBalancer.Servers = append(s.LoadBalancer.Servers, dynamic.UDPServer{Address: v})
-			},
-		)
-	}
+        handleUDPServiceOverride(matched, orule.Matcher, orule.Value,
+            func(s *dynamic.UDPService, v []string) {
+                servers := []dynamic.UDPServer{}
+                for _, addr := range v {
+                    server := dynamic.UDPServer{Address: addr}
+                    servers = append(servers, server)
+                }
+
+                s.LoadBalancer.Servers = servers
+            },
+            func(s *dynamic.UDPService, v string) {
+                s.LoadBalancer.Servers = append(s.LoadBalancer.Servers, dynamic.UDPServer{Address: v})
+            },
+        )
+    }
 }
 
 // buildUDPServers converts a list of URLs to dynamic.UDPServer slice.

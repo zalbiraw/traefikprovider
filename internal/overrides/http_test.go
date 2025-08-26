@@ -156,7 +156,7 @@ func TestOverrideHTTPServices_ServerOverrideString(t *testing.T) {
 		}},
 	}
 
-	OverrideHTTPServices(services, overrides)
+	OverrideHTTPServices(services, overrides, nil)
 
 	if len(services["test-service"].LoadBalancer.Servers) != 2 {
 		t.Errorf("Expected 2 servers, got %d", len(services["test-service"].LoadBalancer.Servers))
@@ -188,10 +188,7 @@ func TestOverrideHTTPServices_WithTunnel(t *testing.T) {
 		}},
 	}
 
-	OverrideHTTPServices(services, overrides)
-
-	// Apply tunnels in a separate pass per new design
-	ApplyTunnels(services, overrides, tunnels)
+	OverrideHTTPServices(services, overrides, tunnels)
 
 	// Tunnels should be used for HTTP services when specified.
 	if len(services["tunnel-service"].LoadBalancer.Servers) != 2 {
@@ -221,7 +218,7 @@ func TestOverrideHTTPServices_HealthcheckOverride(t *testing.T) {
 		}},
 	}
 
-	OverrideHTTPServices(services, overrides)
+	OverrideHTTPServices(services, overrides, nil)
 
 	hc := services["health-service"].LoadBalancer.HealthCheck
 	if hc == nil {
@@ -255,7 +252,7 @@ func TestOverrideHTTPServices_HealthcheckPartial(t *testing.T) {
 		}},
 	}
 
-	OverrideHTTPServices(services, overrides)
+	OverrideHTTPServices(services, overrides, nil)
 
 	hc := services["health-service"].LoadBalancer.HealthCheck
 	if hc.Path != "/new-health" {
@@ -286,7 +283,7 @@ func TestOverrideHTTPServices_NoHealthcheck(t *testing.T) {
 	}
 
 	// Should not panic when health check is nil
-	OverrideHTTPServices(services, overrides)
+	OverrideHTTPServices(services, overrides, nil)
 
 	// Service should remain unchanged
 	if services["no-hc-service"].LoadBalancer.HealthCheck != nil {
