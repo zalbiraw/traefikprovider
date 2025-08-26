@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"time"
@@ -45,18 +44,6 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 	cfg, err := parseDynamicConfiguration(body, providerCfg)
 	if err != nil {
 		return cfg
-	}
-
-	// Log response body as string; pretty-print if it's JSON
-	var anyBody interface{}
-	if err := json.Unmarshal(body, &anyBody); err == nil {
-		if pretty, err := json.MarshalIndent(anyBody, "", "  "); err == nil {
-			log.Printf("provider response body (pretty JSON):\n%s", string(pretty))
-		} else {
-			log.Printf("provider response body (json, unindented): %s", string(body))
-		}
-	} else {
-		log.Printf("provider response body (raw): %s", string(body))
 	}
 
 	return cfg

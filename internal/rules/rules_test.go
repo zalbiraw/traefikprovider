@@ -10,7 +10,7 @@ func TestCompileAndMatch_BasicMatchers(t *testing.T) {
 		Service:     "api-service",
 	}
 
-	cases := []struct{
+	cases := []struct {
 		rule string
 		exp  bool
 		name string
@@ -43,7 +43,7 @@ func TestCompileAndMatch_BasicMatchers(t *testing.T) {
 func TestCompileAndMatch_LogicalOps(t *testing.T) {
 	ctx := Context{Name: "web-router", Provider: "file", Entrypoints: []string{"web"}, Service: "svc"}
 
-	cases := []struct{
+	cases := []struct {
 		rule string
 		exp  bool
 		name string
@@ -69,8 +69,8 @@ func TestCompileAndMatch_LogicalOps(t *testing.T) {
 
 func TestCompile_InvalidSyntax(t *testing.T) {
 	bad := []string{
-		"Name(`a`",             // missing )
-		"Unknown(`a`)",         // unknown ident is allowed but will never match (handled at eval), still valid syntax
+		"Name(`a`",                    // missing )
+		"Unknown(`a`)",                // unknown ident is allowed but will never match (handled at eval), still valid syntax
 		"Name(`a`) &&& Provider(`b`)", // bad operator
 		"Name(`a`) Provider(`b`)",     // missing operator
 	}

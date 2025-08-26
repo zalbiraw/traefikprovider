@@ -50,13 +50,12 @@ func OverrideHTTPRouters(matched map[string]*dynamic.Router, overrides config.Ro
 }
 
 // OverrideHTTPServices applies overrides to matched HTTP services.
-func OverrideHTTPServices(matched map[string]*dynamic.Service, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
+func OverrideHTTPServices(matched map[string]*dynamic.Service, overrides config.ServiceOverrides) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
 		handleServiceOverride(matched, orule.Matcher, orule.Value,
 			func(s *dynamic.Service, v []string) {
-				urls := resolveServerURLs(orule.Tunnel, tunnels, v)
-				s.LoadBalancer.Servers = buildServers(urls)
+				s.LoadBalancer.Servers = buildServers(v)
 			},
 			func(s *dynamic.Service, v string) {
 				s.LoadBalancer.Servers = append(s.LoadBalancer.Servers, dynamic.Server{URL: v})
@@ -69,19 +68,6 @@ func OverrideHTTPServices(matched map[string]*dynamic.Service, overrides config.
 			applyHealthcheck(s, hc)
 		})
 	}
-}
-
-// resolveServerURLs returns the list of server URLs to use, taking tunnels into account.
-func resolveServerURLs(tunnelName string, tunnels []config.TunnelConfig, defaults []string) []string {
-	if tunnelName == "" {
-		return defaults
-	}
-	for _, t := range tunnels {
-		if t.Name == tunnelName {
-			return t.Addresses
-		}
-	}
-	return defaults
 }
 
 // buildServers converts a list of URLs to dynamic.Server slice.

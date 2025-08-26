@@ -1,4 +1,5 @@
-// Package filters provides utilities to filter dynamic configuration objects.
+// Package matchers provides utilities to filter dynamic configuration objects
+// (HTTP/TCP/UDP/TLS) using a rules-based matcher DSL.
 package matchers
 
 import (

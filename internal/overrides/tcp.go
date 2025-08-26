@@ -57,23 +57,12 @@ func OverrideTCPRouters(matched map[string]*dynamic.TCPRouter, overrides config.
 }
 
 // OverrideTCPServices applies overrides to matched TCP services.
-func OverrideTCPServices(matched map[string]*dynamic.TCPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
+func OverrideTCPServices(matched map[string]*dynamic.TCPService, overrides config.ServiceOverrides) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
 		handleTCPServiceOverride(matched, orule.Matcher, orule.Value,
 			func(s *dynamic.TCPService, v []string) {
 				servers := []dynamic.TCPServer{}
-
-				// If tunnel is specified, use tunnel addresses instead of v
-				if orule.Tunnel != "" {
-					for _, tunnel := range tunnels {
-						if tunnel.Name == orule.Tunnel {
-							v = tunnel.Addresses
-						}
-					}
-				}
-
-				// Use the provided addresses (or tunnel addresses)
 				for _, addr := range v {
 					server := dynamic.TCPServer{Address: addr}
 					servers = append(servers, server)
@@ -86,4 +75,16 @@ func OverrideTCPServices(matched map[string]*dynamic.TCPService, overrides confi
 			},
 		)
 	}
+}
+
+// buildTCPServers converts a list of URLs to dynamic.TCPServer slice.
+func buildTCPServers(urls []string) []dynamic.TCPServer {
+	if len(urls) == 0 {
+		return nil
+	}
+	servers := make([]dynamic.TCPServer, 0, len(urls))
+	for _, addr := range urls {
+		servers = append(servers, dynamic.TCPServer{Address: addr})
+	}
+	return servers
 }

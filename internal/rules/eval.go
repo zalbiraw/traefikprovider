@@ -20,7 +20,9 @@ type Program struct {
 
 // Match evaluates the program against a context.
 func (p *Program) Match(ctx Context) bool {
-	if p == nil || p.expr == nil { return true }
+	if p == nil || p.expr == nil {
+		return true
+	}
 	return eval(p.expr, ctx)
 }
 
@@ -35,7 +37,9 @@ func eval(e Expr, ctx Context) bool {
 		}
 		return false
 	case UnaryExpr:
-		if n.Op == NOT { return !eval(n.Expr, ctx) }
+		if n.Op == NOT {
+			return !eval(n.Expr, ctx)
+		}
 		return false
 	case CallExpr:
 		return callMatcher(n.Name, n.Arg, ctx)
@@ -45,7 +49,11 @@ func eval(e Expr, ctx Context) bool {
 }
 
 func anyEntry(entries []string, pred func(string) bool) bool {
-	for _, e := range entries { if pred(e) { return true } }
+	for _, e := range entries {
+		if pred(e) {
+			return true
+		}
+	}
 	return false
 }
 
@@ -73,8 +81,12 @@ func callMatcher(name, arg string, ctx Context) bool {
 }
 
 func matchRegexp(pattern, value string) bool {
-	if pattern == "" { return true }
+	if pattern == "" {
+		return true
+	}
 	re, err := regexp.Compile(pattern)
-	if err != nil { return false }
+	if err != nil {
+		return false
+	}
 	return re.MatchString(value)
 }

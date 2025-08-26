@@ -103,7 +103,8 @@ func processHTTPServices(raw map[string]interface{}, httpConfig *dynamic.HTTPCon
 		}
 	}
 	overrides.StripProvidersHTTP(httpConfig)
-	overrides.OverrideHTTPServices(httpConfig.Services, pc.Services.Overrides, tunnels)
+	overrides.OverrideHTTPServices(httpConfig.Services, pc.Services.Overrides)
+	overrides.ApplyTunnels(httpConfig.Services, pc.Services.Overrides, tunnels)
 }
 
 func processHTTPMiddlewares(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, providerMatcher string) {
@@ -199,7 +200,8 @@ func processTCPServices(raw map[string]interface{}, tcpConfig *dynamic.TCPConfig
 		}
 	}
 	overrides.StripProvidersTCP(tcpConfig)
-	overrides.OverrideTCPServices(tcpConfig.Services, pc.Services.Overrides, tunnels)
+	overrides.OverrideTCPServices(tcpConfig.Services, pc.Services.Overrides)
+	overrides.ApplyTunnels(tcpConfig.Services, pc.Services.Overrides, tunnels)
 }
 
 func processTCPMiddlewares(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, providerMatcher string) {
@@ -283,7 +285,8 @@ func processUDPServices(raw map[string]interface{}, udpConfig *dynamic.UDPConfig
 		}
 	}
 	overrides.StripProvidersUDP(udpConfig)
-	overrides.OverrideUDPServices(udpConfig.Services, pc.Services.Overrides, tunnels)
+	overrides.OverrideUDPServices(udpConfig.Services, pc.Services.Overrides)
+	overrides.ApplyTunnels(udpConfig.Services, pc.Services.Overrides, tunnels)
 }
 
 func parseTLSConfig(raw map[string]interface{}, tlsConfig *dynamic.TLSConfiguration, providerConfig *config.TLSSection) {

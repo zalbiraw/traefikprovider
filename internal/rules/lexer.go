@@ -16,23 +16,29 @@ func newLexer(input string) *lexer {
 }
 
 func (l *lexer) next() rune {
-	if l.pos >= l.len { return 0 }
+	if l.pos >= l.len {
+		return 0
+	}
 	ch := l.src[l.pos]
 	l.pos++
 	return ch
 }
 
 func (l *lexer) peek() rune {
-	if l.pos >= l.len { return 0 }
+	if l.pos >= l.len {
+		return 0
+	}
 	return l.src[l.pos]
 }
 
 func (l *lexer) skipSpace() {
-	for unicode.IsSpace(l.peek()) { l.next() }
+	for unicode.IsSpace(l.peek()) {
+		l.next()
+	}
 }
 
 func (l *lexer) scanIdent() string {
-	start := l.pos-1
+	start := l.pos - 1
 	for {
 		ch := l.peek()
 		if unicode.IsLetter(ch) || unicode.IsDigit(ch) || ch == '_' {
@@ -49,13 +55,18 @@ func (l *lexer) scanBacktickString() (string, bool) {
 	start := l.pos
 	for {
 		ch := l.next()
-		if ch == 0 { return "", false }
+		if ch == 0 {
+			return "", false
+		}
 		if ch == '`' {
-			return string(l.src[start:l.pos-1]), true
+			return string(l.src[start : l.pos-1]), true
 		}
 	}
 }
 
+// LexAll tokenizes the input into a slice of tokens.
+//
+//nolint:gocyclo // The small state machine is clearer un-factored.
 func LexAll(input string) ([]Token, error) {
 	l := newLexer(input)
 	toks := []Token{}
@@ -72,10 +83,18 @@ func LexAll(input string) ([]Token, error) {
 		case '!':
 			toks = append(toks, Token{Type: NOT, Lexeme: "!"})
 		case '&':
-			if l.peek() == '&' { l.next(); toks = append(toks, Token{Type: AND, Lexeme: "&&"}); break }
+			if l.peek() == '&' {
+				l.next()
+				toks = append(toks, Token{Type: AND, Lexeme: "&&"})
+				break
+			}
 			return nil, ErrSyntax
 		case '|':
-			if l.peek() == '|' { l.next(); toks = append(toks, Token{Type: OR, Lexeme: "||"}); break }
+			if l.peek() == '|' {
+				l.next()
+				toks = append(toks, Token{Type: OR, Lexeme: "||"})
+				break
+			}
 			return nil, ErrSyntax
 		case ',':
 			toks = append(toks, Token{Type: COMMA, Lexeme: ","})

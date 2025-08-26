@@ -20,27 +20,27 @@ func TestParse_UnaryOperator(t *testing.T) {
 }
 
 func TestParse_Errors_PrimaryAndUnary(t *testing.T) {
-    // Bad primary: starts with RPAREN
-    if _, err := parse(")"); err == nil {
-        t.Fatalf("expected syntax error for stray ')', got nil")
-    }
-    // Missing closing RPAREN after group
-    if _, err := parse("(Name(`x`)"); err == nil {
-        t.Fatalf("expected syntax error for missing ')', got nil")
-    }
-    // Dangling NOT without primary
-    if _, err := parse("!"); err == nil {
-        t.Fatalf("expected syntax error for dangling '!', got nil")
-    }
+	// Bad primary: starts with RPAREN
+	if _, err := parse(")"); err == nil {
+		t.Fatalf("expected syntax error for stray ')', got nil")
+	}
+	// Missing closing RPAREN after group
+	if _, err := parse("(Name(`x`)"); err == nil {
+		t.Fatalf("expected syntax error for missing ')', got nil")
+	}
+	// Dangling NOT without primary
+	if _, err := parse("!"); err == nil {
+		t.Fatalf("expected syntax error for dangling '!', got nil")
+	}
 }
 
 func TestParse_Errors_AndOperatorDangling(t *testing.T) {
-    // Left side ok, dangling '&&' without right operand
-    if _, err := parse("Name(`a`) &&"); err == nil {
-        t.Fatalf("expected syntax error for dangling &&, got nil")
-    }
-    // Also for OR
-    if _, err := parse("Name(`a`) ||"); err == nil {
-        t.Fatalf("expected syntax error for dangling ||, got nil")
-    }
+	// Left side ok, dangling '&&' without right operand
+	if _, err := parse("Name(`a`) &&"); err == nil {
+		t.Fatalf("expected syntax error for dangling &&, got nil")
+	}
+	// Also for OR
+	if _, err := parse("Name(`a`) ||"); err == nil {
+		t.Fatalf("expected syntax error for dangling ||, got nil")
+	}
 }

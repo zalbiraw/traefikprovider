@@ -1,0 +1,72 @@
+api:
+  insecure: true
+  dashboard: true
+
+experimental:
+  localPlugins:
+    traefik:
+      moduleName: github.com/zalbiraw/traefikprovider
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+  tcp-ep:
+    address: ":8000"
+  udp-ep:
+    address: ":9000/udp"
+
+accessLog: {}
+
+providers:
+  plugin:
+    traefik:
+      pollInterval: "5s"
+      providers:
+        - name: provider1
+          connection:
+            host: traefik-provider1
+            port: 8080
+            path: /api/rawdata
+            timeout: "10s"
+          matcher: "Provider(`file`)"
+          tunnels:
+            - name: web-tunnel
+              addresses:
+                - "http://traefik-provider1"
+          http:
+            discover: true
+            routers:
+              discover: true
+              discoverPriority: false
+              matcher: "Entrypoint(`web`)"
+            services:
+              discover: true
+              overrides:
+                servers:
+                  - tunnel: "web-tunnel"
+                    matcher: "Name(`provider1-web-service`)"
+        - name: provider2
+          connection:
+            host: traefik-provider2
+            port: 8080
+            path: /api/rawdata
+            timeout: "10s"
+          matcher: "Provider(`file`)"
+          tunnels:
+            - name: web-tunnel
+              addresses:
+                - "http://traefik-provider2"
+          http:
+            discover: true
+            routers:
+              discover: true
+              discoverPriority: false
+              matcher: "Entrypoint(`web`)"
+            services:
+              discover: true
+              overrides:
+                servers:
+                  - tunnel: "web-tunnel"
+                    matcher: "Name(`provider2-web-service`)"

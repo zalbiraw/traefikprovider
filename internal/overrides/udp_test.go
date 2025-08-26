@@ -126,7 +126,7 @@ func TestOverrideUDPServices(t *testing.T) {
 			},
 		}
 
-		OverrideUDPServices(services, overrides, []config.TunnelConfig{})
+		OverrideUDPServices(services, overrides)
 
 		if len(services["udp-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers, got %d", len(services["udp-service"].LoadBalancer.Servers))
@@ -157,7 +157,7 @@ func TestOverrideUDPServices(t *testing.T) {
 			},
 		}
 
-		OverrideUDPServices(services, overrides, []config.TunnelConfig{})
+		OverrideUDPServices(services, overrides)
 
 		if len(services["udp-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers, got %d", len(services["udp-service"].LoadBalancer.Servers))
@@ -196,7 +196,10 @@ func TestOverrideUDPServices(t *testing.T) {
 			},
 		}
 
-		OverrideUDPServices(services, overrides, tunnels)
+		OverrideUDPServices(services, overrides)
+
+		// Apply tunnels in a separate pass per new design
+		ApplyTunnels(services, overrides, tunnels)
 
 		if len(services["tunnel-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers from tunnel, got %d", len(services["tunnel-service"].LoadBalancer.Servers))

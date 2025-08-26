@@ -54,15 +54,15 @@ func TestHTTPRouters_DiscoverPriorityReset(t *testing.T) {
 	raw := map[string]interface{}{
 		"routers": map[string]interface{}{
 			"r1": map[string]interface{}{
-				"rule":    "Host(`example.com`)",
-				"service": "svc",
+				"rule":     "Host(`example.com`)",
+				"service":  "svc",
 				"priority": 42,
 			},
 		},
 	}
 	pc := &config.HTTPSection{
-		Routers: &config.RoutersConfig{Discover: true, DiscoverPriority: false},
-		Services: &config.ServicesConfig{Discover: false},
+		Routers:     &config.RoutersConfig{Discover: true, DiscoverPriority: false},
+		Services:    &config.ServicesConfig{Discover: false},
 		Middlewares: &config.MiddlewaresConfig{Discover: false},
 	}
 
@@ -80,15 +80,15 @@ func TestTCPRouters_DiscoverPriorityReset(t *testing.T) {
 	raw := map[string]interface{}{
 		"tcpRouters": map[string]interface{}{
 			"r1": map[string]interface{}{
-				"rule":    "HostSNI(`example.com`)",
-				"service": "svc",
+				"rule":     "HostSNI(`example.com`)",
+				"service":  "svc",
 				"priority": 99,
 			},
 		},
 	}
 	pc := &config.TCPSection{
-		Routers: &config.RoutersConfig{Discover: true, DiscoverPriority: false},
-		Services: &config.ServicesConfig{Discover: false},
+		Routers:     &config.RoutersConfig{Discover: true, DiscoverPriority: false},
+		Services:    &config.ServicesConfig{Discover: false},
 		Middlewares: &config.MiddlewaresConfig{Discover: false},
 	}
 

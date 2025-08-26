@@ -51,23 +51,12 @@ func OverrideUDPRouters(matched map[string]*dynamic.UDPRouter, overrides config.
 }
 
 // OverrideUDPServices applies overrides to matched UDP services.
-func OverrideUDPServices(matched map[string]*dynamic.UDPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
+func OverrideUDPServices(matched map[string]*dynamic.UDPService, overrides config.ServiceOverrides) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
 		handleUDPServiceOverride(matched, orule.Matcher, orule.Value,
 			func(s *dynamic.UDPService, v []string) {
 				servers := []dynamic.UDPServer{}
-
-				// If tunnel is specified, use tunnel addresses instead of v
-				if orule.Tunnel != "" {
-					for _, tunnel := range tunnels {
-						if tunnel.Name == orule.Tunnel {
-							v = tunnel.Addresses
-						}
-					}
-				}
-
-				// Use the provided addresses (or tunnel addresses)
 				for _, addr := range v {
 					server := dynamic.UDPServer{Address: addr}
 					servers = append(servers, server)
@@ -80,4 +69,16 @@ func OverrideUDPServices(matched map[string]*dynamic.UDPService, overrides confi
 			},
 		)
 	}
+}
+
+// buildUDPServers converts a list of URLs to dynamic.UDPServer slice.
+func buildUDPServers(urls []string) []dynamic.UDPServer {
+	if len(urls) == 0 {
+		return nil
+	}
+	servers := make([]dynamic.UDPServer, 0, len(urls))
+	for _, addr := range urls {
+		servers = append(servers, dynamic.UDPServer{Address: addr})
+	}
+	return servers
 }

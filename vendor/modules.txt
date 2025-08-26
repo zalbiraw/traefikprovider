@@ -3,6 +3,3 @@
 github.com/traefik/genconf/dynamic
 github.com/traefik/genconf/dynamic/tls
 github.com/traefik/genconf/dynamic/types
-# gopkg.in/yaml.v3 v3.0.1
-## explicit
-gopkg.in/yaml.v3

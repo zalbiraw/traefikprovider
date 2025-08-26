@@ -1,0 +1,13 @@
+http:
+  routers:
+    provider1-web-router:
+      rule: "Host(`provider1.example.com`) && PathPrefix(`/web`)"
+      service: "provider1-web-service"
+      entryPoints:
+        - "web"
+
+  services:
+    provider1-web-service:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"

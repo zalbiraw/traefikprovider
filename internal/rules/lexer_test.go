@@ -4,10 +4,10 @@ import "testing"
 
 func TestLexAll_Errors(t *testing.T) {
 	cases := []string{
-		"&",           // lone &
-		"|",           // lone |
+		"&",             // lone &
+		"|",             // lone |
 		"`unterminated", // unterminated backtick string
-		"$",           // invalid starting char
+		"$",             // invalid starting char
 	}
 	for _, in := range cases {
 		if _, err := LexAll(in); err == nil {
