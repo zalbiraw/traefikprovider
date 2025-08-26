@@ -13,8 +13,8 @@ func TestOverrideHTTPRouters_RuleOverride(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Rules: []config.OverrideRule{{
-			Filter: config.RouterFilter{Name: "test-router"},
-			Value:  "Host(`new.example.com`)",
+			Matcher: "Name(`test-router`)",
+			Value:   "Host(`new.example.com`)",
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -29,8 +29,8 @@ func TestOverrideHTTPRouters_RuleOverrideWithDollar(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Rules: []config.OverrideRule{{
-			Filter: config.RouterFilter{Name: "api-router"},
-			Value:  "$1 && PathPrefix(`/v1`)",
+			Matcher: "Name(`api-router`)",
+			Value:   "$1 && PathPrefix(`/v1`)",
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -46,8 +46,8 @@ func TestOverrideHTTPRouters_ServiceOverride(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Services: []config.OverrideService{{
-			Filter: config.RouterFilter{Name: "service-router"},
-			Value:  "new-service",
+			Matcher: "Name(`service-router`)",
+			Value:   "new-service",
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -62,8 +62,8 @@ func TestOverrideHTTPRouters_ServiceOverrideWithDollar(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Services: []config.OverrideService{{
-			Filter: config.RouterFilter{Name: "service-router"},
-			Value:  "$1-v2",
+			Matcher: "Name(`service-router`)",
+			Value:   "$1-v2",
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -78,8 +78,8 @@ func TestOverrideHTTPRouters_EntrypointsString(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Entrypoints: []config.OverrideEntrypoint{{
-			Filter: config.RouterFilter{Name: "ep-router"},
-			Value:  "websecure",
+			Matcher: "Name(`ep-router`)",
+			Value:   "websecure",
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -95,8 +95,8 @@ func TestOverrideHTTPRouters_EntrypointsArray(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Entrypoints: []config.OverrideEntrypoint{{
-			Filter: config.RouterFilter{Name: "ep-router"},
-			Value:  []string{"web", "websecure"},
+			Matcher: "Name(`ep-router`)",
+			Value:   []string{"web", "websecure"},
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -112,8 +112,8 @@ func TestOverrideHTTPRouters_MiddlewaresString(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Middlewares: []config.OverrideMiddleware{{
-			Filter: config.RouterFilter{Name: "mw-router"},
-			Value:  "cors",
+			Matcher: "Name(`mw-router`)",
+			Value:   "cors",
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -129,8 +129,8 @@ func TestOverrideHTTPRouters_MiddlewaresArray(t *testing.T) {
 	}
 	overrides := config.RouterOverrides{
 		Middlewares: []config.OverrideMiddleware{{
-			Filter: config.RouterFilter{Name: "mw-router"},
-			Value:  []string{"cors", "ratelimit"},
+			Matcher: "Name(`mw-router`)",
+			Value:   []string{"cors", "ratelimit"},
 		}},
 	}
 	OverrideHTTPRouters(routers, overrides)
@@ -151,8 +151,8 @@ func TestOverrideHTTPServices_ServerOverrideString(t *testing.T) {
 
 	overrides := config.ServiceOverrides{
 		Servers: []config.OverrideServer{{
-			Filter: config.ServiceFilter{Name: "test-service"},
-			Value:  "http://new-server:8080",
+			Matcher: "Name(`test-service`)",
+			Value:   "http://new-server:8080",
 		}},
 	}
 
@@ -182,9 +182,9 @@ func TestOverrideHTTPServices_WithTunnel(t *testing.T) {
 
 	overrides := config.ServiceOverrides{
 		Servers: []config.OverrideServer{{
-			Filter: config.ServiceFilter{Name: "tunnel-service"},
-			Value:  []string{"http://ignored:8080"},
-			Tunnel: "my-tunnel",
+			Matcher: "Name(`tunnel-service`)",
+			Value:   []string{"http://ignored:8080"},
+			Tunnel:  "my-tunnel",
 		}},
 	}
 
@@ -210,7 +210,7 @@ func TestOverrideHTTPServices_HealthcheckOverride(t *testing.T) {
 
 	overrides := config.ServiceOverrides{
 		Healthchecks: []config.OverrideHealthcheck{{
-			Filter:   config.ServiceFilter{Name: "health-service"},
+			Matcher:  "Name(`health-service`)",
 			Path:     "/health",
 			Interval: "30s",
 			Timeout:  "5s",
@@ -246,8 +246,8 @@ func TestOverrideHTTPServices_HealthcheckPartial(t *testing.T) {
 
 	overrides := config.ServiceOverrides{
 		Healthchecks: []config.OverrideHealthcheck{{
-			Filter: config.ServiceFilter{Name: "health-service"},
-			Path:   "/new-health", // Only override path
+			Matcher: "Name(`health-service`)",
+			Path:    "/new-health", // Only override path
 		}},
 	}
 
@@ -276,8 +276,8 @@ func TestOverrideHTTPServices_NoHealthcheck(t *testing.T) {
 
 	overrides := config.ServiceOverrides{
 		Healthchecks: []config.OverrideHealthcheck{{
-			Filter: config.ServiceFilter{Name: "no-hc-service"},
-			Path:   "/health",
+			Matcher: "Name(`no-hc-service`)",
+			Path:    "/health",
 		}},
 	}
 

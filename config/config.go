@@ -4,18 +4,13 @@ package config
 // ProviderConfig defines a single upstream provider to poll and filter.
 type ProviderConfig struct {
 	Name       string           `json:"name,omitempty" yaml:"name,omitempty"`
-	Filter     ProviderFilter   `json:"filter,omitempty" yaml:"filter,omitempty"`
+	Matcher    string           `json:"matcher,omitempty" yaml:"matcher,omitempty"`
 	Connection ConnectionConfig `json:"connection,omitempty" yaml:"connection,omitempty"`
 	HTTP       *HTTPSection     `json:"http,omitempty" yaml:"http,omitempty"`
 	TCP        *TCPSection      `json:"tcp,omitempty" yaml:"tcp,omitempty"`
 	UDP        *UDPSection      `json:"udp,omitempty" yaml:"udp,omitempty"`
 	TLS        *TLSSection      `json:"tls,omitempty" yaml:"tls,omitempty"`
 	Tunnels    []TunnelConfig   `json:"tunnels,omitempty" yaml:"tunnels,omitempty"`
-}
-
-// ProviderFilter narrows discovered objects to a specific provider name.
-type ProviderFilter struct {
-	Provider string `json:"provider,omitempty" yaml:"provider,omitempty"`
 }
 
 // ConnectionConfig configures how to connect to the upstream provider API.

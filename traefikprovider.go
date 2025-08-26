@@ -27,9 +27,7 @@ func CreateConfig() *Config {
 					Path:    "/api/rawdata",
 					Timeout: "5s",
 				},
-				Filter: config.ProviderFilter{
-					Provider: "file",
-				},
+				Matcher: "Provider(`file`)",
 			},
 		},
 	}

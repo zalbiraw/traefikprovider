@@ -6,7 +6,7 @@ import (
 
 	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefikprovider/config"
-	"github.com/zalbiraw/traefikprovider/internal/filters"
+	"github.com/zalbiraw/traefikprovider/internal/matchers"
 	"github.com/zalbiraw/traefikprovider/internal/overrides"
 )
 
@@ -31,16 +31,16 @@ func convertToTyped[T any](data interface{}) map[string]*T {
 	return result
 }
 
-func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
+func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection, providerMatcher string, tunnels []config.TunnelConfig) {
 	ensureHTTPDefaults(providerConfig)
 	if providerConfig.Routers.Discover {
-		processHTTPRouters(raw, httpConfig, providerConfig, pf)
+		processHTTPRouters(raw, httpConfig, providerConfig, providerMatcher)
 	}
 	if providerConfig.Services.Discover {
-		processHTTPServices(raw, httpConfig, providerConfig, pf, tunnels)
+		processHTTPServices(raw, httpConfig, providerConfig, providerMatcher, tunnels)
 	}
 	if providerConfig.Middlewares.Discover {
-		processHTTPMiddlewares(raw, httpConfig, providerConfig, pf)
+		processHTTPMiddlewares(raw, httpConfig, providerConfig, providerMatcher)
 	}
 }
 
@@ -56,10 +56,10 @@ func ensureHTTPDefaults(pc *config.HTTPSection) {
 	}
 }
 
-func processHTTPRouters(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, pf config.ProviderFilter) {
+func processHTTPRouters(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, providerMatcher string) {
 	if routers, ok := raw["routers"]; ok {
 		typedRouters := convertToTyped[dynamic.Router](routers)
-		httpConfig.Routers = filters.HTTPRouters(typedRouters, pc.Routers, pf)
+		httpConfig.Routers = matchers.HTTPRouters(typedRouters, pc.Routers, providerMatcher)
 	}
 	for _, extra := range pc.Routers.ExtraRoutes {
 		b, err := json.Marshal(extra)
@@ -84,10 +84,10 @@ func processHTTPRouters(raw map[string]interface{}, httpConfig *dynamic.HTTPConf
 	}
 }
 
-func processHTTPServices(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
+func processHTTPServices(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, providerMatcher string, tunnels []config.TunnelConfig) {
 	if services, ok := raw["services"]; ok {
 		typedServices := convertToTyped[dynamic.Service](services)
-		httpConfig.Services = filters.HTTPServices(typedServices, pc.Services, pf)
+		httpConfig.Services = matchers.HTTPServices(typedServices, pc.Services, providerMatcher)
 	}
 	for _, extra := range pc.Services.ExtraServices {
 		b, err := json.Marshal(extra)
@@ -106,10 +106,10 @@ func processHTTPServices(raw map[string]interface{}, httpConfig *dynamic.HTTPCon
 	overrides.OverrideHTTPServices(httpConfig.Services, pc.Services.Overrides, tunnels)
 }
 
-func processHTTPMiddlewares(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, pf config.ProviderFilter) {
+func processHTTPMiddlewares(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, providerMatcher string) {
 	if middlewares, ok := raw["middlewares"]; ok {
 		typedMiddlewares := convertToTyped[dynamic.Middleware](middlewares)
-		httpConfig.Middlewares = filters.HTTPMiddlewares(typedMiddlewares, pc.Middlewares, pf)
+		httpConfig.Middlewares = matchers.HTTPMiddlewares(typedMiddlewares, pc.Middlewares, providerMatcher)
 	}
 	for _, extra := range pc.Middlewares.ExtraMiddlewares {
 		b, err := json.Marshal(extra)
@@ -127,16 +127,16 @@ func processHTTPMiddlewares(raw map[string]interface{}, httpConfig *dynamic.HTTP
 	overrides.StripProvidersHTTP(httpConfig)
 }
 
-func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
+func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection, providerMatcher string, tunnels []config.TunnelConfig) {
 	ensureTCPDefaults(providerConfig)
 	if providerConfig.Routers.Discover {
-		processTCPRouters(raw, tcpConfig, providerConfig, pf)
+		processTCPRouters(raw, tcpConfig, providerConfig, providerMatcher)
 	}
 	if providerConfig.Services.Discover {
-		processTCPServices(raw, tcpConfig, providerConfig, pf, tunnels)
+		processTCPServices(raw, tcpConfig, providerConfig, providerMatcher, tunnels)
 	}
 	if providerConfig.Middlewares.Discover {
-		processTCPMiddlewares(raw, tcpConfig, providerConfig, pf)
+		processTCPMiddlewares(raw, tcpConfig, providerConfig, providerMatcher)
 	}
 }
 
@@ -152,10 +152,10 @@ func ensureTCPDefaults(pc *config.TCPSection) {
 	}
 }
 
-func processTCPRouters(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, pf config.ProviderFilter) {
+func processTCPRouters(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, providerMatcher string) {
 	if routers, ok := raw["tcpRouters"]; ok {
 		typedRouters := convertToTyped[dynamic.TCPRouter](routers)
-		tcpConfig.Routers = filters.TCPRouters(typedRouters, pc.Routers, pf)
+		tcpConfig.Routers = matchers.TCPRouters(typedRouters, pc.Routers, providerMatcher)
 	}
 	for _, extra := range pc.Routers.ExtraRoutes {
 		b, err := json.Marshal(extra)
@@ -180,10 +180,10 @@ func processTCPRouters(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigu
 	}
 }
 
-func processTCPServices(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
+func processTCPServices(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, providerMatcher string, tunnels []config.TunnelConfig) {
 	if services, ok := raw["tcpServices"]; ok {
 		typedServices := convertToTyped[dynamic.TCPService](services)
-		tcpConfig.Services = filters.TCPServices(typedServices, pc.Services, pf)
+		tcpConfig.Services = matchers.TCPServices(typedServices, pc.Services, providerMatcher)
 	}
 	for _, extra := range pc.Services.ExtraServices {
 		b, err := json.Marshal(extra)
@@ -202,10 +202,10 @@ func processTCPServices(raw map[string]interface{}, tcpConfig *dynamic.TCPConfig
 	overrides.OverrideTCPServices(tcpConfig.Services, pc.Services.Overrides, tunnels)
 }
 
-func processTCPMiddlewares(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, pf config.ProviderFilter) {
+func processTCPMiddlewares(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, providerMatcher string) {
 	if middlewares, ok := raw["tcpMiddlewares"]; ok {
 		typedMiddlewares := convertToTyped[dynamic.TCPMiddleware](middlewares)
-		tcpConfig.Middlewares = filters.TCPMiddlewares(typedMiddlewares, pc.Middlewares, pf)
+		tcpConfig.Middlewares = matchers.TCPMiddlewares(typedMiddlewares, pc.Middlewares, providerMatcher)
 	}
 	for _, extra := range pc.Middlewares.ExtraMiddlewares {
 		b, err := json.Marshal(extra)
@@ -223,13 +223,13 @@ func processTCPMiddlewares(raw map[string]interface{}, tcpConfig *dynamic.TCPCon
 	overrides.StripProvidersTCP(tcpConfig)
 }
 
-func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
+func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection, providerMatcher string, tunnels []config.TunnelConfig) {
 	ensureUDPDefaults(providerConfig)
 	if providerConfig.Routers.Discover {
-		processUDPRouters(raw, udpConfig, providerConfig, pf)
+		processUDPRouters(raw, udpConfig, providerConfig, providerMatcher)
 	}
 	if providerConfig.Services.Discover {
-		processUDPServices(raw, udpConfig, providerConfig, pf, tunnels)
+		processUDPServices(raw, udpConfig, providerConfig, providerMatcher, tunnels)
 	}
 }
 
@@ -242,10 +242,10 @@ func ensureUDPDefaults(pc *config.UDPSection) {
 	}
 }
 
-func processUDPRouters(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, pc *config.UDPSection, pf config.ProviderFilter) {
+func processUDPRouters(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, pc *config.UDPSection, providerMatcher string) {
 	if routers, ok := raw["udpRouters"]; ok {
 		typedRouters := convertToTyped[dynamic.UDPRouter](routers)
-		udpConfig.Routers = filters.UDPRouters(typedRouters, pc.Routers, pf)
+		udpConfig.Routers = matchers.UDPRouters(typedRouters, pc.Routers, providerMatcher)
 	}
 	for _, extra := range pc.Routers.ExtraRoutes {
 		b, err := json.Marshal(extra)
@@ -264,10 +264,10 @@ func processUDPRouters(raw map[string]interface{}, udpConfig *dynamic.UDPConfigu
 	overrides.OverrideUDPRouters(udpConfig.Routers, pc.Routers.Overrides)
 }
 
-func processUDPServices(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, pc *config.UDPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
+func processUDPServices(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, pc *config.UDPSection, providerMatcher string, tunnels []config.TunnelConfig) {
 	if services, ok := raw["udpServices"]; ok {
 		typedServices := convertToTyped[dynamic.UDPService](services)
-		udpConfig.Services = filters.UDPServices(typedServices, pc.Services, pf)
+		udpConfig.Services = matchers.UDPServices(typedServices, pc.Services, providerMatcher)
 	}
 	for _, extra := range pc.Services.ExtraServices {
 		b, err := json.Marshal(extra)
@@ -288,12 +288,12 @@ func processUDPServices(raw map[string]interface{}, udpConfig *dynamic.UDPConfig
 
 func parseTLSConfig(raw map[string]interface{}, tlsConfig *dynamic.TLSConfiguration, providerConfig *config.TLSSection) {
 	if certificates, ok := raw["tlsCertificates"]; ok {
-		tlsConfig.Certificates = filters.TLSCertificates(certificates, providerConfig)
+		tlsConfig.Certificates = matchers.TLSCertificates(certificates, providerConfig)
 	}
 	if options, ok := raw["tlsOptions"]; ok {
-		tlsConfig.Options = filters.TLSOptions(options, providerConfig)
+		tlsConfig.Options = matchers.TLSOptions(options, providerConfig)
 	}
 	if stores, ok := raw["tlsStores"]; ok {
-		tlsConfig.Stores = filters.TLSStores(stores, providerConfig)
+		tlsConfig.Stores = matchers.TLSStores(stores, providerConfig)
 	}
 }

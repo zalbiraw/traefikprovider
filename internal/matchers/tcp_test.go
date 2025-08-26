@@ -1,4 +1,4 @@
-package filters
+package matchers
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/zalbiraw/traefikprovider/config"
 )
 
-func TestFilterTCPRouters(t *testing.T) {
+func TestMatchTCPRouters(t *testing.T) {
 	tests := []struct {
 		name     string
 		routers  map[string]*dynamic.TCPRouter
@@ -15,7 +15,7 @@ func TestFilterTCPRouters(t *testing.T) {
 		expected []string
 	}{
 		{
-			name: "filter all routers",
+			name: "match all routers",
 			routers: map[string]*dynamic.TCPRouter{
 				"tcp-router": {
 					Rule:    "HostSNI(`tcp.example.com`)",
@@ -30,7 +30,7 @@ func TestFilterTCPRouters(t *testing.T) {
 			expected: []string{"mysql-router", "tcp-router"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			routers: map[string]*dynamic.TCPRouter{
 				"tcp-router": {
 					Rule:    "HostSNI(`tcp.example.com`)",
@@ -48,7 +48,7 @@ func TestFilterTCPRouters(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := TCPRouters(tt.routers, &config.RoutersConfig{Filter: config.RouterFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := TCPRouters(tt.routers, &config.RoutersConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d routers, got %d", len(tt.expected), len(result))
@@ -72,7 +72,7 @@ func TestTCPServices(t *testing.T) {
 		expected []string
 	}{
 		{
-			name: "filter all TCP services",
+			name: "match all TCP services",
 			services: map[string]*dynamic.TCPService{
 				"tcp-service": {
 					LoadBalancer: &dynamic.TCPServersLoadBalancer{
@@ -93,7 +93,7 @@ func TestTCPServices(t *testing.T) {
 			expected: []string{"mysql-service", "tcp-service"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			services: map[string]*dynamic.TCPService{
 				"tcp-service": {
 					LoadBalancer: &dynamic.TCPServersLoadBalancer{
@@ -117,7 +117,7 @@ func TestTCPServices(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := TCPServices(tt.services, &config.ServicesConfig{Filter: config.ServiceFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := TCPServices(tt.services, &config.ServicesConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d services, got %d", len(tt.expected), len(result))
@@ -141,7 +141,7 @@ func TestTCPMiddlewares(t *testing.T) {
 		expected    []string
 	}{
 		{
-			name: "filter all TCP middlewares",
+			name: "match all TCP middlewares",
 			middlewares: map[string]*dynamic.TCPMiddleware{
 				"tcp-auth": {
 					IPWhiteList: &dynamic.TCPIPWhiteList{
@@ -158,7 +158,7 @@ func TestTCPMiddlewares(t *testing.T) {
 			expected: []string{"tcp-auth", "tcp-limiter"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			middlewares: map[string]*dynamic.TCPMiddleware{
 				"tcp-auth": {
 					IPWhiteList: &dynamic.TCPIPWhiteList{
@@ -178,7 +178,7 @@ func TestTCPMiddlewares(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := TCPMiddlewares(tt.middlewares, &config.MiddlewaresConfig{Filter: config.MiddlewareFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := TCPMiddlewares(tt.middlewares, &config.MiddlewaresConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d middlewares, got %d", len(tt.expected), len(result))
@@ -194,8 +194,8 @@ func TestTCPMiddlewares(t *testing.T) {
 	}
 }
 
-func TestTCPRoutersAdvancedFiltering(t *testing.T) {
-	t.Run("filter by entrypoints", func(t *testing.T) {
+func TestTCPRoutersAdvancedmatching(t *testing.T) {
+	t.Run("match by entrypoints", func(t *testing.T) {
 		routers := map[string]*dynamic.TCPRouter{
 			"tcp-router-1": {
 				Rule:        "HostSNI(`tcp1.example.com`)",
@@ -210,12 +210,10 @@ func TestTCPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.RoutersConfig{
-			Filter: config.RouterFilter{
-				Entrypoints: []string{"tcp"},
-			},
+			Matcher: "Entrypoint(`tcp`)",
 		}
 
-		result := TCPRouters(routers, cfg, config.ProviderFilter{})
+		result := TCPRouters(routers, cfg, "")
 
 		if len(result) != 1 {
 			t.Errorf("Expected 1 router, got %d", len(result))
@@ -226,7 +224,7 @@ func TestTCPRoutersAdvancedFiltering(t *testing.T) {
 		}
 	})
 
-	t.Run("filter by rule", func(t *testing.T) {
+	t.Run("match by rule", func(t *testing.T) {
 		routers := map[string]*dynamic.TCPRouter{
 			"tcp-router-1": {
 				Rule:    "HostSNI(`tcp1.example.com`)",
@@ -239,12 +237,10 @@ func TestTCPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.RoutersConfig{
-			Filter: config.RouterFilter{
-				Rule: ".*tcp1.*",
-			},
+			Matcher: "NameRegexp(`.*tcp-router-1.*`)",
 		}
 
-		result := TCPRouters(routers, cfg, config.ProviderFilter{})
+		result := TCPRouters(routers, cfg, "")
 
 		if len(result) != 1 {
 			t.Errorf("Expected 1 router, got %d", len(result))
@@ -255,7 +251,7 @@ func TestTCPRoutersAdvancedFiltering(t *testing.T) {
 		}
 	})
 
-	t.Run("filter by service", func(t *testing.T) {
+	t.Run("match by service", func(t *testing.T) {
 		routers := map[string]*dynamic.TCPRouter{
 			"tcp-router-1": {
 				Rule:    "HostSNI(`tcp1.example.com`)",
@@ -268,12 +264,37 @@ func TestTCPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.RoutersConfig{
-			Filter: config.RouterFilter{
+			Matcher: "ServiceRegexp(`.*tcp-service-1.*`)",
+		}
+
+		result := TCPRouters(routers, cfg, "")
+
+		if len(result) != 1 {
+			t.Errorf("Expected 1 router, got %d", len(result))
+		}
+
+		if _, exists := result["tcp-router-1"]; !exists {
+			t.Error("Expected tcp-router-1 to be in result")
+		}
+	})
+
+	t.Run("match by service name", func(t *testing.T) {
+		routers := map[string]*dynamic.TCPRouter{
+			"tcp-router-1": {
+				Rule:    "HostSNI(`tcp1.example.com`)",
 				Service: "tcp-service-1",
+			},
+			"tcp-router-2": {
+				Rule:    "HostSNI(`tcp2.example.com`)",
+				Service: "tcp-service-2",
 			},
 		}
 
-		result := TCPRouters(routers, cfg, config.ProviderFilter{})
+		cfg := &config.RoutersConfig{
+			Matcher: "Service(`tcp-service-1`)",
+		}
+
+		result := TCPRouters(routers, cfg, "")
 
 		if len(result) != 1 {
 			t.Errorf("Expected 1 router, got %d", len(result))
@@ -293,12 +314,10 @@ func TestTCPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.RoutersConfig{
-			Filter: config.RouterFilter{
-				Rule: "[", // Invalid regex
-			},
+			Matcher: "NameRegexp(`[`)", // Invalid regex
 		}
 
-		result := TCPRouters(routers, cfg, config.ProviderFilter{})
+		result := TCPRouters(routers, cfg, "")
 
 		if len(result) != 0 {
 			t.Errorf("Expected 0 routers due to invalid regex, got %d", len(result))
@@ -314,12 +333,10 @@ func TestTCPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.RoutersConfig{
-			Filter: config.RouterFilter{
-				Service: "*", // Invalid regex
-			},
+			Matcher: "ServiceRegexp(`*`)", // Invalid regex
 		}
 
-		result := TCPRouters(routers, cfg, config.ProviderFilter{})
+		result := TCPRouters(routers, cfg, "")
 
 		if len(result) != 0 {
 			t.Errorf("Expected 0 routers due to invalid regex, got %d", len(result))

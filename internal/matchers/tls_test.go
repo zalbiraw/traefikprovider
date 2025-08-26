@@ -1,4 +1,4 @@
-package filters
+package matchers
 
 import (
 	"testing"
@@ -11,7 +11,7 @@ func TestTLSCertificates(t *testing.T) {
 		expectedLen  int
 	}{
 		{
-			name: "filter all certificates",
+			name: "match all certificates",
 			certificates: []interface{}{
 				map[string]interface{}{"certFile": "/path/to/cert1.pem", "keyFile": "/path/to/key1.pem"},
 				map[string]interface{}{"certFile": "/path/to/cert2.pem", "keyFile": "/path/to/key2.pem"},
@@ -63,7 +63,7 @@ func TestTLSOptions(t *testing.T) {
 		expectedLen int
 	}{
 		{
-			name: "filter all options",
+			name: "match all options",
 			options: map[string]interface{}{
 				"default": map[string]interface{}{"minVersion": "VersionTLS12"},
 				"strict":  map[string]interface{}{"minVersion": "VersionTLS13"},
@@ -115,7 +115,7 @@ func TestTLSStores(t *testing.T) {
 		expectedLen int
 	}{
 		{
-			name: "filter all stores",
+			name: "match all stores",
 			stores: map[string]interface{}{
 				"default": map[string]interface{}{"defaultCertificate": map[string]interface{}{"certFile": "cert.pem", "keyFile": "key.pem"}},
 				"custom":  map[string]interface{}{"defaultCertificate": map[string]interface{}{"certFile": "custom.pem", "keyFile": "custom-key.pem"}},

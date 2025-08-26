@@ -1,4 +1,4 @@
-// Package overrides applies user-defined overrides to filtered configs.
+// Package overrides applies user-defined overrides to matched configs.
 package overrides
 
 import (
@@ -8,38 +8,38 @@ import (
 	"github.com/zalbiraw/traefikprovider/config"
 )
 
-func applyOverrideTCP[T any](filtered map[string]*dynamic.TCPRouter, value T, apply func(r *dynamic.TCPRouter, v T)) {
-	for key, router := range filtered {
+func applyOverrideTCP[T any](matched map[string]*dynamic.TCPRouter, value T, apply func(r *dynamic.TCPRouter, v T)) {
+	for key, router := range matched {
 		apply(router, value)
-		filtered[key] = router
+		matched[key] = router
 	}
 }
 
 func handleOverrideTCP(
-	filtered map[string]*dynamic.TCPRouter,
+	matched map[string]*dynamic.TCPRouter,
 	value interface{},
 	applyArray func(r *dynamic.TCPRouter, arr []string),
 	applyString func(r *dynamic.TCPRouter, s string),
 ) {
 	switch v := value.(type) {
 	case []string:
-		applyOverrideTCP(filtered, v, applyArray)
+		applyOverrideTCP(matched, v, applyArray)
 	case string:
-		applyOverrideTCP(filtered, v, applyString)
+		applyOverrideTCP(matched, v, applyString)
 	}
 }
 
 // OverrideTCPRouters applies override rules to the given TCP routers map.
-func OverrideTCPRouters(filtered map[string]*dynamic.TCPRouter, overrides config.RouterOverrides) {
+func OverrideTCPRouters(matched map[string]*dynamic.TCPRouter, overrides config.RouterOverrides) {
 	for _, oep := range overrides.Entrypoints {
-		handleOverrideTCP(filtered, oep.Value,
+		handleOverrideTCP(matched, oep.Value,
 			func(r *dynamic.TCPRouter, arr []string) { r.EntryPoints = arr },
 			func(r *dynamic.TCPRouter, s string) { r.EntryPoints = append(r.EntryPoints, s) },
 		)
 	}
 
 	for _, osvc := range overrides.Services {
-		applyOverrideTCP(filtered, osvc.Value, func(r *dynamic.TCPRouter, v string) {
+		applyOverrideTCP(matched, osvc.Value, func(r *dynamic.TCPRouter, v string) {
 			if strings.Contains(v, "$1") {
 				r.Service = strings.ReplaceAll(v, "$1", r.Service)
 			} else {
@@ -49,18 +49,18 @@ func OverrideTCPRouters(filtered map[string]*dynamic.TCPRouter, overrides config
 	}
 
 	for _, omw := range overrides.Middlewares {
-		handleOverrideTCP(filtered, omw.Value,
+		handleOverrideTCP(matched, omw.Value,
 			func(r *dynamic.TCPRouter, arr []string) { r.Middlewares = arr },
 			func(r *dynamic.TCPRouter, s string) { r.Middlewares = append(r.Middlewares, s) },
 		)
 	}
 }
 
-// OverrideTCPServices applies overrides to filtered TCP services.
-func OverrideTCPServices(filtered map[string]*dynamic.TCPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
+// OverrideTCPServices applies overrides to matched TCP services.
+func OverrideTCPServices(matched map[string]*dynamic.TCPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
-		handleTCPServiceOverride(filtered, orule.Filter, orule.Value,
+		handleTCPServiceOverride(matched, orule.Matcher, orule.Value,
 			func(s *dynamic.TCPService, v []string) {
 				servers := []dynamic.TCPServer{}
 

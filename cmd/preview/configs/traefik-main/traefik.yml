@@ -29,7 +29,7 @@ providers:
             path: /api/rawdata
             timeout: "10s"
           filter:
-            provider: file
+            rule: "Provider(`file`)"
         - name: provider2
           connection:
             host: traefik-provider2
@@ -37,4 +37,4 @@ providers:
             path: /api/rawdata
             timeout: "10s"
           filter:
-            provider: file
+            rule: "Provider(`file`)"

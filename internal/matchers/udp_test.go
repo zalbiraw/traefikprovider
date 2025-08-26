@@ -1,4 +1,4 @@
-package filters
+package matchers
 
 import (
 	"testing"
@@ -15,7 +15,7 @@ func TestUDPRouters(t *testing.T) {
 		expected []string
 	}{
 		{
-			name: "filter all UDP routers",
+			name: "match all UDP routers",
 			routers: map[string]*dynamic.UDPRouter{
 				"udp-router": {
 					Service: "udp-service",
@@ -31,7 +31,7 @@ func TestUDPRouters(t *testing.T) {
 			expected: []string{"admin", "dns-router", "udp-router"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			routers: map[string]*dynamic.UDPRouter{
 				"udp-router": {
 					Service: "udp-service",
@@ -44,7 +44,7 @@ func TestUDPRouters(t *testing.T) {
 			expected: []string{"udp-router"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			routers: map[string]*dynamic.UDPRouter{
 				"udp-router": {
 					Service: "udp-service",
@@ -60,7 +60,7 @@ func TestUDPRouters(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := UDPRouters(tt.routers, &config.UDPRoutersConfig{Filter: config.UDPRouterFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := UDPRouters(tt.routers, &config.UDPRoutersConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d routers, got %d", len(tt.expected), len(result))
@@ -84,7 +84,7 @@ func TestUDPServices(t *testing.T) {
 		expected []string
 	}{
 		{
-			name: "filter all UDP services",
+			name: "match all UDP services",
 			services: map[string]*dynamic.UDPService{
 				"udp-service": {
 					LoadBalancer: &dynamic.UDPServersLoadBalancer{
@@ -112,7 +112,7 @@ func TestUDPServices(t *testing.T) {
 			expected: []string{"admin", "dns-service", "udp-service"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			services: map[string]*dynamic.UDPService{
 				"udp-service": {
 					LoadBalancer: &dynamic.UDPServersLoadBalancer{
@@ -136,7 +136,7 @@ func TestUDPServices(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := UDPServices(tt.services, &config.UDPServicesConfig{Filter: config.ServiceFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := UDPServices(tt.services, &config.UDPServicesConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d services, got %d", len(tt.expected), len(result))
@@ -152,8 +152,8 @@ func TestUDPServices(t *testing.T) {
 	}
 }
 
-func TestUDPRoutersAdvancedFiltering(t *testing.T) {
-	t.Run("filter by entrypoints", func(t *testing.T) {
+func TestUDPRoutersAdvancedmatching(t *testing.T) {
+	t.Run("match by entrypoints", func(t *testing.T) {
 		routers := map[string]*dynamic.UDPRouter{
 			"udp-router-1": {
 				Service:     "udp-service-1",
@@ -166,12 +166,10 @@ func TestUDPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.UDPRoutersConfig{
-			Filter: config.UDPRouterFilter{
-				Entrypoints: []string{"udp"},
-			},
+			Matcher: "Entrypoint(`udp`)",
 		}
 
-		result := UDPRouters(routers, cfg, config.ProviderFilter{})
+		result := UDPRouters(routers, cfg, "")
 
 		if len(result) != 1 {
 			t.Errorf("Expected 1 router, got %d", len(result))
@@ -182,7 +180,7 @@ func TestUDPRoutersAdvancedFiltering(t *testing.T) {
 		}
 	})
 
-	t.Run("filter by service", func(t *testing.T) {
+	t.Run("match by service", func(t *testing.T) {
 		routers := map[string]*dynamic.UDPRouter{
 			"udp-router-1": {
 				Service: "udp-service-1",
@@ -193,12 +191,10 @@ func TestUDPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.UDPRoutersConfig{
-			Filter: config.UDPRouterFilter{
-				Service: "udp-service-1",
-			},
+			Matcher: "Service(`udp-service-1`)",
 		}
 
-		result := UDPRouters(routers, cfg, config.ProviderFilter{})
+		result := UDPRouters(routers, cfg, "")
 
 		if len(result) != 1 {
 			t.Errorf("Expected 1 router, got %d", len(result))
@@ -217,12 +213,10 @@ func TestUDPRoutersAdvancedFiltering(t *testing.T) {
 		}
 
 		cfg := &config.UDPRoutersConfig{
-			Filter: config.UDPRouterFilter{
-				Service: "*", // Invalid regex
-			},
+			Matcher: "ServiceRegexp(`*`)", // Invalid regex
 		}
 
-		result := UDPRouters(routers, cfg, config.ProviderFilter{})
+		result := UDPRouters(routers, cfg, "")
 
 		if len(result) != 0 {
 			t.Errorf("Expected 0 routers due to invalid regex, got %d", len(result))

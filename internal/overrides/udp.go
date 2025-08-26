@@ -1,4 +1,4 @@
-// Package overrides applies user-defined overrides to filtered configs.
+// Package overrides applies user-defined overrides to matched configs.
 package overrides
 
 import (
@@ -9,38 +9,38 @@ import (
 )
 
 // OverrideUDPRouters applies override rules to the given UDP routers map.
-func applyOverrideUDP[T any](filtered map[string]*dynamic.UDPRouter, value T, apply func(r *dynamic.UDPRouter, v T)) {
-	for key, router := range filtered {
+func applyOverrideUDP[T any](matched map[string]*dynamic.UDPRouter, value T, apply func(r *dynamic.UDPRouter, v T)) {
+	for key, router := range matched {
 		apply(router, value)
-		filtered[key] = router
+		matched[key] = router
 	}
 }
 
 func handleOverrideUDP(
-	filtered map[string]*dynamic.UDPRouter,
+	matched map[string]*dynamic.UDPRouter,
 	value interface{},
 	applyArray func(r *dynamic.UDPRouter, arr []string),
 	applyString func(r *dynamic.UDPRouter, s string),
 ) {
 	switch v := value.(type) {
 	case []string:
-		applyOverrideUDP(filtered, v, applyArray)
+		applyOverrideUDP(matched, v, applyArray)
 	case string:
-		applyOverrideUDP(filtered, v, applyString)
+		applyOverrideUDP(matched, v, applyString)
 	}
 }
 
 // OverrideUDPRouters applies overrides to the provided UDP routers map.
-func OverrideUDPRouters(filtered map[string]*dynamic.UDPRouter, overrides config.UDPOverrides) {
+func OverrideUDPRouters(matched map[string]*dynamic.UDPRouter, overrides config.UDPOverrides) {
 	for _, oep := range overrides.Entrypoints {
-		handleOverrideUDP(filtered, oep.Value,
+		handleOverrideUDP(matched, oep.Value,
 			func(r *dynamic.UDPRouter, arr []string) { r.EntryPoints = arr },
 			func(r *dynamic.UDPRouter, s string) { r.EntryPoints = append(r.EntryPoints, s) },
 		)
 	}
 
 	for _, osvc := range overrides.Services {
-		applyOverrideUDP(filtered, osvc.Value, func(r *dynamic.UDPRouter, v string) {
+		applyOverrideUDP(matched, osvc.Value, func(r *dynamic.UDPRouter, v string) {
 			if strings.Contains(v, "$1") {
 				r.Service = strings.ReplaceAll(v, "$1", r.Service)
 			} else {
@@ -50,11 +50,11 @@ func OverrideUDPRouters(filtered map[string]*dynamic.UDPRouter, overrides config
 	}
 }
 
-// OverrideUDPServices applies overrides to filtered UDP services.
-func OverrideUDPServices(filtered map[string]*dynamic.UDPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
+// OverrideUDPServices applies overrides to matched UDP services.
+func OverrideUDPServices(matched map[string]*dynamic.UDPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
-		handleUDPServiceOverride(filtered, orule.Filter, orule.Value,
+		handleUDPServiceOverride(matched, orule.Matcher, orule.Value,
 			func(s *dynamic.UDPService, v []string) {
 				servers := []dynamic.UDPServer{}
 

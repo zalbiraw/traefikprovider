@@ -40,10 +40,94 @@ func TestParseHTTPConfigMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	if len(httpConfig.Routers) != 1 {
 		t.Errorf("Expected 1 router, got %d", len(httpConfig.Routers))
+	}
+}
+
+func TestHTTPRouters_DiscoverPriorityReset(t *testing.T) {
+	httpConfig := &dynamic.HTTPConfiguration{
+		Routers: make(map[string]*dynamic.Router),
+	}
+	raw := map[string]interface{}{
+		"routers": map[string]interface{}{
+			"r1": map[string]interface{}{
+				"rule":    "Host(`example.com`)",
+				"service": "svc",
+				"priority": 42,
+			},
+		},
+	}
+	pc := &config.HTTPSection{
+		Routers: &config.RoutersConfig{Discover: true, DiscoverPriority: false},
+		Services: &config.ServicesConfig{Discover: false},
+		Middlewares: &config.MiddlewaresConfig{Discover: false},
+	}
+
+	parseHTTPConfig(raw, httpConfig, pc, "", nil)
+
+	if got := httpConfig.Routers["r1"].Priority; got != 0 {
+		t.Fatalf("expected router priority reset to 0, got %d", got)
+	}
+}
+
+func TestTCPRouters_DiscoverPriorityReset(t *testing.T) {
+	tcpConfig := &dynamic.TCPConfiguration{
+		Routers: make(map[string]*dynamic.TCPRouter),
+	}
+	raw := map[string]interface{}{
+		"tcpRouters": map[string]interface{}{
+			"r1": map[string]interface{}{
+				"rule":    "HostSNI(`example.com`)",
+				"service": "svc",
+				"priority": 99,
+			},
+		},
+	}
+	pc := &config.TCPSection{
+		Routers: &config.RoutersConfig{Discover: true, DiscoverPriority: false},
+		Services: &config.ServicesConfig{Discover: false},
+		Middlewares: &config.MiddlewaresConfig{Discover: false},
+	}
+
+	parseTCPConfig(raw, tcpConfig, pc, "", nil)
+
+	if got := tcpConfig.Routers["r1"].Priority; got != 0 {
+		t.Fatalf("expected TCP router priority reset to 0, got %d", got)
+	}
+}
+
+func TestConvertToTyped_SkipBranches(t *testing.T) {
+	// Non-map data should yield empty result
+	if res := convertToTyped[dynamic.Router]([]interface{}{"x"}); len(res) != 0 {
+		t.Fatalf("expected empty result for non-map input, got %d", len(res))
+	}
+
+	data := map[string]interface{}{
+		"ok": map[string]interface{}{
+			"rule":    "Host(`ok.com`)",
+			"service": "svc",
+		},
+		// marshal error path
+		"marshalErr": map[string]interface{}{
+			"rule": make(chan int),
+		},
+		// unmarshal error path (rule should be string)
+		"unmarshalErr": map[string]interface{}{
+			"rule": []int{1},
+		},
+		// value that is not a map[string]interface{}
+		"notMap": 123,
+	}
+
+	res := convertToTyped[dynamic.Router](data)
+	if len(res) != 1 {
+		t.Fatalf("expected only 1 valid item, got %d", len(res))
+	}
+	if _, ok := res["ok"]; !ok {
+		t.Fatalf("expected 'ok' key present in result")
 	}
 }
 
@@ -274,7 +358,7 @@ func TestParseHTTPConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parseHTTPConfig(tt.raw, tt.httpConfig, tt.providerConfig, config.ProviderFilter{}, tt.tunnels)
+			parseHTTPConfig(tt.raw, tt.httpConfig, tt.providerConfig, "", tt.tunnels)
 
 			if tt.expectError {
 				return
@@ -479,7 +563,7 @@ func TestParseTCPConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parseTCPConfig(tt.raw, tt.tcpConfig, tt.providerConfig, config.ProviderFilter{}, tt.tunnels)
+			parseTCPConfig(tt.raw, tt.tcpConfig, tt.providerConfig, "", tt.tunnels)
 
 			if tt.expectError {
 				return
@@ -614,7 +698,7 @@ func TestParseUDPConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parseUDPConfig(tt.raw, tt.udpConfig, tt.providerConfig, config.ProviderFilter{}, tt.tunnels)
+			parseUDPConfig(tt.raw, tt.udpConfig, tt.providerConfig, "", tt.tunnels)
 
 			if tt.expectError {
 				return
@@ -763,7 +847,7 @@ func TestParseHTTPConfigJSONMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	// Valid entries should be added despite marshal errors
 	if len(httpConfig.Routers) != 1 {
@@ -815,7 +899,7 @@ func TestParseHTTPConfigJSONUnmarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	// Items with unmarshal errors should not be added
 	if len(httpConfig.Routers) != 0 {
@@ -862,7 +946,7 @@ func TestParseTCPConfigJSONMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseTCPConfig(raw, tcpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseTCPConfig(raw, tcpConfig, providerConfig, "", nil)
 
 	if len(tcpConfig.Routers) != 0 {
 		t.Errorf("Expected 0 routers, got %d", len(tcpConfig.Routers))
@@ -894,7 +978,7 @@ func TestParseUDPConfigJSONMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseUDPConfig(raw, udpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseUDPConfig(raw, udpConfig, providerConfig, "", nil)
 
 	if len(udpConfig.Routers) != 0 {
 		t.Errorf("Expected 0 routers, got %d", len(udpConfig.Routers))
@@ -981,7 +1065,7 @@ func TestParseHTTPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	// Items without name should not be added
 	if len(httpConfig.Routers) != 0 {
@@ -1040,7 +1124,7 @@ func TestParseTCPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseTCPConfig(raw, tcpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseTCPConfig(raw, tcpConfig, providerConfig, "", nil)
 
 	// Items without name should not be added
 	if len(tcpConfig.Routers) != 0 {
@@ -1086,7 +1170,7 @@ func TestParseUDPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseUDPConfig(raw, udpConfig, providerConfig, config.ProviderFilter{}, nil)
+	parseUDPConfig(raw, udpConfig, providerConfig, "", nil)
 
 	// Items without name should not be added
 	if len(udpConfig.Routers) != 0 {
@@ -1129,7 +1213,7 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, config.ProviderFilter{}, nil)
+	parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, "", nil)
 
 	// All should be empty due to marshal errors
 	if len(httpConfig.Routers) != 0 {
@@ -1173,7 +1257,7 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, config.ProviderFilter{}, nil)
+	parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, "", nil)
 
 	// All should be empty due to marshal errors
 	if len(tcpConfig.Routers) != 0 {
@@ -1209,7 +1293,7 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, config.ProviderFilter{}, nil)
+	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "", nil)
 
 	// All should be empty due to marshal errors
 	if len(udpConfig.Routers) != 0 {
@@ -1258,7 +1342,7 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, config.ProviderFilter{}, nil)
+	parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, "", nil)
 
 	// All should be empty due to unmarshal errors
 	if len(httpConfig.Routers) != 0 {
@@ -1308,7 +1392,7 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, config.ProviderFilter{}, nil)
+	parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, "", nil)
 
 	// All should be empty due to unmarshal errors
 	if len(tcpConfig.Routers) != 0 {
@@ -1348,7 +1432,7 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, config.ProviderFilter{}, nil)
+	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "", nil)
 
 	// All should be empty due to unmarshal errors
 	if len(udpConfig.Routers) != 0 {

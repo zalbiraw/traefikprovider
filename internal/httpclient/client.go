@@ -104,17 +104,17 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 
 	// HTTP
 	if providerCfg.HTTP.Discover {
-		parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Filter, providerCfg.Tunnels)
+		parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Matcher, providerCfg.Tunnels)
 	}
 
 	// TCP
 	if providerCfg.TCP.Discover {
-		parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Filter, providerCfg.Tunnels)
+		parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Matcher, providerCfg.Tunnels)
 	}
 
 	// UDP
 	if providerCfg.UDP.Discover {
-		parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Filter, providerCfg.Tunnels)
+		parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Matcher, providerCfg.Tunnels)
 	}
 
 	// TLS

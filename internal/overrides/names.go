@@ -1,4 +1,4 @@
-// Package overrides applies user-defined overrides to filtered configs.
+// Package overrides applies user-defined overrides to matched configs.
 package overrides
 
 import (

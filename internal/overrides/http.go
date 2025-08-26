@@ -1,4 +1,4 @@
-// Package overrides applies user-defined overrides to filtered configs.
+// Package overrides applies user-defined overrides to matched configs.
 package overrides
 
 import (
@@ -9,10 +9,10 @@ import (
 )
 
 // OverrideHTTPRouters applies override rules to the given HTTP routers map.
-func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.RouterOverrides) {
+func OverrideHTTPRouters(matched map[string]*dynamic.Router, overrides config.RouterOverrides) {
 	// Rule overrides
 	for _, orule := range overrides.Rules {
-		applyRouterOverride(filtered, orule.Filter, orule.Value, func(r *dynamic.Router, v string) {
+		applyRouterOverride(matched, orule.Matcher, orule.Value, func(r *dynamic.Router, v string) {
 			if strings.Contains(v, "$1") {
 				r.Rule = strings.ReplaceAll(v, "$1", r.Rule)
 			} else {
@@ -23,7 +23,7 @@ func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.R
 
 	// Entrypoint overrides
 	for _, oep := range overrides.Entrypoints {
-		handleRouterOverride(filtered, oep.Filter, oep.Value,
+		handleRouterOverride(matched, oep.Matcher, oep.Value,
 			func(r *dynamic.Router, arr []string) { r.EntryPoints = arr },
 			func(r *dynamic.Router, s string) { r.EntryPoints = append(r.EntryPoints, s) },
 		)
@@ -31,7 +31,7 @@ func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.R
 
 	// Service overrides
 	for _, osvc := range overrides.Services {
-		applyRouterOverride(filtered, osvc.Filter, osvc.Value, func(r *dynamic.Router, v string) {
+		applyRouterOverride(matched, osvc.Matcher, osvc.Value, func(r *dynamic.Router, v string) {
 			if strings.Contains(v, "$1") {
 				r.Service = strings.ReplaceAll(v, "$1", r.Service)
 			} else {
@@ -42,18 +42,18 @@ func OverrideHTTPRouters(filtered map[string]*dynamic.Router, overrides config.R
 
 	// Middlewares overrides
 	for _, omw := range overrides.Middlewares {
-		handleRouterOverride(filtered, omw.Filter, omw.Value,
+		handleRouterOverride(matched, omw.Matcher, omw.Value,
 			func(r *dynamic.Router, arr []string) { r.Middlewares = arr },
 			func(r *dynamic.Router, s string) { r.Middlewares = append(r.Middlewares, s) },
 		)
 	}
 }
 
-// OverrideHTTPServices applies overrides to filtered HTTP services.
-func OverrideHTTPServices(filtered map[string]*dynamic.Service, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
+// OverrideHTTPServices applies overrides to matched HTTP services.
+func OverrideHTTPServices(matched map[string]*dynamic.Service, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
 	// Server overrides
 	for _, orule := range overrides.Servers {
-		handleServiceOverride(filtered, orule.Filter, orule.Value,
+		handleServiceOverride(matched, orule.Matcher, orule.Value,
 			func(s *dynamic.Service, v []string) {
 				urls := resolveServerURLs(orule.Tunnel, tunnels, v)
 				s.LoadBalancer.Servers = buildServers(urls)
@@ -65,7 +65,7 @@ func OverrideHTTPServices(filtered map[string]*dynamic.Service, overrides config
 	}
 	// Healthcheck overrides
 	for _, ohc := range overrides.Healthchecks {
-		applyServiceOverride(filtered, ohc.Filter, ohc, func(s *dynamic.Service, hc config.OverrideHealthcheck) {
+		applyServiceOverride(matched, ohc.Matcher, ohc, func(s *dynamic.Service, hc config.OverrideHealthcheck) {
 			applyHealthcheck(s, hc)
 		})
 	}

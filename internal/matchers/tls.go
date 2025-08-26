@@ -1,5 +1,5 @@
 // Package filters provides utilities to filter dynamic configuration objects.
-package filters
+package matchers
 
 import (
 	"encoding/json"

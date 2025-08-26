@@ -39,6 +39,46 @@ func TestGenerateConfiguration_HostHeaderOverride(t *testing.T) {
 	}
 }
 
+func TestGenerateConfiguration_MissingPort(t *testing.T) {
+	// When Port == 0, GenerateConfiguration should early-return an empty config
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: "localhost",
+			Port: 0,
+			Path: "/api",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	cfg := GenerateConfiguration(providerConfig)
+	if cfg == nil {
+		t.Fatal("expected non-nil configuration")
+	}
+	if cfg.HTTP != nil || cfg.TCP != nil || cfg.UDP != nil || cfg.TLS != nil {
+		t.Fatalf("expected empty configuration on missing port, got: %+v", cfg)
+	}
+}
+
+func TestGenerateConfiguration_MissingPath(t *testing.T) {
+	// When Path == "", GenerateConfiguration should early-return an empty config
+	providerConfig := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: "localhost",
+			Port: 8080,
+			Path: "",
+		},
+		HTTP: &config.HTTPSection{Discover: true},
+	}
+
+	cfg := GenerateConfiguration(providerConfig)
+	if cfg == nil {
+		t.Fatal("expected non-nil configuration")
+	}
+	if cfg.HTTP != nil || cfg.TCP != nil || cfg.UDP != nil || cfg.TLS != nil {
+		t.Fatalf("expected empty configuration on missing path, got: %+v", cfg)
+	}
+}
+
 func TestBuildProviderURL(t *testing.T) {
 	tests := []struct {
 		name     string

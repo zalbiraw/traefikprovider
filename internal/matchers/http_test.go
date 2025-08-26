@@ -1,4 +1,4 @@
-package filters
+package matchers
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	"github.com/zalbiraw/traefikprovider/config"
 )
 
-func TestFilterHTTPRouters(t *testing.T) {
+func TestMatchHTTPRouters(t *testing.T) {
 	tests := []struct {
 		name     string
 		routers  map[string]*dynamic.Router
@@ -15,7 +15,7 @@ func TestFilterHTTPRouters(t *testing.T) {
 		expected []string
 	}{
 		{
-			name: "filter all routers",
+			name: "match all routers",
 			routers: map[string]*dynamic.Router{
 				"web-router": {Rule: "Host(`web.example.com`)", Service: "web-service"},
 				"api-router": {Rule: "Host(`api.example.com`)", Service: "api-service"},
@@ -24,7 +24,7 @@ func TestFilterHTTPRouters(t *testing.T) {
 			expected: []string{"api-router", "web-router"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			routers: map[string]*dynamic.Router{
 				"web-router": {Rule: "Host(`web.example.com`)", Service: "web-service"},
 				"api-router": {Rule: "Host(`api.example.com`)", Service: "api-service"},
@@ -36,7 +36,7 @@ func TestFilterHTTPRouters(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := HTTPRouters(tt.routers, &config.RoutersConfig{Filter: config.RouterFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := HTTPRouters(tt.routers, &config.RoutersConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d routers, got %d", len(tt.expected), len(result))
@@ -52,7 +52,7 @@ func TestFilterHTTPRouters(t *testing.T) {
 	}
 }
 
-func TestFilterHTTPServices(t *testing.T) {
+func TestMatchHTTPServices(t *testing.T) {
 	tests := []struct {
 		name     string
 		services map[string]*dynamic.Service
@@ -60,7 +60,7 @@ func TestFilterHTTPServices(t *testing.T) {
 		expected []string
 	}{
 		{
-			name: "filter all services",
+			name: "match all services",
 			services: map[string]*dynamic.Service{
 				"web-service": {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
@@ -77,7 +77,7 @@ func TestFilterHTTPServices(t *testing.T) {
 			expected: []string{"api-service", "web-service"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			services: map[string]*dynamic.Service{
 				"web-service": {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
@@ -97,7 +97,7 @@ func TestFilterHTTPServices(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := HTTPServices(tt.services, &config.ServicesConfig{Filter: config.ServiceFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := HTTPServices(tt.services, &config.ServicesConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d services, got %d", len(tt.expected), len(result))
@@ -113,7 +113,7 @@ func TestFilterHTTPServices(t *testing.T) {
 	}
 }
 
-func TestFilterHTTPMiddlewares(t *testing.T) {
+func TestMatchHTTPMiddlewares(t *testing.T) {
 	tests := []struct {
 		name        string
 		middlewares map[string]*dynamic.Middleware
@@ -121,7 +121,7 @@ func TestFilterHTTPMiddlewares(t *testing.T) {
 		expected    []string
 	}{
 		{
-			name: "filter all middlewares",
+			name: "match all middlewares",
 			middlewares: map[string]*dynamic.Middleware{
 				"auth-middleware": {
 					BasicAuth: &dynamic.BasicAuth{
@@ -138,7 +138,7 @@ func TestFilterHTTPMiddlewares(t *testing.T) {
 			expected: []string{"auth-middleware", "cors-middleware"},
 		},
 		{
-			name: "filter specific pattern",
+			name: "match specific pattern",
 			middlewares: map[string]*dynamic.Middleware{
 				"auth-middleware": {
 					BasicAuth: &dynamic.BasicAuth{
@@ -158,7 +158,7 @@ func TestFilterHTTPMiddlewares(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := HTTPMiddlewares(tt.middlewares, &config.MiddlewaresConfig{Filter: config.MiddlewareFilter{Name: tt.pattern}}, config.ProviderFilter{})
+			result := HTTPMiddlewares(tt.middlewares, &config.MiddlewaresConfig{Matcher: "NameRegexp(`" + tt.pattern + "`)"}, "")
 
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d middlewares, got %d", len(tt.expected), len(result))

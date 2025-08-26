@@ -3,14 +3,14 @@ type: provider
 
 import: github.com/zalbiraw/traefikprovider
 
-summary: 'Traefik provider that will allow you to discover other Traefik instances configuration. The plugin will allow you to filter and overide discovered config as well as group discvered services and introduces tunneling concept for services.'
+summary: 'Traefik provider that allows you to discover other Traefik instances configuration. The plugin lets you filter and override discovered config, group discovered services, and introduces a tunneling concept for services.'
 
 testData:
   pollInterval: "5s"
   providers:
   - name: "cluster-1"
     connection:
-      host: ["localhost"]
+      host: "localhost"
       port: 8080
       path: "/api/rawdata"
       timeout: "15s"
@@ -40,189 +40,143 @@ testData:
       routers:
         discover: true
         discoverPriority: false
-        filter:
-          name: ""
-          provider: ""
-          entrypoints: []
-          rule: ""
-          service: ""
+        matcher: ""
         overrides:
           rules:
           # Set
           - value: "Host(`app.traefik.cloud`)"
-            filter: 
-              rule: "Host(`app.traefik.localhost`)"
+            matcher: ""
           # Regex
           - value: "$1 && PathPrefix(`/api/`)"
-            filter: 
-              rule: "Host(`app.traefik`) && PathPrefix(`/api/`)"
+            matcher: ""
           entrypoints:
           # Set
           - value: ["websecure"]
-            filter: 
-              entrypoints: ["web"]
+            matcher: "Entrypoint(`web`)"
           # Append
           - value: "websecure"
-            filter: 
-              entrypoints: ["web"]
+            matcher: "Entrypoint(`web`)"
           services:
           # Set
           - value: "apps"
-            filter: 
-              service: "app[123]"
+            matcher: "ServiceRegexp(`app[123]`)"
           # Regex
           - value: "$1-service"
-            filter: 
-              service: "app[123]"
+            matcher: "ServiceRegexp(`app[123]`)"
           middlewares:
           # Set
           - value: ["jwt", "ratelimit"]
-            filter: 
-              entrypoints: ["web"]
+            matcher: "Entrypoint(`web`)"
           # Append, if prepend is required, it can bed done at entrypoint level, this allows the notation to be simple
           - value: "ratelimit"
-            filter: 
-              name: "app[123]"
+            matcher: "NameRegexp(`app[123]`)"
         extraRoutes: []
       middlewares: 
         discover: true
-        filter:
-          name: ""
-          provider: ""
+        matcher: ""
         extraMiddlewares: []
       services:
         discover: true
-        filter:
-          name: ""
-          provider: ""
+        matcher: ""
         overrides:
           servers:
           # Override web-app with specific servers
           - strategy: "wrr"
             value: ["http://new-web-app-1:80", "http://new-web-app-2:80"]
-            filter: 
-              name: "web-app"
+            matcher: "Name(`web-app`)"
           # Override api-service with tunnel
           - tunnel: "web-tunnel"
-            filter: 
-              name: "api-service"
+            matcher: "Name(`api-service`)"
           # Override load-balanced-app servers using regex
           - strategy: "p2c"
             value: ["http://production-lb:80"]
-            filter: 
-              name: "load-balanced.*"
+            matcher: "NameRegexp(`load-balanced.*`)"
           healthchecks:
           - path: "/api/health"
             interval: "10s"
             timeout: "3s"
-            filter: 
-              name: "health-checked-app"
+            matcher: "Name(`health-checked-app`)"
         extraServices: []
     tcp:
       discover: true
       routers:
         discover: true
-        filter:
-          name: ""
-          provider: ""
-          entrypoints: []
-          rule: ""
-          service: ""
+        matcher: ""
         overrides:
           rules:
           # Set
           - value: "HostSNI(`app.traefik.cloud`)"
-            filter: 
-              rule: "HostSNI(`app.traefik.localhost`)"
+            matcher: ""
           # Regex
           - value: "$1 && HostSNI(`dev.app.traefik`)"
-            filter: 
-              rule: "HostSNI(`app.traefik`)"
+            matcher: ""
           entrypoints:
           # Set
           - value: ["websecure"]
-            filter: 
-              entrypoints: ["web"]
+            matcher: "Entrypoint(`web`)"
           # Append
           - value: "websecure"
-            filter: 
-              entrypoints: ["web"]
+            matcher: "Entrypoint(`web`)"
           services:
           # Set
           - value: "apps"
-            filter: 
-              service: "app[123]"
+            matcher: "ServiceRegexp(`app[123]`)"
           # Regex
           - value: "$1-service"
-            filter: 
-              service: "app[123]"
+            matcher: "ServiceRegexp(`app[123]`)"
           middlewares:
           # Set
           - value: ["ip-allow-list"]
-            filter: 
-              entrypoints: ["web"]
+            matcher: "Entrypoint(`web`)"
           # Append
           - value: "internal-network-allow-list"
-            filter: 
-              name: "app[123]"
+            matcher: "NameRegexp(`app[123]`)"
         extraRoutes: []
       middlewares:
         discover: true
-        filter:
-          name: ""
-          provider: ""
+        matcher: ""
         extraMiddlewares: []
       services:
         discover: true
-        filter:
-          name: ""
-          provider: ""
+        matcher: ""
         overrides:
           servers:
           - strategy: ""
             value: []
-            filter: {}
+            matcher: ""
           - strategy: ""
             value: ""
-            filter: {}
+            matcher: ""
           - tunnel: "tunnel1"
-            filter: {}
+            matcher: ""
         extraServices: []
     udp:
       discover: true
       routers:
         discover: true
-        filter:
-          name: ""
-          provider: ""
-          entrypoints: []
-          service: ""
+        matcher: ""
         overrides:
           services:
           # Set
           - value: "apps"
-            filter: 
-              service: "app[123]"
+            matcher: "ServiceRegexp(`app[123]`)"
           # Regex
           - value: "$1-service"
-            filter: 
-              service: "app[123]"
+            matcher: "ServiceRegexp(`app[123]`)"
         extraRoutes: []
       services:
         discover: true
-        filter:
-          name: ""
-          provider: ""
+        matcher: ""
         overrides:
           servers:
           - strategy: ""
             value: []
-            filter: {}
+            matcher: ""
           - strategy: ""
             value: ""
-            filter: {}
+            matcher: ""
           - tunnel: "tunnel1"
-            filter: {}
+            matcher: ""
         extraServices: []
     tls:
       discover: true

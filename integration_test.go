@@ -156,9 +156,7 @@ func TestIntegrationFilter(t *testing.T) {
 				Discover: true,
 				Routers: &config.RoutersConfig{
 					Discover: true,
-					Filter: config.RouterFilter{
-						Name: "provider1-.*",
-					},
+					Matcher:  "NameRegexp(`provider1-.*`)",
 				},
 			},
 		}
@@ -190,9 +188,7 @@ func TestIntegrationFilter(t *testing.T) {
 				Discover: true,
 				Services: &config.ServicesConfig{
 					Discover: true,
-					Filter: config.ServiceFilter{
-						Name: ".*-service",
-					},
+					Matcher:  "NameRegexp(`.*-service`)",
 				},
 			},
 		}
@@ -239,10 +235,8 @@ func TestIntegrationOverrides(t *testing.T) {
 					Overrides: config.RouterOverrides{
 						Rules: []config.OverrideRule{
 							{
-								Value: "Host(`overridden.example.com`)",
-								Filter: config.RouterFilter{
-									Name: "provider1-api",
-								},
+								Matcher: "Name(`provider1-api`)",
+								Value:   "Host(`overridden.example.com`)",
 							},
 						},
 					},
@@ -278,10 +272,8 @@ func TestIntegrationOverrides(t *testing.T) {
 					Overrides: config.RouterOverrides{
 						Entrypoints: []config.OverrideEntrypoint{
 							{
-								Value: []string{"websecure"},
-								Filter: config.RouterFilter{
-									Name: "provider1-web",
-								},
+								Matcher: "Name(`provider1-web`)",
+								Value:   []string{"websecure"},
 							},
 						},
 					},
