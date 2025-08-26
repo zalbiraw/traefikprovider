@@ -1,4 +1,4 @@
-.PHONY: lint test vendor clean traefik-up traefik-down traefik-logs
+.PHONY: lint test vendor clean traefik-up traefik-down traefik-logs preview-test
 
 export GO111MODULE=on
 
@@ -31,3 +31,8 @@ traefik-down:
 traefik-logs:
 	@echo "Showing Traefik logs..."
 	docker-compose -f docker-compose.test.yml logs -f traefik
+
+# Run shell-based integration checks using the preview docker-compose setup
+preview-test:
+	@echo "Running shell integration checks against cmd/preview/docker-compose.yml..."
+	bash ./cmd/preview/test.sh
