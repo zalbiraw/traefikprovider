@@ -5,23 +5,23 @@ package config
 
 // CreateConfig creates the default plugin configuration.
 func CreateConfig() *Config {
-	return &Config{
-		PollInterval: "5s",
-		Providers: []ProviderConfig{
-			{
-				Name: "Traefik Provider",
-				Connection: ConnectionConfig{
-					Host:    "localhost",
-					Port:    8080,
-					Path:    "/api/rawdata",
-					Timeout: "5s",
-				},
-				Filter: ProviderFilter{
-					Provider: "file",
-				},
-			},
-		},
-	}
+    return &Config{
+        PollInterval: "5s",
+        Providers: []ProviderConfig{
+            {
+                Name: "Traefik Provider",
+                Connection: ConnectionConfig{
+                    Host:    "localhost",
+                    Port:    8080,
+                    Path:    "/api/rawdata",
+                    Timeout: "5s",
+                },
+                Filter: ProviderFilter{
+                    Provider: "file",
+                },
+            },
+        },
+    }
 }
 
 // Config is the root configuration for the provider plugin.

@@ -20,9 +20,6 @@ func HTTPRouters(routers map[string]*dynamic.Router, cfg *config.RoutersConfig, 
 
 	filtered := filterMapByNameRegex[dynamic.Router, *dynamic.Router](routers, filters.Name, filters.Provider)
 	for name, router := range filtered {
-		if !cfg.DiscoverPriority {
-			router.Priority = 0
-		}
 		if !httpRouterMatches(router, filters) {
 			continue
 		}

@@ -76,6 +76,12 @@ func processHTTPRouters(raw map[string]interface{}, httpConfig *dynamic.HTTPConf
 	}
 	overrides.StripProvidersHTTP(httpConfig)
 	overrides.OverrideHTTPRouters(httpConfig.Routers, pc.Routers.Overrides)
+
+	if pc.Routers != nil && !pc.Routers.DiscoverPriority {
+		for _, r := range httpConfig.Routers {
+			r.Priority = 0
+		}
+	}
 }
 
 func processHTTPServices(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, pc *config.HTTPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
@@ -166,6 +172,12 @@ func processTCPRouters(raw map[string]interface{}, tcpConfig *dynamic.TCPConfigu
 	}
 	overrides.StripProvidersTCP(tcpConfig)
 	overrides.OverrideTCPRouters(tcpConfig.Routers, pc.Routers.Overrides)
+
+	if pc.Routers != nil && !pc.Routers.DiscoverPriority {
+		for _, r := range tcpConfig.Routers {
+			r.Priority = 0
+		}
+	}
 }
 
 func processTCPServices(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, pc *config.TCPSection, pf config.ProviderFilter, tunnels []config.TunnelConfig) {
