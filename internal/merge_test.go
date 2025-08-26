@@ -7,26 +7,55 @@ import (
 	tlstypes "github.com/traefik/genconf/dynamic/tls"
 )
 
+func assertHTTPInitialized(t *testing.T, http *dynamic.HTTPConfiguration) {
+	t.Helper()
+	if http == nil {
+		t.Fatal("Expected HTTP section to be initialized")
+	}
+	if http.Routers == nil || http.Services == nil || http.Middlewares == nil {
+		t.Error("Expected HTTP maps to be initialized")
+	}
+}
+
+func assertTCPInitialized(t *testing.T, tcp *dynamic.TCPConfiguration) {
+	t.Helper()
+	if tcp == nil {
+		t.Fatal("Expected TCP section to be initialized")
+	}
+	if tcp.Routers == nil || tcp.Services == nil || tcp.Middlewares == nil {
+		t.Error("Expected TCP maps to be initialized")
+	}
+}
+
+func assertUDPInitialized(t *testing.T, udp *dynamic.UDPConfiguration) {
+	t.Helper()
+	if udp == nil {
+		t.Fatal("Expected UDP section to be initialized")
+	}
+	if udp.Routers == nil || udp.Services == nil {
+		t.Error("Expected UDP maps to be initialized")
+	}
+}
+
+func assertTLSInitialized(t *testing.T, tls *dynamic.TLSConfiguration) {
+	t.Helper()
+	if tls == nil {
+		t.Fatal("Expected TLS section to be initialized")
+	}
+	if tls.Certificates == nil || tls.Options == nil || tls.Stores == nil {
+		t.Error("Expected TLS fields to be initialized")
+	}
+}
+
 func assertConfigInitialized(t *testing.T, result *dynamic.Configuration) {
 	t.Helper()
 	if result == nil {
 		t.Fatal("Expected non-nil result")
 	}
-	if result.HTTP == nil || result.TCP == nil || result.UDP == nil || result.TLS == nil {
-		t.Fatal("Expected all protocol sections to be initialized")
-	}
-	if result.HTTP.Routers == nil || result.HTTP.Services == nil || result.HTTP.Middlewares == nil {
-		t.Error("Expected HTTP maps to be initialized")
-	}
-	if result.TCP.Routers == nil || result.TCP.Services == nil || result.TCP.Middlewares == nil {
-		t.Error("Expected TCP maps to be initialized")
-	}
-	if result.UDP.Routers == nil || result.UDP.Services == nil {
-		t.Error("Expected UDP maps to be initialized")
-	}
-	if result.TLS.Certificates == nil || result.TLS.Options == nil || result.TLS.Stores == nil {
-		t.Error("Expected TLS fields to be initialized")
-	}
+	assertHTTPInitialized(t, result.HTTP)
+	assertTCPInitialized(t, result.TCP)
+	assertUDPInitialized(t, result.UDP)
+	assertTLSInitialized(t, result.TLS)
 }
 
 func TestMergeConfigurations_Empty(t *testing.T) {

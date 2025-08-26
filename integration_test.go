@@ -59,8 +59,8 @@ func ensureDockerServices() error {
 	return errSetup
 }
 
-// TestIntegrationBasic tests basic functionality with live Docker services
-func TestIntegrationBasic(t *testing.T) {
+// TestIntegrationBasic_FetchProvider1 tests fetching configuration from provider1
+func TestIntegrationBasic_FetchProvider1(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping integration tests in short mode")
 	}
@@ -69,64 +69,70 @@ func TestIntegrationBasic(t *testing.T) {
 		t.Skipf("Skipping integration tests - Docker services not available: %v", err)
 	}
 
-	// Test basic configuration fetching
-	t.Run("Fetch Provider1 Configuration", func(t *testing.T) {
-		cfg := &config.ProviderConfig{
-			Connection: config.ConnectionConfig{
-				Host: "localhost",
-				Port: 8081,
-				Path: "/api/rawdata",
-			},
-		}
-		dynCfg := httpclient.GenerateConfiguration(cfg)
+	cfg := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: "localhost",
+			Port: 8081,
+			Path: "/api/rawdata",
+		},
+	}
+	dynCfg := httpclient.GenerateConfiguration(cfg)
 
-		if dynCfg == nil {
-			t.Fatal("Configuration is nil")
-		}
+	if dynCfg == nil {
+		t.Fatal("Configuration is nil")
+	}
 
-		expectedRouters := []string{"provider1-api", "provider1-web", "provider1-admin", "provider1-test"}
-		for _, routerName := range expectedRouters {
-			if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
-				t.Errorf("Expected router %s not found", routerName)
-			}
+	expectedRouters := []string{"provider1-api", "provider1-web", "provider1-admin", "provider1-test"}
+	for _, routerName := range expectedRouters {
+		if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
+			t.Errorf("Expected router %s not found", routerName)
 		}
+	}
 
-		expectedServices := []string{"provider1-service", "provider1-web-service", "provider1-admin-service", "provider1-test-service"}
-		for _, serviceName := range expectedServices {
-			if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
-				t.Errorf("Expected service %s not found", serviceName)
-			}
+	expectedServices := []string{"provider1-service", "provider1-web-service", "provider1-admin-service", "provider1-test-service"}
+	for _, serviceName := range expectedServices {
+		if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
+			t.Errorf("Expected service %s not found", serviceName)
 		}
-	})
+	}
+}
 
-	t.Run("Fetch Provider2 Configuration", func(t *testing.T) {
-		cfg := &config.ProviderConfig{
-			Connection: config.ConnectionConfig{
-				Host: "localhost",
-				Port: 8082,
-				Path: "/api/rawdata",
-			},
-		}
-		dynCfg := httpclient.GenerateConfiguration(cfg)
+// TestIntegrationBasic_FetchProvider2 tests fetching configuration from provider2
+func TestIntegrationBasic_FetchProvider2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration tests in short mode")
+	}
 
-		if dynCfg == nil {
-			t.Fatal("Configuration is nil")
-		}
+	if err := ensureDockerServices(); err != nil {
+		t.Skipf("Skipping integration tests - Docker services not available: %v", err)
+	}
 
-		expectedRouters := []string{"provider2-dashboard", "provider2-api", "provider2-secure", "provider2-metrics"}
-		for _, routerName := range expectedRouters {
-			if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
-				t.Errorf("Expected router %s not found", routerName)
-			}
-		}
+	cfg := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: "localhost",
+			Port: 8082,
+			Path: "/api/rawdata",
+		},
+	}
+	dynCfg := httpclient.GenerateConfiguration(cfg)
 
-		expectedServices := []string{"provider2-service", "provider2-api-service", "provider2-secure-service", "provider2-metrics-service"}
-		for _, serviceName := range expectedServices {
-			if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
-				t.Errorf("Expected service %s not found", serviceName)
-			}
+	if dynCfg == nil {
+		t.Fatal("Configuration is nil")
+	}
+
+	expectedRouters := []string{"provider2-dashboard", "provider2-api", "provider2-secure", "provider2-metrics"}
+	for _, routerName := range expectedRouters {
+		if _, exists := dynCfg.HTTP.Routers[routerName]; !exists {
+			t.Errorf("Expected router %s not found", routerName)
 		}
-	})
+	}
+
+	expectedServices := []string{"provider2-service", "provider2-api-service", "provider2-secure-service", "provider2-metrics-service"}
+	for _, serviceName := range expectedServices {
+		if _, exists := dynCfg.HTTP.Services[serviceName]; !exists {
+			t.Errorf("Expected service %s not found", serviceName)
+		}
+	}
 }
 
 // TestIntegrationFilter tests basic filtering functionality

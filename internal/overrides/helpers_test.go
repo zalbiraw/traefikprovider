@@ -198,8 +198,7 @@ func TestStripProviderRefsRouter_UDP(t *testing.T) {
 	}
 }
 
-func TestStripProvidersHTTP_TCP_UDP(t *testing.T) {
-	// HTTP
+func TestStripProvidersHTTP(t *testing.T) {
 	httpCfg := &dynamic.HTTPConfiguration{
 		Routers: map[string]*dynamic.Router{
 			"r@p": {Service: "s@p", Middlewares: []string{"m1@p", "m2"}},
@@ -223,8 +222,9 @@ func TestStripProvidersHTTP_TCP_UDP(t *testing.T) {
 	if _, ok := httpCfg.Middlewares["m1"]; !ok {
 		t.Fatalf("middleware key not stripped")
 	}
+}
 
-	// TCP
+func TestStripProvidersTCP(t *testing.T) {
 	tcpCfg := &dynamic.TCPConfiguration{
 		Routers: map[string]*dynamic.TCPRouter{
 			"tr@p": {Service: "ts@p", Middlewares: []string{"tm@p"}},
@@ -248,8 +248,9 @@ func TestStripProvidersHTTP_TCP_UDP(t *testing.T) {
 	if _, ok := tcpCfg.Middlewares["tm"]; !ok {
 		t.Fatalf("tcp middleware key not stripped")
 	}
+}
 
-	// UDP
+func TestStripProvidersUDP(t *testing.T) {
 	udpCfg := &dynamic.UDPConfiguration{
 		Routers: map[string]*dynamic.UDPRouter{
 			"ur@p": {Service: "us@p"},
