@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -526,7 +529,7 @@ func TestParseDynamicConfigurationErrorPaths(t *testing.T) {
 					Routers:  &config.RoutersConfig{Discover: true},
 				},
 			},
-			expectError: false, // parseHTTPConfig doesn't return errors for invalid data
+			expectError: false, // arseHTTPConfig doesn't return errors for invalid data
 		},
 		{
 			name:     "TCP parsing error",
@@ -951,4 +954,125 @@ func TestGenerateConfigurationAllPaths(t *testing.T) {
 			}
 		})
 	}
+}
+
+// hostAndPort extracts host and port (int) from an httptest.Server URL.
+func hostAndPort(t *testing.T, raw string) (string, int) {
+	t.Helper()
+	u, err := url.Parse(raw)
+	if err != nil {
+		t.Fatalf("parse url: %v", err)
+	}
+	h, p, ok := strings.Cut(u.Host, ":")
+	if !ok {
+		t.Fatalf("expected host:port in %q", u.Host)
+	}
+	pi, err := strconv.Atoi(p)
+	if err != nil {
+		t.Fatalf("atoi port: %v", err)
+	}
+	return h, pi
+}
+
+func TestGenerateConfiguration_FullPathsThroughDo(t *testing.T) {
+	// 1) Successful 200 with valid JSON
+	okSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"routers": {}}`))
+	}))
+	defer okSrv.Close()
+	h1, p1 := hostAndPort(t, okSrv.URL)
+	cfg1 := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{
+			Host: h1,
+			Port: p1,
+			Path: "/api",
+			Headers: map[string]string{
+				"Accept": "application/json",
+			},
+		},
+		HTTP: &config.HTTPSection{Discover: true, Routers: &config.RoutersConfig{Discover: true}},
+	}
+	res1 := GenerateConfiguration(cfg1)
+	if res1 == nil {
+		t.Fatalf("expected non-nil config")
+	}
+
+	// 2) Non-200 response
+	errSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte("bad"))
+	}))
+	defer errSrv.Close()
+	h2, p2 := hostAndPort(t, errSrv.URL)
+	cfg2 := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{Host: h2, Port: p2, Path: "/api"},
+		HTTP:       &config.HTTPSection{Discover: true},
+	}
+	res2 := GenerateConfiguration(cfg2)
+	if res2 == nil {
+		t.Fatalf("expected non-nil config")
+	}
+
+	// 3) Body read error: set Content-Length then close without body
+	readErrSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Length", "100")
+		w.WriteHeader(http.StatusOK)
+		// no body
+	}))
+	// close immediately after first response to increase likelihood of read error
+	defer readErrSrv.Close()
+	h3, p3 := hostAndPort(t, readErrSrv.URL)
+	cfg3 := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{Host: h3, Port: p3, Path: "/api"},
+		HTTP:       &config.HTTPSection{Discover: true},
+	}
+	_ = GenerateConfiguration(cfg3)
+
+	// 4) Timeout parsed branch (valid)
+	timeoutSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"routers": {}}`))
+	}))
+	defer timeoutSrv.Close()
+	h4, p4 := hostAndPort(t, timeoutSrv.URL)
+	cfg4 := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{Host: h4, Port: p4, Path: "/api", Timeout: "5ms"},
+		HTTP:       &config.HTTPSection{Discover: true},
+	}
+	_ = GenerateConfiguration(cfg4)
+
+	// 5) Invalid timeout branch
+	h5, p5 := hostAndPort(t, timeoutSrv.URL)
+	cfg5 := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{Host: h5, Port: p5, Path: "/api", Timeout: "not-a-duration"},
+		HTTP:       &config.HTTPSection{Discover: true},
+	}
+	_ = GenerateConfiguration(cfg5)
+
+	// 6) HTTP client error: close server to force connection error; keep valid host/port/path
+	errOnceSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	h6, p6 := hostAndPort(t, errOnceSrv.URL)
+	errOnceSrv.Close()
+	cfg6 := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{Host: h6, Port: p6, Path: "/api"},
+		HTTP:       &config.HTTPSection{Discover: true},
+	}
+	_ = GenerateConfiguration(cfg6)
+
+	// 7) Host header override verified
+	hostHdrSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Host != "custom-host.example" {
+			t.Fatalf("expected Host header override, got %q", r.Host)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer hostHdrSrv.Close()
+	h7, p7 := hostAndPort(t, hostHdrSrv.URL)
+	cfg7 := &config.ProviderConfig{
+		Connection: config.ConnectionConfig{Host: h7, Port: p7, Path: "/api", Headers: map[string]string{"Host": "custom-host.example"}},
+		HTTP:       &config.HTTPSection{Discover: true},
+	}
+	_ = GenerateConfiguration(cfg7)
 }

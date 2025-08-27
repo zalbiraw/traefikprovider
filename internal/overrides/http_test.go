@@ -257,3 +257,36 @@ func TestOverrideHTTPServices_NoHealthcheck(t *testing.T) {
 		t.Error("Expected health check to remain nil")
 	}
 }
+
+func TestBuildServers_EmptyAndMultiple(t *testing.T) {
+	if res := buildServers(nil); res != nil {
+		t.Fatalf("expected nil for empty input, got: %+v", res)
+	}
+	res := buildServers([]string{"http://a", "http://b"})
+	if len(res) != 2 || res[0].URL != "http://a" || res[1].URL != "http://b" {
+		t.Fatalf("unexpected servers: %+v", res)
+	}
+}
+
+func TestOverrideHTTPServices_ServerOverrideArrayReplaces(t *testing.T) {
+	services := map[string]*dynamic.Service{
+		"svc": {
+			LoadBalancer: &dynamic.ServersLoadBalancer{
+				Servers: []dynamic.Server{{URL: "http://old:1"}},
+			},
+		},
+	}
+	overrides := config.ServiceOverrides{
+		Servers: []config.OverrideServer{{
+			Matcher: "Name(`svc`)",
+			Value:   []string{"http://n1", "http://n2"},
+		}},
+	}
+
+	OverrideHTTPServices(services, overrides, nil)
+
+	got := services["svc"].LoadBalancer.Servers
+	if len(got) != 2 || got[0].URL != "http://n1" || got[1].URL != "http://n2" {
+		t.Fatalf("expected replace with two servers, got: %+v", got)
+	}
+}

@@ -13,6 +13,17 @@ func TestCallMatcher_UnknownReturnsFalse(t *testing.T) {
 	}
 }
 
+func TestCallMatcher_UnknownMixedCaseReturnsFalse(t *testing.T) {
+	// Mixed case name ensures callMatcher lowercases before switch
+	prog, err := Compile("NoSuchMatcher(`x`)")
+	if err != nil {
+		t.Fatalf("unexpected compile error: %v", err)
+	}
+	if prog.Match(Context{}) {
+		t.Error("mixed-case unknown matcher should evaluate to false")
+	}
+}
+
 func TestMatchRegexp_EmptyPatternTrue(t *testing.T) {
 	if !matchRegexp("", "anything") {
 		t.Error("empty pattern should match true")

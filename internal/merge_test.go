@@ -17,6 +17,31 @@ func assertHTTPInitialized(t *testing.T, http *dynamic.HTTPConfiguration) {
 	}
 }
 
+func TestMergeConfigurations_HTTPServersTransports(t *testing.T) {
+	c1 := &dynamic.Configuration{HTTP: &dynamic.HTTPConfiguration{
+		ServersTransports: map[string]*dynamic.ServersTransport{
+			"st1": {ServerName: "name1"},
+		},
+	}}
+	c2 := &dynamic.Configuration{HTTP: &dynamic.HTTPConfiguration{
+		ServersTransports: map[string]*dynamic.ServersTransport{
+			"st2": {ServerName: "name2"},
+		},
+	}}
+
+	result := MergeConfigurations(c1, c2)
+	assertConfigInitialized(t, result)
+	if result.HTTP.ServersTransports == nil {
+		t.Fatal("expected ServersTransports map to be initialized")
+	}
+	if _, ok := result.HTTP.ServersTransports["st1"]; !ok {
+		t.Error("expected st1 to be present in merged ServersTransports")
+	}
+	if _, ok := result.HTTP.ServersTransports["st2"]; !ok {
+		t.Error("expected st2 to be present in merged ServersTransports")
+	}
+}
+
 func assertTCPInitialized(t *testing.T, tcp *dynamic.TCPConfiguration) {
 	t.Helper()
 	if tcp == nil {
@@ -297,10 +322,10 @@ func TestMergeConfigurationsTLSCertificateAppend(t *testing.T) {
 		t.Errorf("Expected 2 certificates, got %d", len(result.TLS.Certificates))
 	}
 
-	if result.TLS.Certificates[0].Certificate.CertFile != "/path/to/cert1.pem" {
+	if result.TLS.Certificates[0].CertFile != "/path/to/cert1.pem" {
 		t.Error("Expected first certificate to be preserved")
 	}
-	if result.TLS.Certificates[1].Certificate.CertFile != "/path/to/cert2.pem" {
+	if result.TLS.Certificates[1].CertFile != "/path/to/cert2.pem" {
 		t.Error("Expected second certificate to be appended")
 	}
 }

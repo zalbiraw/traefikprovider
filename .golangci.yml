@@ -60,6 +60,7 @@ linters:
     - gomnd
     - forbidigo
     - varnamelen
+    - ireturn
 
 issues:
   exclude-use-default: false
