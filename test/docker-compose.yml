@@ -6,14 +6,13 @@ services:
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
     ports:
       - "80:80"
-      - "443:443"
       - "8080:8080"
     volumes:
       - ./configs/traefik-main/traefik.yml:/etc/traefik/traefik.yml:ro
       - ../:/plugins-local/src/github.com/zalbiraw/traefikprovider:ro
+      - ./certs:/etc/traefik/certs:ro
     networks:
       - traefik
     labels:
@@ -28,15 +27,16 @@ services:
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--accesslog=true"
+      - "--entrypoints.web.http.tls=true"
+      - "--entrypoints.web.http.tls.options=default"
     ports:
       - "8081:8080"
       - "8001:80"
-      - "8443:443"
     volumes:
       - ./configs/traefik-provider1:/etc/traefik/dynamic:ro
+      - ./certs:/etc/traefik/certs:ro
     networks:
       - traefik
 
@@ -47,15 +47,16 @@ services:
       - "--api.insecure=true"
       - "--api.dashboard=true"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--accesslog=true"
+      - "--entrypoints.web.http.tls=true"
+      - "--entrypoints.web.http.tls.options=default"
     ports:
       - "8082:8080"
       - "8002:80"
-      - "8444:443"
     volumes:
       - ./configs/traefik-provider2:/etc/traefik/dynamic:ro
+      - ./certs:/etc/traefik/certs:ro
     networks:
       - traefik
 

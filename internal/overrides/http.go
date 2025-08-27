@@ -53,36 +53,24 @@ func OverrideHTTPRouters(matched map[string]*dynamic.Router, overrides config.Ro
 // If a server override specifies a Tunnel, the matched services' servers are
 // replaced with the tunnel addresses.
 func OverrideHTTPServices(matched map[string]*dynamic.Service, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
-    // Server overrides
-    for _, orule := range overrides.Servers {
-        // If tunnel is specified and resolves to addresses, prefer it
-        if orule.Tunnel != "" {
-            addrs := resolveServerURLs(orule.Tunnel, tunnels)
-            if len(addrs) > 0 {
-                handleServiceOverride(matched, orule.Matcher, addrs,
-                    func(s *dynamic.Service, v []string) { s.LoadBalancer.Servers = buildServers(v) },
-                    func(s *dynamic.Service, v string) {},
-                )
-                continue
-            }
-        }
-
-        // Otherwise apply value-based overrides
-        handleServiceOverride(matched, orule.Matcher, orule.Value,
-            func(s *dynamic.Service, v []string) {
-                s.LoadBalancer.Servers = buildServers(v)
-            },
-            func(s *dynamic.Service, v string) {
-                s.LoadBalancer.Servers = append(s.LoadBalancer.Servers, dynamic.Server{URL: v})
-            },
-        )
-    }
-    // Healthcheck overrides
-    for _, ohc := range overrides.Healthchecks {
-        applyServiceOverride(matched, ohc.Matcher, ohc, func(s *dynamic.Service, hc config.OverrideHealthcheck) {
-            applyHealthcheck(s, hc)
-        })
-    }
+	// Server overrides
+	for _, orule := range overrides.Servers {
+		// Otherwise apply value-based overrides
+		handleServiceOverride(matched, orule.Matcher, orule.Value,
+			func(s *dynamic.Service, v []string) {
+				s.LoadBalancer.Servers = buildServers(v)
+			},
+			func(s *dynamic.Service, v string) {
+				s.LoadBalancer.Servers = append(s.LoadBalancer.Servers, dynamic.Server{URL: v})
+			},
+		)
+	}
+	// Healthcheck overrides
+	for _, ohc := range overrides.Healthchecks {
+		applyServiceOverride(matched, ohc.Matcher, ohc, func(s *dynamic.Service, hc config.OverrideHealthcheck) {
+			applyHealthcheck(s, hc)
+		})
+	}
 }
 
 // buildServers converts a list of URLs to dynamic.Server slice.

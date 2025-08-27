@@ -32,21 +32,13 @@ providers:
             timeout: "10s"
           matcher: "Provider(`file`)"
           tunnels:
-            - name: web-tunnel
+            - matcher: "NameRegexp(`.*`)"
               addresses:
-                - "http://traefik-provider1"
-          http:
-            discover: true
-            routers:
-              discover: true
-              discoverPriority: false
-              matcher: "Entrypoint(`web`)"
-            services:
-              discover: true
-              overrides:
-                servers:
-                  - tunnel: "web-tunnel"
-                    matcher: "Name(`provider1-web-service`)"
+                - "https://traefik-provider1:80"
+              mTLS:
+                caFile: "/etc/traefik/certs/ca.crt"
+                certFile: "/etc/traefik/certs/client.crt"
+                keyFile: "/etc/traefik/certs/client.key"
         - name: provider2
           connection:
             host: traefik-provider2
@@ -55,18 +47,10 @@ providers:
             timeout: "10s"
           matcher: "Provider(`file`)"
           tunnels:
-            - name: web-tunnel
+            - matcher: "NameRegexp(`.*`)"
               addresses:
-                - "http://traefik-provider2"
-          http:
-            discover: true
-            routers:
-              discover: true
-              discoverPriority: false
-              matcher: "Entrypoint(`web`)"
-            services:
-              discover: true
-              overrides:
-                servers:
-                  - tunnel: "web-tunnel"
-                    matcher: "Name(`provider2-web-service`)"
+                - "https://traefik-provider2:80"
+              mTLS:
+                caFile: "/etc/traefik/certs/ca.crt"
+                certFile: "/etc/traefik/certs/client.crt"
+                keyFile: "/etc/traefik/certs/client.key"

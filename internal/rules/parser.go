@@ -1,6 +1,4 @@
 // Package rules implements the matcher DSL AST and parser.
-//
-//nolint:ireturn
 package rules
 
 import "fmt"

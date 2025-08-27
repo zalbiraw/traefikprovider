@@ -97,14 +97,3 @@ func handleUDPServiceOverride(
 		applyUDPServiceOverride(matched, matcher, v, applyString)
 	}
 }
-
-func resolveServerURLs(tunnelName string, tunnels []config.TunnelConfig) []string {
-	if tunnelName != "" {
-		for _, t := range tunnels {
-			if t.Name == tunnelName {
-				return t.Addresses
-			}
-		}
-	}
-	return []string{}
-}

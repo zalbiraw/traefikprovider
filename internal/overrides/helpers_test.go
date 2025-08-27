@@ -7,7 +7,7 @@ import (
 	"github.com/traefik/genconf/dynamic"
 )
 
-func TestApplyRouterOverride(t *testing.T) {
+func TestApplyRouterOverride_UpdatesRule(t *testing.T) {
 	matched := map[string]*dynamic.Router{
 		"test-router": {
 			Rule:    "Host(`example.com`)",
@@ -23,50 +23,35 @@ func TestApplyRouterOverride(t *testing.T) {
 		r.Rule = v
 	})
 
-	// The function should work through the match system
-	// This is more of an integration test
-	if len(matched) == 0 {
-		t.Error("Expected router to remain in matched map")
+	// Assert that rule was updated
+	if got := matched["test-router"].Rule; got != "new-rule" {
+		t.Fatalf("rule=%q want %q", got, "new-rule")
 	}
 }
 
-func TestHandleRouterOverride(t *testing.T) {
-	tests := []struct {
-		name  string
-		value interface{}
-	}{
-		{
-			name:  "string value",
-			value: "web",
-		},
-		{
-			name:  "array value",
-			value: []string{"web", "websecure"},
-		},
+func TestHandleRouterOverride_SetsEntryPoints(t *testing.T) {
+	// string value -> single entrypoint slice
+	matched := map[string]*dynamic.Router{
+		"r1": {EntryPoints: []string{}},
+	}
+	handleRouterOverride(matched, "", "web",
+		func(r *dynamic.Router, arr []string) { r.EntryPoints = arr },
+		func(r *dynamic.Router, s string) { r.EntryPoints = []string{s} },
+	)
+	if got := matched["r1"].EntryPoints; !reflect.DeepEqual(got, []string{"web"}) {
+		t.Fatalf("entryPoints=%v want %v", got, []string{"web"})
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			matched := map[string]*dynamic.Router{
-				"test-router": {
-					Rule:        "Host(`example.com`)",
-					Service:     "test-service",
-					EntryPoints: []string{},
-				},
-			}
-
-			match := ""
-
-			handleRouterOverride(matched, match, tt.value,
-				func(r *dynamic.Router, arr []string) { r.EntryPoints = arr },
-				func(r *dynamic.Router, s string) { r.EntryPoints = []string{s} },
-			)
-
-			// Test that function executes without error
-			if len(matched) == 0 {
-				t.Error("Expected router to remain in matched map")
-			}
-		})
+	// array value -> direct replace
+	matched = map[string]*dynamic.Router{
+		"r2": {EntryPoints: []string{}},
+	}
+	handleRouterOverride(matched, "", []string{"web", "websecure"},
+		func(r *dynamic.Router, arr []string) { r.EntryPoints = arr },
+		func(r *dynamic.Router, s string) { r.EntryPoints = []string{s} },
+	)
+	if got := matched["r2"].EntryPoints; !reflect.DeepEqual(got, []string{"web", "websecure"}) {
+		t.Fatalf("entryPoints=%v want %v", got, []string{"web", "websecure"})
 	}
 }
 
@@ -94,9 +79,8 @@ func TestApplyServiceOverride(t *testing.T) {
 		}
 	})
 
-	// Test that function executes without error
-	if len(matched) == 0 {
-		t.Error("Expected service to remain in matched map")
+	if got := matched["test-service"].LoadBalancer.Servers; len(got) != 1 || got[0].URL != "http://new-server:8080" {
+		t.Fatalf("servers=%v want one server with URL http://new-server:8080", got)
 	}
 }
 
@@ -124,9 +108,8 @@ func TestApplyTCPServiceOverride(t *testing.T) {
 		}
 	})
 
-	// Test that function executes without error
-	if len(matched) == 0 {
-		t.Error("Expected TCP service to remain in matched map")
+	if got := matched["tcp-service"].LoadBalancer.Servers; len(got) != 1 || got[0].Address != "new-server:8080" {
+		t.Fatalf("servers=%v want one server with Address new-server:8080", got)
 	}
 }
 
@@ -154,9 +137,8 @@ func TestApplyUDPServiceOverride(t *testing.T) {
 		}
 	})
 
-	// Test that function executes without error
-	if len(matched) == 0 {
-		t.Error("Expected UDP service to remain in matched map")
+	if got := matched["udp-service"].LoadBalancer.Servers; len(got) != 1 || got[0].Address != "new-server:8080" {
+		t.Fatalf("servers=%v want one server with Address new-server:8080", got)
 	}
 }
 

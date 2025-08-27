@@ -1,4 +1,4 @@
-package httpclient
+package parsers
 
 import (
 	"testing"
@@ -698,7 +698,7 @@ func TestParseUDPConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parseUDPConfig(tt.raw, tt.udpConfig, tt.providerConfig, "", tt.tunnels)
+			parseUDPConfig(tt.raw, tt.udpConfig, tt.providerConfig, "")
 
 			if tt.expectError {
 				return
@@ -978,7 +978,7 @@ func TestParseUDPConfigJSONMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseUDPConfig(raw, udpConfig, providerConfig, "", nil)
+	parseUDPConfig(raw, udpConfig, providerConfig, "")
 
 	if len(udpConfig.Routers) != 0 {
 		t.Errorf("Expected 0 routers, got %d", len(udpConfig.Routers))
@@ -1170,7 +1170,7 @@ func TestParseUDPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseUDPConfig(raw, udpConfig, providerConfig, "", nil)
+	parseUDPConfig(raw, udpConfig, providerConfig, "")
 
 	// Items without name should not be added
 	if len(udpConfig.Routers) != 0 {
@@ -1293,7 +1293,7 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "", nil)
+	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "")
 
 	// All should be empty due to marshal errors
 	if len(udpConfig.Routers) != 0 {
@@ -1432,7 +1432,7 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "", nil)
+	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "")
 
 	// All should be empty due to unmarshal errors
 	if len(udpConfig.Routers) != 0 {

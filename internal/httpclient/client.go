@@ -10,6 +10,7 @@ import (
 
 	"github.com/traefik/genconf/dynamic"
 	"github.com/zalbiraw/traefikprovider/config"
+	"github.com/zalbiraw/traefikprovider/internal/parsers"
 )
 
 // GenerateConfiguration fetches and parses the dynamic configuration from the remote provider.
@@ -91,22 +92,22 @@ func parseDynamicConfiguration(body []byte, providerCfg *config.ProviderConfig) 
 
 	// HTTP
 	if providerCfg.HTTP.Discover {
-		parseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Matcher, providerCfg.Tunnels)
+		parsers.ParseHTTPConfig(raw, httpConfig, providerCfg.HTTP, providerCfg.Matcher, providerCfg.Tunnels)
 	}
 
 	// TCP
 	if providerCfg.TCP.Discover {
-		parseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Matcher, providerCfg.Tunnels)
+		parsers.ParseTCPConfig(raw, tcpConfig, providerCfg.TCP, providerCfg.Matcher, providerCfg.Tunnels)
 	}
 
 	// UDP
 	if providerCfg.UDP.Discover {
-		parseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Matcher, providerCfg.Tunnels)
+		parsers.ParseUDPConfig(raw, udpConfig, providerCfg.UDP, providerCfg.Matcher)
 	}
 
 	// TLS
 	if providerCfg.TLS.Discover {
-		parseTLSConfig(raw, tlsConfig, providerCfg.TLS)
+		parsers.ParseTLSConfig(raw, tlsConfig, providerCfg.TLS)
 	}
 
 	cfg := &dynamic.Configuration{

@@ -19,7 +19,6 @@ type OverrideServer struct {
 	Strategy string      `json:"strategy,omitempty" yaml:"strategy,omitempty"`
 	Value    interface{} `json:"value,omitempty" yaml:"value,omitempty"`
 	Matcher  string      `json:"matcher,omitempty" yaml:"matcher,omitempty"`
-	Tunnel   string      `json:"tunnel,omitempty" yaml:"tunnel,omitempty"`
 }
 
 // OverrideHealthcheck overrides healthcheck settings for matching services.

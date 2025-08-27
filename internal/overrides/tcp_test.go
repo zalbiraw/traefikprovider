@@ -349,43 +349,4 @@ func TestOverrideTCPServices(t *testing.T) {
 			t.Errorf("Expected second server 'new-server:8080', got %s", services["test-service"].LoadBalancer.Servers[1].Address)
 		}
 	})
-
-	t.Run("server override with tunnel", func(t *testing.T) {
-		services := map[string]*dynamic.TCPService{
-			"tunnel-service": {
-				LoadBalancer: &dynamic.TCPServersLoadBalancer{
-					Servers: []dynamic.TCPServer{
-						{Address: "old-server:8080"},
-					},
-				},
-			},
-		}
-
-		tunnels := []config.TunnelConfig{
-			{
-				Name:      "tcp-tunnel",
-				Addresses: []string{"tunnel1:8080", "tunnel2:8080"},
-			},
-		}
-
-		overrides := config.ServiceOverrides{
-			Servers: []config.OverrideServer{
-				{
-					Matcher: "Name(`tunnel-service`)",
-					Value:   []string{"ignored:8080"},
-					Tunnel:  "tcp-tunnel",
-				},
-			},
-		}
-
-		OverrideTCPServices(services, overrides, tunnels)
-
-		if len(services["tunnel-service"].LoadBalancer.Servers) != 2 {
-			t.Errorf("Expected 2 servers from tunnel, got %d", len(services["tunnel-service"].LoadBalancer.Servers))
-		}
-
-		if services["tunnel-service"].LoadBalancer.Servers[0].Address != "tunnel1:8080" {
-			t.Errorf("Expected first server 'tunnel1:8080', got %s", services["tunnel-service"].LoadBalancer.Servers[0].Address)
-		}
-	})
 }

@@ -166,39 +166,6 @@ func TestOverrideHTTPServices_ServerOverrideString(t *testing.T) {
 	}
 }
 
-func TestOverrideHTTPServices_WithTunnel(t *testing.T) {
-	services := map[string]*dynamic.Service{
-		"tunnel-service": {
-			LoadBalancer: &dynamic.ServersLoadBalancer{
-				Servers: []dynamic.Server{{URL: "http://old-server:8080"}},
-			},
-		},
-	}
-
-	tunnels := []config.TunnelConfig{{
-		Name:      "my-tunnel",
-		Addresses: []string{"http://tunnel1:8080", "http://tunnel2:8080"},
-	}}
-
-	overrides := config.ServiceOverrides{
-		Servers: []config.OverrideServer{{
-			Matcher: "Name(`tunnel-service`)",
-			Value:   []string{"http://ignored:8080"},
-			Tunnel:  "my-tunnel",
-		}},
-	}
-
-	OverrideHTTPServices(services, overrides, tunnels)
-
-	// Tunnels should be used for HTTP services when specified.
-	if len(services["tunnel-service"].LoadBalancer.Servers) != 2 {
-		t.Errorf("Expected 2 servers from tunnel, got %d", len(services["tunnel-service"].LoadBalancer.Servers))
-	}
-	if services["tunnel-service"].LoadBalancer.Servers[0].URL != "http://tunnel1:8080" {
-		t.Errorf("Expected first server 'http://tunnel1:8080', got %s", services["tunnel-service"].LoadBalancer.Servers[0].URL)
-	}
-}
-
 func TestOverrideHTTPServices_HealthcheckOverride(t *testing.T) {
 	services := map[string]*dynamic.Service{
 		"health-service": {

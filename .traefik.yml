@@ -45,10 +45,10 @@ testData:
           rules:
           # Set
           - value: "Host(`app.traefik.cloud`)"
-            matcher: ""
+            matcher: "Host(`app.traefik.localhost`)"
           # Regex
           - value: "$1 && PathPrefix(`/api/`)"
-            matcher: ""
+            matcher: "PathPrefix(`api`)"
           entrypoints:
           # Set
           - value: ["websecure"]
@@ -84,10 +84,6 @@ testData:
           - strategy: "wrr"
             value: ["http://new-web-app-1:80", "http://new-web-app-2:80"]
             matcher: "Name(`web-app`)"
-          # Override api-service with tunnel
-          - tunnel: "web-tunnel"
-            matcher: "Name(`api-service`)"
-          # Override load-balanced-app servers using regex
           - strategy: "p2c"
             value: ["http://production-lb:80"]
             matcher: "NameRegexp(`load-balanced.*`)"

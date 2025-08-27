@@ -80,31 +80,27 @@ func TestTunnelConfig_Validate(t *testing.T) {
 		{
 			name: "valid tunnel config",
 			tunnel: TunnelConfig{
-				Name:      "test-tunnel",
 				Addresses: []string{"http://tunnel1:80", "http://tunnel2:80"},
 			},
 			wantErr: false,
 		},
 		{
-			name: "missing name",
+			name: "no name required",
 			tunnel: TunnelConfig{
 				Addresses: []string{"http://tunnel:80"},
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "empty addresses",
 			tunnel: TunnelConfig{
-				Name:      "test-tunnel",
 				Addresses: []string{},
 			},
 			wantErr: true,
 		},
 		{
-			name: "nil addresses",
-			tunnel: TunnelConfig{
-				Name: "test-tunnel",
-			},
+			name:    "nil addresses",
+			tunnel:  TunnelConfig{},
 			wantErr: true,
 		},
 	}
@@ -112,7 +108,7 @@ func TestTunnelConfig_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Simple validation check
-			hasErr := tt.tunnel.Name == "" || len(tt.tunnel.Addresses) == 0
+			hasErr := len(tt.tunnel.Addresses) == 0
 			if hasErr != tt.wantErr {
 				t.Errorf("TunnelConfig validation error = %v, wantErr %v", hasErr, tt.wantErr)
 			}
@@ -181,46 +177,6 @@ func TestConnectionConfig_GetURL(t *testing.T) {
 			}
 			if (tt.config.MTLS != nil && scheme != "https") || (tt.config.MTLS == nil && scheme != "http") {
 				t.Errorf("ConnectionConfig scheme mismatch: got %s, expected %s", scheme, expectedScheme)
-			}
-		})
-	}
-}
-
-func TestOverrideServer_HasTunnel(t *testing.T) {
-	tests := []struct {
-		name     string
-		override OverrideServer
-		expected bool
-	}{
-		{
-			name: "has tunnel",
-			override: OverrideServer{
-				Tunnel: "test-tunnel",
-			},
-			expected: true,
-		},
-		{
-			name: "no tunnel",
-			override: OverrideServer{
-				Strategy: "replace",
-				Value:    []string{"http://server:80"},
-			},
-			expected: false,
-		},
-		{
-			name: "empty tunnel",
-			override: OverrideServer{
-				Tunnel: "",
-			},
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tt.override.Tunnel != ""
-			if result != tt.expected {
-				t.Errorf("OverrideServer tunnel check = %v, expected %v", result, tt.expected)
 			}
 		})
 	}

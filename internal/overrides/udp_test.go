@@ -126,7 +126,7 @@ func TestOverrideUDPServices(t *testing.T) {
 			},
 		}
 
-		OverrideUDPServices(services, overrides, nil)
+		OverrideUDPServices(services, overrides)
 
 		if len(services["udp-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers, got %d", len(services["udp-service"].LoadBalancer.Servers))
@@ -157,7 +157,7 @@ func TestOverrideUDPServices(t *testing.T) {
 			},
 		}
 
-		OverrideUDPServices(services, overrides, nil)
+		OverrideUDPServices(services, overrides)
 
 		if len(services["udp-service"].LoadBalancer.Servers) != 2 {
 			t.Errorf("Expected 2 servers, got %d", len(services["udp-service"].LoadBalancer.Servers))
@@ -165,45 +165,6 @@ func TestOverrideUDPServices(t *testing.T) {
 
 		if services["udp-service"].LoadBalancer.Servers[1].Address != "new-server:8080" {
 			t.Errorf("Expected second server 'new-server:8080', got %s", services["udp-service"].LoadBalancer.Servers[1].Address)
-		}
-	})
-
-	t.Run("server override with tunnel", func(t *testing.T) {
-		services := map[string]*dynamic.UDPService{
-			"tunnel-service": {
-				LoadBalancer: &dynamic.UDPServersLoadBalancer{
-					Servers: []dynamic.UDPServer{
-						{Address: "old-server:8080"},
-					},
-				},
-			},
-		}
-
-		tunnels := []config.TunnelConfig{
-			{
-				Name:      "udp-tunnel",
-				Addresses: []string{"tunnel1:8080", "tunnel2:8080"},
-			},
-		}
-
-		overrides := config.ServiceOverrides{
-			Servers: []config.OverrideServer{
-				{
-					Matcher: "Name(`tunnel-service`)",
-					Value:   []string{"ignored:8080"},
-					Tunnel:  "udp-tunnel",
-				},
-			},
-		}
-
-		OverrideUDPServices(services, overrides, tunnels)
-
-		if len(services["tunnel-service"].LoadBalancer.Servers) != 2 {
-			t.Errorf("Expected 2 servers from tunnel, got %d", len(services["tunnel-service"].LoadBalancer.Servers))
-		}
-
-		if services["tunnel-service"].LoadBalancer.Servers[0].Address != "tunnel1:8080" {
-			t.Errorf("Expected first server 'tunnel1:8080', got %s", services["tunnel-service"].LoadBalancer.Servers[0].Address)
 		}
 	})
 }

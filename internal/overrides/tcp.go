@@ -60,45 +60,21 @@ func OverrideTCPRouters(matched map[string]*dynamic.TCPRouter, overrides config.
 // If a server override specifies a Tunnel, the matched services' servers are
 // replaced with the tunnel addresses.
 func OverrideTCPServices(matched map[string]*dynamic.TCPService, overrides config.ServiceOverrides, tunnels []config.TunnelConfig) {
-    // Server overrides
-    for _, orule := range overrides.Servers {
-        // If tunnel is specified and resolves to addresses, prefer it
-        if orule.Tunnel != "" {
-            addrs := resolveServerURLs(orule.Tunnel, tunnels)
-            if len(addrs) > 0 {
-                handleTCPServiceOverride(matched, orule.Matcher, addrs,
-                    func(s *dynamic.TCPService, v []string) { s.LoadBalancer.Servers = buildTCPServers(v) },
-                    func(s *dynamic.TCPService, v string) {},
-                )
-                continue
-            }
-        }
+	// Server overrides
+	for _, orule := range overrides.Servers {
+		handleTCPServiceOverride(matched, orule.Matcher, orule.Value,
+			func(s *dynamic.TCPService, v []string) {
+				servers := []dynamic.TCPServer{}
+				for _, addr := range v {
+					server := dynamic.TCPServer{Address: addr}
+					servers = append(servers, server)
+				}
 
-        handleTCPServiceOverride(matched, orule.Matcher, orule.Value,
-            func(s *dynamic.TCPService, v []string) {
-                servers := []dynamic.TCPServer{}
-                for _, addr := range v {
-                    server := dynamic.TCPServer{Address: addr}
-                    servers = append(servers, server)
-                }
-
-                s.LoadBalancer.Servers = servers
-            },
-            func(s *dynamic.TCPService, v string) {
-                s.LoadBalancer.Servers = append(s.LoadBalancer.Servers, dynamic.TCPServer{Address: v})
-            },
-        )
-    }
-}
-
-// buildTCPServers converts a list of URLs to dynamic.TCPServer slice.
-func buildTCPServers(urls []string) []dynamic.TCPServer {
-	if len(urls) == 0 {
-		return nil
+				s.LoadBalancer.Servers = servers
+			},
+			func(s *dynamic.TCPService, v string) {
+				s.LoadBalancer.Servers = append(s.LoadBalancer.Servers, dynamic.TCPServer{Address: v})
+			},
+		)
 	}
-	servers := make([]dynamic.TCPServer, 0, len(urls))
-	for _, addr := range urls {
-		servers = append(servers, dynamic.TCPServer{Address: addr})
-	}
-	return servers
 }
