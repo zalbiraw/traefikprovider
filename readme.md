@@ -1,278 +1,284 @@
-This repository includes an example plugin, `demo`, for you to use as a reference for developing your own plugins.
+# Traefik Provider: HTTP/TCP/UDP/TLS Merger with Matchers, Overrides, and Tunnels
 
-[![Build Status](https://github.com/traefik/pluginproviderdemo/workflows/Main/badge.svg?branch=master)](https://github.com/traefik/pluginproviderdemo/actions)
+This project is a Traefik Provider plugin that dynamically fetches, filters, merges, and enriches configurations from one or more upstream sources. It focuses on:
 
-The existing plugins can be browsed into the [Plugin Catalog](https://plugins.traefik.io).
+- Discovering HTTP/TCP/UDP/TLS resources via matchers
+- Applying per-resource overrides
+- Injecting HTTP/TCP tunnels (with optional mTLS) and wiring services to ServersTransports
+- Producing a single merged Traefik dynamic configuration payload
 
-# Provider Plugin Demo
+It is designed to work both in Traefik plugin mode and in local development mode.
 
-[Traefik](https://traefik.io) plugins are developed using the [Go language](https://golang.org).
+## Features
 
-Rather than being pre-compiled and linked, however, plugins are executed on the fly by [Yaegi](https://github.com/traefik/yaegi), an embedded Go interpreter.
+- Discover routers, services, middlewares, and TLS objects selectively per provider
+- Powerful matchers to include/exclude resources by provider, name, and other rules
+- Overrides to mutate discovered objects safely (rules, entrypoints, services, middlewares, etc.)
+- Tunnels that:
+  - Replace service server lists with tunnel addresses
+  - Optionally create and attach HTTP ServersTransports with mTLS
+- Automatic provider-suffix stripping on names and cross-references (e.g., `service@file` → `service`)
+- Merge multiple providers into one consistent dynamic configuration (including ServersTransports)
 
-## Usage
+## Architecture
 
-For a plugin to be active for a given Traefik instance, it must be declared in the static configuration.
+- Core plugin entry: `traefikprovider/`
+  - Entry point: `traefikprovider.go` (`Provider.Provide` sends merged JSON payloads periodically)
+- Data model and config: `config/`
+- Parsing pipeline: `internal/parsers/`
+  - HTTP/TCP/UDP/TLS parse stages
+  - Name cleanup and overrides: `internal/overrides/`
+- Matchers: `internal/matchers/`
+- Tunnels: `internal/tunnels/` (creates HTTP ServersTransports from mTLS, rewrites services)
+- Merge: `internal/merge.go` (merges routers/services/middlewares/ServersTransports etc.)
+- HTTP client: `internal/httpclient/` (fetches upstream raw JSON, parses into `dynamic.Configuration`)
 
-Plugins are parsed and loaded exclusively during startup, which allows Traefik to check the integrity of the code and catch errors early on.
-If an error occurs during loading, the plugin is disabled.
+## Installation
 
-For security reasons, it is not possible to start a new plugin or modify an existing one while Traefik is running.
+Use either GitHub plugin mode or local mode.
 
-Plugin dependencies must be [vendored](https://golang.org/ref/mod#vendoring) for each plugin.
-Vendored packages should be included in the plugin's GitHub repository. ([Go modules](https://blog.golang.org/using-go-modules) are not supported.)
+- Static config (plugin mode):
+  - `.traefik.yml` already describes this provider plugin for Traefik Hub/Plugin Catalog
+  - In Traefik static config, enable the plugin provider with this module name:
+    - `github.com/zalbiraw/traefikprovider`
 
-### Configuration
-
-For each plugin, the Traefik static configuration must define the module name (as is usual for Go packages).
-
-The following declaration (given here in YAML) defines a plugin:
+- Static config (local mode, recommended for development):
+  - Use `experimental.localPlugins` and mount this repo inside Traefik:
 
 ```yaml
-# Static configuration
-
 experimental:
-  plugins:
-    example:
-      moduleName: github.com/traefik/pluginproviderdemo
-      version: v0.1.0
+  localPlugins:
+    traefik:
+      moduleName: github.com/zalbiraw/traefikprovider
 
 providers:
   plugin:
-    example:
-      pollInterval: 2s
+    traefik:
+      pollInterval: "5s"
+      providers:
+        # see Configuration Reference below
 ```
 
-#### Local Mode
+See `test/configs/traefik-main/traefik.yml` for a complete example.
 
-Traefik also offers a developer mode that can be used for temporary testing of plugins not hosted on GitHub.
-To use a plugin in local mode, the Traefik static configuration must define the module name (as is usual for Go packages) and a path to a [Go workspace](https://golang.org/doc/gopath_code.html#Workspaces), which can be the local GOPATH or any directory.
+## Quick Start (with the included test stack)
 
-The plugins must be placed in `./plugins-local` directory, 
-which should be in the working directory of the process running the Traefik binary.
-The source code of the plugin should be organized as follows:
+- Requirements: Docker + Docker Compose, Make
+- Commands:
+  - `make traefik-up` — brings up Traefik and the demo upstreams
+  - `make traefik-down` — tears down
+  - `make traefik-restart` — restarts the test stack
 
-```
-./plugins-local/
-    └── src
-        └── github.com
-            └── traefik
-                └── pluginproviderdemo
-                    ├── demo.go
-                    ├── demo_test.go
-                    ├── go.mod
-                    ├── go.sum
-                    ├── LICENSE
-                    ├── Makefile
-                    ├── readme.md
-                    └── vendor
-                        ├── github.com
-                        │   └── traefik
-                        │       └── genconf
-                        │           ├── dynamic
-                        │           │   ├── config.go
-                        │           │   ├── http_config.go
-                        │           │   ├── marshaler.go
-                        │           │   ├── middlewares.go
-                        │           │   ├── plugins.go
-                        │           │   ├── tcp_config.go
-                        │           │   ├── tls
-                        │           │   │   ├── certificate.go
-                        │           │   │   └── tls.go
-                        │           │   ├── types
-                        │           │   │   ├── domains.go
-                        │           │   │   └── tls.go
-                        │           │   └── udp_config.go
-                        │           └── LICENSE
-                        └── modules.txt
-```
+These use `test/docker-compose.yml` and supporting test configs under `test/configs/`.
+
+## Configuration Reference
+
+Root provider config (static):
+
+- Path: Traefik static config (e.g., `traefik.yml`)
+- Section:
+  - `providers.plugin.traefik.pollInterval` string (Go duration, e.g. `"5s"`)
+  - `providers.plugin.traefik.providers[]` array of upstream ProviderConfigs
+
+ProviderConfig model (`config/config.go`):
+
+- `name` string — descriptive name
+- `matcher` string — provider-level matcher (e.g., `Provider('file')`)
+- `connection`:
+  - `host` string (required)
+  - `port` int (required)
+  - `path` string (required)
+  - `timeout` string (Go duration)
+  - `headers` map[string]string
+  - `mTLS` (optional) for calling the upstream provider:
+    - `caFile`, `certFile`, `keyFile` (paths)
+- `http` `HTTPSection` (see below)
+- `tcp` `TCPSection`
+- `udp` `UDPSection`
+- `tls` `TLSSection`
+- `tunnels` []`TunnelConfig` (see Tunnels)
+
+HTTPSection (`config/sections.go`):
+
+- `discover` bool (default: true)
+- `routers` `RoutersConfig`
+- `middlewares` `MiddlewaresConfig`
+- `services` `ServicesConfig`
+
+TCPSection (`config/sections.go`):
+
+- `discover` bool (default: true)
+- `routers` `RoutersConfig`
+- `middlewares` `MiddlewaresConfig`
+- `services` `ServicesConfig`
+
+UDPSection (`config/sections.go`):
+
+- `discover` bool (default: true)
+- `routers` `UDPRoutersConfig`
+- `services` `UDPServicesConfig`
+
+TLSSection (`config/sections.go`):
+
+- `discover` bool (default: true)
+
+RoutersConfig (`config/routers.go`):
+
+- `discover` bool
+- `discoverPriority` bool — keep discovered priorities when true; otherwise reset to 0
+- `matcher` string — matcher to select routers (e.g., by name/provider)
+- `stripServiceProvider` bool — if true, strip `@provider` from router.service
+- `overrides` `RouterOverrides`
+- `extraRoutes` []any — extra router definitions (raw)
+
+RouterOverrides (`config/routers.go`):
+
+- `name` string — rename matching routers
+- `rules` []`OverrideRule`:
+  - `value` string (rule)
+  - `matcher` string
+- `entrypoints` []`OverrideEntrypoint`:
+  - `value` any (string or []string)
+  - `matcher` string
+- `services` []`OverrideService`:
+  - `value` string (service name)
+  - `matcher` string
+- `middlewares` []`OverrideMiddleware`:
+  - `value` any (string or []string)
+  - `matcher` string
+
+ServicesConfig, MiddlewaresConfig, and UDP configs follow the same pattern (discover, matcher, overrides, extra definitions). See files in `config/` for exact shapes.
+
+### Tunnels (`config/config.go`, `internal/tunnels/tunnels.go`)
+
+- `tunnels` array per provider config
+- `TunnelConfig`:
+  - `matcher` string — matches services to modify
+  - `addresses` []string — replace service servers with these addresses
+  - `mTLS` (optional) — when present, a HTTP ServersTransport is created:
+    - `rootCAs` from `caFile`
+    - `certificates` from `certFile` + `keyFile`
+- For HTTP services only, when mTLS is provided:
+  - The plugin creates a `ServersTransport` named `st-<hash of matcher>`
+  - The matched services’ `loadBalancer.serversTransport` is set to that name
+- Notes:
+  - `ServersTransport` objects are stored under `http.serversTransports` in the resulting dynamic config.
+  - This plugin does not set `serverName` automatically. If your upstream cert CN/SAN does not match the host in `addresses`, use a matching hostname or request an explicit `serverName` option.
+
+## How Matching, Overrides, and Name Cleanup Work
+
+- Names may include `@provider` suffixes (e.g., `serviceA@file`). The plugin strips `@provider` in keys and cross-references to make merging consistent across sources.
+  - Code: `internal/overrides/names.go`
+- Matching:
+  - Provider-level matcher filters at the provider scope (e.g., only resources from a source)
+  - Per-section matchers further filter resources
+  - See `internal/matchers/` for matcher implementation
+- Overrides:
+  - Applied after parsing and name normalization
+  - Routers: adjust rules, entrypoints, service, middlewares, and optional name rename
+  - Services and Middlewares support similar override patterns (see `config/` and `internal/overrides/`)
+
+## Merging Behavior
+
+- The plugin polls all configured providers, builds a `*dynamic.Configuration` per provider, and merges them.
+- Merge implementation: `internal/merge.go`
+  - HTTP: merges `routers`, `services`, `middlewares`, and `serversTransports`
+  - TCP/UDP/TLS: merges corresponding maps/arrays
+- Later providers override earlier ones on identical keys.
+
+## Example Static Configuration (local plugin mode)
 
 ```yaml
-# Static configuration
-# Local mode
-entryPoints:
-  web:
-    address: :80
-
-log:
-  level: DEBUG
+api:
+  insecure: true
+  dashboard: true
 
 experimental:
   localPlugins:
-    example:
-      moduleName: github.com/traefik/pluginproviderdemo
+    traefik:
+      moduleName: github.com/zalbiraw/traefikprovider
+
+entryPoints:
+  web:
+    address: ":80"
+
+accessLog: {}
 
 providers:
   plugin:
-    example:
-      pollInterval: 2s
+    traefik:
+      pollInterval: "5s"
+      providers:
+        - name: provider1
+          connection:
+            host: traefik-provider1
+            port: 8080
+            path: /api/rawdata
+            timeout: "10s"
+          matcher: "Provider(`file`)"
+          tunnels:
+            - matcher: "NameRegexp(`.*`)"
+              addresses:
+                - "https://traefik-provider1:443"
+              mTLS:
+                caFile: "/etc/traefik/certs/ca.crt"
+                certFile: "/etc/traefik/certs/client.crt"
+                keyFile: "/etc/traefik/certs/client.key"
+        - name: provider2
+          connection:
+            host: traefik-provider2
+            port: 8080
+            path: /api/rawdata
+            timeout: "10s"
+          matcher: "Provider(`file`)"
+          tunnels:
+            - matcher: "NameRegexp(`.*`)"
+              addresses:
+                - "https://traefik-provider2:443"
+              mTLS:
+                caFile: "/etc/traefik/certs/ca.crt"
+                certFile: "/etc/traefik/certs/client.crt"
+                keyFile: "/etc/traefik/certs/client.key"
 ```
 
-(In the above example, the `pluginproviderdemo` plugin will be loaded from the path `./plugins-local/src/github.com/traefik/pluginproviderdemo`.)
+## Use Cases
 
-## Defining a Plugin
-
-A plugin package must define the following exported Go objects:
-
-- A type `type Config struct { ... }`. The struct fields are arbitrary.
-- A function `func CreateConfig() *Config`.
-- A function `New(ctx context.Context, config *Config, name string) (*Provider, error)`.
-
-The provider must follow this interface:
-
-```go
-type PluginProvider interface {
-	Init() error
-	Provide(cfgChan chan<- json.Marshaler) error
-	Stop() error
-}
-```
-
-The Go objects used to build the dynamic configuration are in the following repository: https://github.com/traefik/genconf
-
-Example:
-
-```go
-// Package example a example plugin.
-package example
-
-import (
-	"context"
-	"encoding/json"
-
-	"github.com/traefik/genconf/dynamic"
-	"github.com/traefik/genconf/dynamic/tls"
-)
-
-// Config the plugin configuration.
-type Config struct {
-	// ...
-}
-
-// CreateConfig creates the default plugin configuration.
-func CreateConfig() *Config {
-	return &Config{
-		// ...
-	}
-}
-
-// Provider a plugin.
-type Provider struct {
-	name     string
-    // ...
-}
-
-// New created a new plugin.
-func New(ctx context.Context, config *Config, name string) (*Provider, error) {
-	// ...
-	return &Provider{
-		// ...
-	}, nil
-}
-
-// Init the provider.
-func (p *Provider) Init() error {
-	// ...
-	return nil
-}
-
-// Provide creates and send dynamic configuration.
-func (p *Provider) Provide(cfgChan chan<- json.Marshaler) error {
-	// ...
-	cfgChan <- cfg
-	// ...
-	return nil
-}
-
-// Stop to stop the provider and the related go routines.
-func (p *Provider) Stop() error {
-	// ...
-	return nil
-}
-```
-
-## Logs
-
-Currently, the only way to send logs to Traefik is to use `os.Stdout.WriteString("...")` or `os.Stderr.WriteString("...")`.
-
-In the future, we will try to provide something better and based on levels.
-
-## Plugins Catalog
-
-Traefik plugins are stored and hosted as public GitHub repositories.
-
-Every 30 minutes, the Plugins Catalog online service polls Github to find plugins and add them to its catalog.
-
-### Prerequisites
-
-To be recognized by Plugins Catalog, your repository must meet the following criteria:
-
-- The `traefik-plugin` topic must be set.
-- The `.traefik.yml` manifest must exist, and be filled with valid contents.
-
-If your repository fails to meet either of these prerequisites, Plugins Catalog will not see it.
-
-### Manifest
-
-A manifest is also mandatory, and it should be named `.traefik.yml` and stored at the root of your project.
-
-This YAML file provides Plugins Catalog with information about your plugin, such as a description, a full name, and so on.
-
-Here is an example of a typical `.traefik.yml`file:
-
-```yaml
-# The name of your plugin as displayed in the Plugins Catalog web UI.
-displayName: Name of your plugin
-
-type: provider
-
-# The import path of your plugin.
-import: github.com/username/my-plugin
-
-# A brief description of what your plugin is doing.
-summary: Description of what my plugin is doing
-
-# Medias associated to the plugin (optional)
-iconPath: foo/icon.png
-bannerPath: foo/banner.png
-
-# Configuration data for your plugin.
-# This is mandatory,
-# and Plugins Catalog will try to execute the plugin with the data you provide as part of its startup validity tests.
-testData:
-  Headers:
-    Foo: Bar
-```
-
-Properties include:
-
-- `displayName` (required): The name of your plugin as displayed in the Plugins Catalog web UI.
-- `type` (required): the type of the plugin (i.e. `provider`).
-- `import` (required): The import path of your plugin.
-- `summary` (required): A brief description of what your plugin is doing.
-- `testData` (required): Configuration data for your plugin. This is mandatory, and Plugins Catalog will try to execute the plugin with the data you provide as part of its startup validity tests.
-- `iconPath` (optional): A local path in the repository to the icon of the project.
-- `bannerPath` (optional): A local path in the repository to the image that will be used when you will share your plugin page in social medias.
-
-There should also be a `go.mod` file at the root of your project.Plugins Catalog will use this file to validate the name of the project.
-
-### Tags and Dependencies
-
-Plugins Catalog gets your sources from a Go module proxy, so your plugins need to be versioned with a git tag.
-
-Last but not least, if your plugin has Go package dependencies, you need to vendor them and add them to your GitHub repository.
-
-If something goes wrong with the integration of your plugin, Plugins Catalog will create an issue inside your Github repository and will stop trying to add your repo until you close the issue.
+- Aggregate multiple upstream providers (e.g., File + CRDs + custom API) into one coherent config
+- Enforce global patterns via matchers and overrides (e.g., entrypoints, rules)
+- Front services via tunneling with mTLS from Traefik to upstream services without modifying upstream definitions
+- Strip provider suffixes for fully merged names and references
 
 ## Troubleshooting
 
-If Plugins Catalog fails to recognize your plugin, you will need to make one or more changes to your GitHub repository.
+- Missing routes or 404s:
+  - Ensure router rules and entrypoints match your request (e.g., Host header, PathPrefix)
+  - Verify the merged config via Traefik dashboard or logs
+- TLS/mTLS issues when tunneling:
+  - Confirm `rootCAs` and client certs/keys paths are correct and mounted
+  - If upstream certificate CN/SAN does not match tunnel hostname, use a matching hostname or request an explicit `serverName` option
+- Name collisions:
+  - Since provider postfixes are stripped, ensure you don’t unintentionally collide distinct services/routers with the same base name
 
-In order for your plugin to be successfully imported by Plugins Catalog, consult this checklist:
+## Development
 
-- The `traefik-plugin` topic must be set on your repository.
-- There must be a `.traefik.yml` file at the root of your project describing your plugin, and it must have a valid `testData` property for testing purposes.
-- There must be a valid `go.mod` file at the root of your project.
-- Your plugin must be versioned with a git tag.
-- If you have package dependencies, they must be vendored and added to your GitHub repository.
+- Code layout:
+  - `traefikprovider.go` — plugin entry points and background polling
+  - `config/` — user-facing configuration
+  - `internal/parsers/` — parsing pipeline
+  - `internal/overrides/` — name stripping + override application
+  - `internal/tunnels/` — tunnels and ServersTransports creation/wiring
+  - `internal/merge.go` — merging logic
+  - `internal/httpclient/` — HTTP client to fetch upstream raw JSON
+  - `test/` — docker-compose test stack with example upstreams
+- Make targets:
+  - `make traefik-up`, `make traefik-down`, `make traefik-restart`
 
+## Security Notes
+
+- Do not embed secrets directly into configs. Mount certs/keys via volumes.
+- Be careful when enabling `discover` widely; scope with matchers.
+- Only grant read access to upstream endpoints exposed via `connection`.
+
+## License
+
+See `LICENSE`.
