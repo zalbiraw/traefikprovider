@@ -13,7 +13,6 @@ func TestParseHTTPConfigMarshalErrors(t *testing.T) {
 		Services:    make(map[string]*dynamic.Service),
 		Middlewares: make(map[string]*dynamic.Middleware),
 	}
-
 	providerConfig := &config.HTTPSection{
 		Routers: &config.RoutersConfig{
 			Discover: true,
@@ -40,11 +39,67 @@ func TestParseHTTPConfigMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
+	ParseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	if len(httpConfig.Routers) != 1 {
 		t.Errorf("Expected 1 router, got %d", len(httpConfig.Routers))
 	}
+}
+
+func TestParseDynamicConfigurationProviderDefaults(t *testing.T) {
+	// All sections nil -> defaults should be applied without panic
+	providerConfig := &config.ProviderConfig{}
+	cfg, err := parseDynamicConfiguration([]byte("{}"), providerConfig)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil || cfg.HTTP == nil || cfg.TCP == nil || cfg.UDP == nil || cfg.TLS == nil {
+		t.Fatalf("expected all sections to be initialized, got: %+v", cfg)
+	}
+}
+
+func TestParseDynamicConfigurationJSONUnmarshalError(t *testing.T) {
+	// Invalid JSON should return an error and a non-nil configuration
+	providerConfig := &config.ProviderConfig{}
+	_, err := parseDynamicConfiguration([]byte("{"), providerConfig)
+	if err == nil {
+		t.Fatal("expected error for invalid JSON input")
+	}
+}
+
+func TestParseDynamicConfigurationExistingSectionsNoDefaulting(t *testing.T) {
+    // All sections non-nil and Discover disabled -> defaults branches are false and no parsing occurs
+    providerConfig := &config.ProviderConfig{
+        HTTP: &config.HTTPSection{Discover: false},
+        TCP:  &config.TCPSection{Discover: false},
+        UDP:  &config.UDPSection{Discover: false},
+        TLS:  &config.TLSSection{Discover: false},
+        // Non-nil tunnels slice as well
+        Tunnels: []config.TunnelConfig{{Matcher: "Name(`x`)"}},
+    }
+
+    jsonData := "{}"
+    cfg, err := parseDynamicConfiguration([]byte(jsonData), providerConfig)
+    if err != nil {
+        t.Fatalf("unexpected error: %v", err)
+    }
+    if cfg == nil {
+        t.Fatal("expected non-nil configuration")
+    }
+    // Since Discover=false everywhere, no sections should be populated by parsers
+    if cfg.HTTP != nil && (len(cfg.HTTP.Routers) != 0 || len(cfg.HTTP.Services) != 0 || len(cfg.HTTP.Middlewares) != 0) {
+        t.Fatalf("expected HTTP section to remain empty when Discover=false, got: %+v", cfg.HTTP)
+    }
+    if cfg.TCP != nil && (len(cfg.TCP.Routers) != 0 || len(cfg.TCP.Services) != 0 || len(cfg.TCP.Middlewares) != 0) {
+        t.Fatalf("expected TCP section to remain empty when Discover=false, got: %+v", cfg.TCP)
+    }
+    if cfg.UDP != nil && (len(cfg.UDP.Routers) != 0 || len(cfg.UDP.Services) != 0) {
+        t.Fatalf("expected UDP section to remain empty when Discover=false, got: %+v", cfg.UDP)
+    }
+    if cfg.TLS != nil && (len(cfg.TLS.Certificates) != 0 || len(cfg.TLS.Options) != 0 || len(cfg.TLS.Stores) != 0) {
+        t.Fatalf("expected TLS section to remain empty when Discover=false, got: %+v", cfg.TLS)
+    }
+
 }
 
 func TestHTTPRouters_DiscoverPriorityReset(t *testing.T) {
@@ -66,7 +121,7 @@ func TestHTTPRouters_DiscoverPriorityReset(t *testing.T) {
 		Middlewares: &config.MiddlewaresConfig{Discover: false},
 	}
 
-	parseHTTPConfig(raw, httpConfig, pc, "", nil)
+	ParseHTTPConfig(raw, httpConfig, pc, "", nil)
 
 	if got := httpConfig.Routers["r1"].Priority; got != 0 {
 		t.Fatalf("expected router priority reset to 0, got %d", got)
@@ -92,7 +147,7 @@ func TestTCPRouters_DiscoverPriorityReset(t *testing.T) {
 		Middlewares: &config.MiddlewaresConfig{Discover: false},
 	}
 
-	parseTCPConfig(raw, tcpConfig, pc, "", nil)
+	ParseTCPConfig(raw, tcpConfig, pc, "", nil)
 
 	if got := tcpConfig.Routers["r1"].Priority; got != 0 {
 		t.Fatalf("expected TCP router priority reset to 0, got %d", got)
@@ -358,7 +413,7 @@ func TestParseHTTPConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parseHTTPConfig(tt.raw, tt.httpConfig, tt.providerConfig, "", tt.tunnels)
+			ParseHTTPConfig(tt.raw, tt.httpConfig, tt.providerConfig, "", tt.tunnels)
 
 			if tt.expectError {
 				return
@@ -563,7 +618,7 @@ func TestParseTCPConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parseTCPConfig(tt.raw, tt.tcpConfig, tt.providerConfig, "", tt.tunnels)
+			ParseTCPConfig(tt.raw, tt.tcpConfig, tt.providerConfig, "", tt.tunnels)
 
 			if tt.expectError {
 				return
@@ -698,7 +753,7 @@ func TestParseUDPConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parseUDPConfig(tt.raw, tt.udpConfig, tt.providerConfig, "")
+			ParseUDPConfig(tt.raw, tt.udpConfig, tt.providerConfig, "")
 
 			if tt.expectError {
 				return
@@ -847,7 +902,7 @@ func TestParseHTTPConfigJSONMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
+	ParseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	// Valid entries should be added despite marshal errors
 	if len(httpConfig.Routers) != 1 {
@@ -899,7 +954,7 @@ func TestParseHTTPConfigJSONUnmarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
+	ParseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	// Items with unmarshal errors should not be added
 	if len(httpConfig.Routers) != 0 {
@@ -946,7 +1001,7 @@ func TestParseTCPConfigJSONMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseTCPConfig(raw, tcpConfig, providerConfig, "", nil)
+	ParseTCPConfig(raw, tcpConfig, providerConfig, "", nil)
 
 	if len(tcpConfig.Routers) != 0 {
 		t.Errorf("Expected 0 routers, got %d", len(tcpConfig.Routers))
@@ -978,7 +1033,7 @@ func TestParseUDPConfigJSONMarshalErrors(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseUDPConfig(raw, udpConfig, providerConfig, "")
+	ParseUDPConfig(raw, udpConfig, providerConfig, "")
 
 	if len(udpConfig.Routers) != 0 {
 		t.Errorf("Expected 0 routers, got %d", len(udpConfig.Routers))
@@ -1065,7 +1120,7 @@ func TestParseHTTPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
+	ParseHTTPConfig(raw, httpConfig, providerConfig, "", nil)
 
 	// Items without name should not be added
 	if len(httpConfig.Routers) != 0 {
@@ -1124,7 +1179,7 @@ func TestParseTCPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseTCPConfig(raw, tcpConfig, providerConfig, "", nil)
+	ParseTCPConfig(raw, tcpConfig, providerConfig, "", nil)
 
 	// Items without name should not be added
 	if len(tcpConfig.Routers) != 0 {
@@ -1170,7 +1225,7 @@ func TestParseUDPConfigExtraItemsWithoutName(t *testing.T) {
 	}
 
 	raw := map[string]interface{}{}
-	parseUDPConfig(raw, udpConfig, providerConfig, "")
+	ParseUDPConfig(raw, udpConfig, providerConfig, "")
 
 	// Items without name should not be added
 	if len(udpConfig.Routers) != 0 {
@@ -1213,7 +1268,7 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, "", nil)
+	ParseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, "", nil)
 
 	// All should be empty due to marshal errors
 	if len(httpConfig.Routers) != 0 {
@@ -1257,7 +1312,7 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, "", nil)
+	ParseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, "", nil)
 
 	// All should be empty due to marshal errors
 	if len(tcpConfig.Routers) != 0 {
@@ -1293,7 +1348,7 @@ func TestParseConfigMarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "")
+	ParseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "")
 
 	// All should be empty due to marshal errors
 	if len(udpConfig.Routers) != 0 {
@@ -1342,7 +1397,7 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, "", nil)
+	ParseHTTPConfig(map[string]interface{}{}, httpConfig, httpProviderConfig, "", nil)
 
 	// All should be empty due to unmarshal errors
 	if len(httpConfig.Routers) != 0 {
@@ -1392,7 +1447,7 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, "", nil)
+	ParseTCPConfig(map[string]interface{}{}, tcpConfig, tcpProviderConfig, "", nil)
 
 	// All should be empty due to unmarshal errors
 	if len(tcpConfig.Routers) != 0 {
@@ -1432,7 +1487,7 @@ func TestParseConfigUnmarshalErrors(t *testing.T) {
 		},
 	}
 
-	parseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "")
+	ParseUDPConfig(map[string]interface{}{}, udpConfig, udpProviderConfig, "")
 
 	// All should be empty due to unmarshal errors
 	if len(udpConfig.Routers) != 0 {

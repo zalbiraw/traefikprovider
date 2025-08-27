@@ -427,3 +427,70 @@ func TestUDPServicesProviderOverride(t *testing.T) {
 		t.Fatalf("expected us2@p2 to remain after provider override")
 	}
 }
+
+func TestCombineRulesCases(t *testing.T) {
+	cases := []struct {
+		p   string
+		s   string
+		exp string
+	}{
+		{"", "", ""},
+		{"P", "", "P"},
+		{"", "S", "S"},
+		{"A", "B", "(A) && (B)"},
+	}
+	for _, c := range cases {
+		if got := combineRules(c.p, c.s); got != c.exp {
+			t.Fatalf("combineRules(%q,%q)=%q want %q", c.p, c.s, got, c.exp)
+		}
+	}
+}
+
+func TestRegexMatch_TrueFalse(t *testing.T) {
+	ok, err := regexMatch("^ab.+z$", "abcz")
+	if err != nil || !ok {
+		t.Fatalf("expected true, err=nil got %v,%v", ok, err)
+	}
+	ok, err = regexMatch("^ab.+z$", "abq")
+	if err != nil || ok {
+		t.Fatalf("expected false, err=nil got %v,%v", ok, err)
+	}
+}
+
+func TestHTTPRoutersEarlyReturn(t *testing.T) {
+	r := map[string]*dynamic.Router{
+		"r1": {},
+		"r2": {},
+	}
+	out := HTTPRouters(r, &config.RoutersConfig{Matcher: ""}, "")
+	if len(out) != 2 {
+		t.Fatalf("expected early return of all routers, got %d", len(out))
+	}
+}
+
+func TestHTTPRoutersCompileErrorReturnsEmpty(t *testing.T) {
+	r := map[string]*dynamic.Router{
+		"r1": {},
+	}
+	// invalid rule -> compile error -> empty result
+	out := HTTPRouters(r, &config.RoutersConfig{Matcher: "Name(`unterminated"}, "")
+	if len(out) != 0 {
+		t.Fatalf("expected empty on compile error, got %d", len(out))
+	}
+}
+
+func TestHTTPServicesCompileErrorReturnsEmpty(t *testing.T) {
+	svcs := map[string]*dynamic.Service{"s1": {}}
+	out := HTTPServices(svcs, &config.ServicesConfig{Matcher: "Name(`unterminated"}, "")
+	if len(out) != 0 {
+		t.Fatalf("expected empty on compile error, got %d", len(out))
+	}
+}
+
+func TestTCPRoutersCompileErrorReturnsEmpty(t *testing.T) {
+	r := map[string]*dynamic.TCPRouter{"tr1": {}}
+	out := TCPRouters(r, &config.RoutersConfig{Matcher: "Name(`unterminated"}, "")
+	if len(out) != 0 {
+		t.Fatalf("expected empty on compile error, got %d", len(out))
+	}
+}

@@ -64,6 +64,57 @@ func TestMatchTCPRouters(t *testing.T) {
 	}
 }
 
+func TestTCPRouters_EarlyReturnWhenNoMatcher(t *testing.T) {
+	routers := map[string]*dynamic.TCPRouter{
+		"r1": {Service: "s1"},
+	}
+	// Empty provider and section matcher -> early return original map
+	got := TCPRouters(routers, &config.RoutersConfig{Matcher: ""}, "")
+	if len(got) != 1 || got["r1"] != routers["r1"] {
+		t.Fatalf("expected original routers map to be returned unchanged")
+	}
+}
+
+func TestTCPServices_CompileErrorSyntaxReturnsEmpty(t *testing.T) {
+	svcs := map[string]*dynamic.TCPService{"s1": {}}
+	got := TCPServices(svcs, &config.ServicesConfig{Matcher: "Name(`unterminated"}, "")
+	if len(got) != 0 {
+		t.Fatalf("expected empty result on compile syntax error, got %d", len(got))
+	}
+}
+
+func TestTCPMiddlewares_CompileErrorSyntaxReturnsEmpty(t *testing.T) {
+	mws := map[string]*dynamic.TCPMiddleware{"m1": {}}
+	got := TCPMiddlewares(mws, &config.MiddlewaresConfig{Matcher: "Name(`unterminated"}, "")
+	if len(got) != 0 {
+		t.Fatalf("expected empty result on compile syntax error, got %d", len(got))
+	}
+}
+
+func TestTCPServices_EarlyReturnAndCompileError(t *testing.T) {
+	svcs := map[string]*dynamic.TCPService{"s1": {LoadBalancer: &dynamic.TCPServersLoadBalancer{}}}
+	// Early return when combined matcher is empty
+	if got := TCPServices(svcs, &config.ServicesConfig{Matcher: ""}, ""); len(got) != 1 || got["s1"] != svcs["s1"] {
+		t.Fatalf("expected original services map to be returned")
+	}
+	// Compile error path
+	if got := TCPServices(svcs, &config.ServicesConfig{Matcher: "NameRegexp(`[` )"}, ""); len(got) != 0 {
+		t.Fatalf("expected empty result on compile error, got %d", len(got))
+	}
+}
+
+func TestTCPMiddlewares_EarlyReturnAndCompileError(t *testing.T) {
+	mws := map[string]*dynamic.TCPMiddleware{"m1": {}}
+	// Early return when combined matcher is empty
+	if got := TCPMiddlewares(mws, &config.MiddlewaresConfig{Matcher: ""}, ""); len(got) != 1 || got["m1"] != mws["m1"] {
+		t.Fatalf("expected original middlewares map to be returned")
+	}
+	// Compile error path
+	if got := TCPMiddlewares(mws, &config.MiddlewaresConfig{Matcher: "NameRegexp(`[` )"}, ""); len(got) != 0 {
+		t.Fatalf("expected empty result on compile error, got %d", len(got))
+	}
+}
+
 func TestTCPServices(t *testing.T) {
 	tests := []struct {
 		name     string

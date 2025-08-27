@@ -32,7 +32,7 @@ type MTLSConfig struct {
 	// a router uses a service matched by an mTLS-enabled tunnel. When true (default),
 	// if a router's TLS config only has Options set, the TLS block is removed.
 	// Otherwise, only the Options field is cleared. Set to false to disable.
-	StripRouterTLSOptions *bool `json:"stripRouterTLSOptions,omitempty" yaml:"stripRouterTLSOptions,omitempty"`
+	StripRouterTLSOptions *bool `json:"stripRouterTLSOptions,omitempty" yaml:"stripRouterTLSOptions,omitempty"` //nolint:tagliatelle
 }
 
 // TunnelConfig defines a list of addresses grouped under a name, optionally with mTLS.

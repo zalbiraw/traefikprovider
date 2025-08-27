@@ -12,7 +12,8 @@ import (
 )
 
 // convertToTyped converts a loosely-typed map to a map of typed pointers.
-// nolint:nestif // deeply nested due to JSON shape handling
+//
+//nolint:nestif // deeply nested due to JSON shape handling
 func convertToTyped[T any](data interface{}) map[string]*T {
 	result := make(map[string]*T)
 	if dataMap, ok := data.(map[string]interface{}); ok {
@@ -127,7 +128,7 @@ func processHTTPMiddlewares(raw map[string]interface{}, httpConfig *dynamic.HTTP
 			continue
 		}
 		if middlewareName, ok := extra.(map[string]interface{})["name"].(string); ok {
-				httpConfig.Middlewares[middlewareName] = &middleware
+			httpConfig.Middlewares[middlewareName] = &middleware
 		}
 	}
 	overrides.StripProvidersHTTP(httpConfig)
@@ -308,21 +309,6 @@ func ParseTLSConfig(raw map[string]interface{}, tlsConfig *dynamic.TLSConfigurat
 	if stores, ok := raw["tlsStores"]; ok {
 		tlsConfig.Stores = matchers.TLSStores(stores, providerConfig)
 	}
-}
-
-// The following unexported wrappers and helpers are provided to support tests in this package
-// that expect lowercase function names.
-
-func parseHTTPConfig(raw map[string]interface{}, httpConfig *dynamic.HTTPConfiguration, providerConfig *config.HTTPSection, providerMatcher string, tns []config.TunnelConfig) {
-	ParseHTTPConfig(raw, httpConfig, providerConfig, providerMatcher, tns)
-}
-
-func parseTCPConfig(raw map[string]interface{}, tcpConfig *dynamic.TCPConfiguration, providerConfig *config.TCPSection, providerMatcher string, tns []config.TunnelConfig) {
-	ParseTCPConfig(raw, tcpConfig, providerConfig, providerMatcher, tns)
-}
-
-func parseUDPConfig(raw map[string]interface{}, udpConfig *dynamic.UDPConfiguration, providerConfig *config.UDPSection, providerMatcher string) {
-	ParseUDPConfig(raw, udpConfig, providerConfig, providerMatcher)
 }
 
 func parseTLSConfig(raw map[string]interface{}, tlsConfig *dynamic.TLSConfiguration, providerConfig *config.TLSSection) {

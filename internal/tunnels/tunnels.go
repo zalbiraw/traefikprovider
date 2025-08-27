@@ -109,7 +109,7 @@ func shouldStripRouterTLSOptions(m *config.MTLSConfig) bool {
 // stripRoutersTLSForService inspects routers that use the given service name and
 // mutates their TLS config according to the rule:
 // - if TLS only has Options set (no certResolver, no domains), remove the TLS block
-// - else clear only the Options field
+// - else clear only the Options field.
 func stripRoutersTLSForService(httpConfig *dynamic.HTTPConfiguration, serviceName string) {
 	if httpConfig == nil || httpConfig.Routers == nil {
 		return

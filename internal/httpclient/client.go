@@ -1,3 +1,4 @@
+// Package httpclient fetches provider data over HTTP and converts it into Traefik dynamic configuration.
 package httpclient
 
 import (
