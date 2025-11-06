@@ -56,8 +56,12 @@ func buildProviderURL(cfg *config.ProviderConfig) string {
 	host := cfg.Connection.Host
 	port := cfg.Connection.Port
 	path := cfg.Connection.Path
+	scheme := "http"
+	if cfg.Connection.HTTPS {
+		scheme = "https"
+	}
 	hostPort := net.JoinHostPort(host, fmt.Sprintf("%d", port))
-	return "http://" + hostPort + path
+	return scheme + "://" + hostPort + path
 }
 
 // buildProviderRequest creates an HTTP GET request with headers and host.

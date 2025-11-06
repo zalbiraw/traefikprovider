@@ -121,6 +121,30 @@ func TestBuildProviderURL(t *testing.T) {
 			},
 			expected: "http://api.example.com:443/",
 		},
+		{
+			name: "HTTPS URL",
+			config: &config.ProviderConfig{
+				Connection: config.ConnectionConfig{
+					Host:  "secure.example.com",
+					Port:  443,
+					Path:  "/api",
+					HTTPS: true,
+				},
+			},
+			expected: "https://secure.example.com:443/api",
+		},
+		{
+			name: "HTTPS with custom port",
+			config: &config.ProviderConfig{
+				Connection: config.ConnectionConfig{
+					Host:  "localhost",
+					Port:  8443,
+					Path:  "/secure/api",
+					HTTPS: true,
+				},
+			},
+			expected: "https://localhost:8443/secure/api",
+		},
 	}
 
 	for _, tt := range tests {

@@ -19,6 +19,7 @@ type ConnectionConfig struct {
 	Port    int               `json:"port,omitempty" yaml:"port,omitempty"`
 	Path    string            `json:"path,omitempty" yaml:"path,omitempty"`
 	Timeout string            `json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	HTTPS   bool              `json:"https,omitempty" yaml:"https,omitempty"`
 	Headers map[string]string `json:"headers,omitempty" yaml:"headers,omitempty"`
 	MTLS    *MTLSConfig       `json:"mTLS,omitempty" yaml:"mTLS,omitempty"` //nolint:tagliatelle
 }
