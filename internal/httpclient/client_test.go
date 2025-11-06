@@ -139,7 +139,7 @@ func TestBuildProviderRequest_ValidWithHeaders(t *testing.T) {
 		"Authorization": "Bearer token",
 		"Content-Type":  "application/json",
 	}
-	req := buildProviderRequest(url, headers)
+	req := buildProviderRequest(url, "", headers)
 	if req == nil {
 		t.Fatal("Expected non-nil request")
 	}
@@ -158,7 +158,7 @@ func TestBuildProviderRequest_ValidWithHeaders(t *testing.T) {
 
 func TestBuildProviderRequest_ValidNoHeaders(t *testing.T) {
 	url := "http://example.com/test"
-	req := buildProviderRequest(url, nil)
+	req := buildProviderRequest(url, "", nil)
 	if req == nil {
 		t.Fatal("Expected non-nil request")
 	}
@@ -170,24 +170,22 @@ func TestBuildProviderRequest_ValidNoHeaders(t *testing.T) {
 	}
 }
 
-func TestBuildProviderRequest_HostHeader(t *testing.T) {
-	url := "http://localhost:8080/api"
-	headers := map[string]string{
-		"Host": "custom-host.com",
-	}
-	req := buildProviderRequest(url, headers)
-	if req == nil {
-		t.Fatal("Expected non-nil request")
-	}
-	if req.Host != "custom-host.com" {
-		t.Errorf("Expected Host custom-host.com, got %s", req.Host)
+func TestBuildProviderRequest_InvalidURL(t *testing.T) {
+	req := buildProviderRequest("://invalid-url", "", nil)
+	if req != nil {
+		t.Error("Expected nil request for invalid URL")
 	}
 }
 
-func TestBuildProviderRequest_InvalidURL(t *testing.T) {
-	req := buildProviderRequest("://invalid-url", nil)
-	if req != nil {
-		t.Error("Expected nil request for invalid URL")
+func TestBuildProviderRequest_HostFromParameter(t *testing.T) {
+	url := "http://localhost:8080/api"
+	host := "provider-host.com"
+	req := buildProviderRequest(url, host, nil)
+	if req == nil {
+		t.Fatal("Expected non-nil request")
+	}
+	if req.Host != host {
+		t.Errorf("Expected Host %s, got %s", host, req.Host)
 	}
 }
 
@@ -1060,18 +1058,20 @@ func TestGenerateConfiguration_FullPathsThroughDo(t *testing.T) {
 	}
 	_ = GenerateConfiguration(cfg6)
 
-	// 7) Host header override verified
+	// 7) Host parameter is used for request Host field
+	var h7Checked string
 	hostHdrSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Host != "custom-host.example" {
-			t.Fatalf("expected Host header override, got %q", r.Host)
+		if r.Host != h7Checked {
+			t.Fatalf("expected Host to be %q, got %q", h7Checked, r.Host)
 		}
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{}`))
 	}))
 	defer hostHdrSrv.Close()
 	h7, p7 := hostAndPort(t, hostHdrSrv.URL)
+	h7Checked = h7
 	cfg7 := &config.ProviderConfig{
-		Connection: config.ConnectionConfig{Host: h7, Port: p7, Path: "/api", Headers: map[string]string{"Host": "custom-host.example"}},
+		Connection: config.ConnectionConfig{Host: h7, Port: p7, Path: "/api"},
 		HTTP:       &config.HTTPSection{Discover: true},
 	}
 	_ = GenerateConfiguration(cfg7)

@@ -21,7 +21,7 @@ func GenerateConfiguration(providerCfg *config.ProviderConfig) *dynamic.Configur
 	}
 
 	url := buildProviderURL(providerCfg)
-	req := buildProviderRequest(url, providerCfg.Connection.Headers)
+	req := buildProviderRequest(url, providerCfg.Connection.Host, providerCfg.Connection.Headers)
 
 	client := http.DefaultClient
 	if providerCfg.Connection.Timeout != "" {
@@ -60,8 +60,8 @@ func buildProviderURL(cfg *config.ProviderConfig) string {
 	return "http://" + hostPort + path
 }
 
-// buildProviderRequest creates an HTTP GET request with headers.
-func buildProviderRequest(url string, headers map[string]string) *http.Request {
+// buildProviderRequest creates an HTTP GET request with headers and host.
+func buildProviderRequest(url string, host string, headers map[string]string) *http.Request {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil
@@ -69,9 +69,7 @@ func buildProviderRequest(url string, headers map[string]string) *http.Request {
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	if hostHeader, ok := headers["Host"]; ok {
-		req.Host = hostHeader
-	}
+	req.Host = host
 	return req
 }
 
