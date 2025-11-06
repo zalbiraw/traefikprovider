@@ -65,7 +65,7 @@ func buildProviderURL(cfg *config.ProviderConfig) string {
 }
 
 // buildProviderRequest creates an HTTP GET request with headers and host.
-func buildProviderRequest(url string, host string, headers map[string]string) *http.Request {
+func buildProviderRequest(url, host string, headers map[string]string) *http.Request {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil
